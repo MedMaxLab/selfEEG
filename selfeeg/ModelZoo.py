@@ -2,38 +2,114 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ =['ConstrainedConv2d', 'ConstrainedDense', 'SeparableConv2d', 'EEGNetEncoder',
-          'EEGNet', 'StagerNetEncoder', 'StagerNet', 'ShallowNetEncoder', 'ShallowNet',
-          'BasicBlock1', 'ResNet1DEncoder', 'ResNet1D'
+__all__ =['ConstrainedConv2d', 'ConstrainedDense','DepthwiseConv2d', 'SeparableConv2d', 
+          'EEGNetEncoder', 'EEGNet', 'StagerNetEncoder', 'StagerNet', 'ShallowNetEncoder', 
+          'ShallowNet', 'BasicBlock1', 'ResNet1DEncoder', 'ResNet1D'
          ]
 
+## -------------------------------------------------------------------- ##
+# TO DO: ADD MORE MODELS (DEEPCONVNET, EFFICIENTNET, TRANSFORMER ETC.)
+## -------------------------------------------------------------------- ##
+
+
 # ### Special Kernels not implemented in pytorch
-class ConstrainedConv2d(nn.Conv2d):
-    def forward(self, input):
-        return F.conv2d(input, self.weight.clamp(min=0, max=1.0), self.bias, self.stride,
-                        self.padding, self.dilation, self.groups)
-    
-class ConstrainedDense(nn.Linear):
-    def __init__(self, in_features, out_features, bias=True, device=None, dtype=None, norm_rate=0.25):
-        super(ConstrainedDense, self).__init__(in_features, out_features, bias=bias, device=device, dtype=dtype)
-        self.norm_rate = norm_rate 
+class DepthwiseConv2d(nn.Conv2d):
+    def __init__(self, in_channels, depth_multiplier, kernel_size, 
+                 stride=1, padding='same', dilation=1, bias=False, max_norm=None
+                ):
+        super(DepthwiseConv2d, self).__init__(in_channels, depth_multiplier*in_channels, kernel_size, groups=in_channels,
+                                              stride=stride, padding=padding, dilation=dilation, bias=bias)
+        if max_norm is not None:
+            if max_norm <=0:
+                raise ValueError('max_norm can\'t be lower or equal than 0')
+            else:
+                self.max_norm=max_norm
+        else:
+            self.max_norm= max_norm
+
+    @torch.no_grad()
+    def scale_norm(self, eps=1e-9):
+        """
+        CONSIDERING THE DESCRIPTION PROVIDED IN TENSORFLOW 
         
+        integer, axis along which to calculate weight norms. For instance, in a Dense layer the weight matrix has shape 
+        (input_dim, output_dim), set axis to 0 to constrain each weight vector of length (input_dim,). 
+        In a Conv2D layer with data_format="channels_last", the weight tensor has shape (rows, cols, input_depth, output_depth), 
+        set axis to [0, 1, 2] to constrain the weights of each filter tensor of size (rows, cols, input_depth).
+        """
+        # calcuate the norm of each filter of size (row, cols, input_depth), here (1, kernel_size)
+        if self.kernel_size[1]>1:
+            norm= self.weight.norm(dim=2, keepdim=True).norm(dim=3,keepdim=True)
+        else:
+            norm = self.weight.norm(dim=2, keepdim=True)
+
+        # rescale only those filters which have a norm bigger than the maximum allowed
+        if (norm>self.max_norm).sum()>self.max_norm:
+            desired = torch.clamp(norm, 0, self.max_norm)
+            self.weight = torch.nn.Parameter(self.weight*desired/ (eps + norm))
+    
     def forward(self, input):
-        return F.linear(input, self.weight.clamp(min=0,max=self.norm_rate), self.bias)
+        if self.max_norm is not None:
+            self.scale_norm(self.max_norm)
+        return self._conv_forward(input, self.weight, self.bias)
     
-    
+
 class SeparableConv2d(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, bias=False, padding='same'):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding='same', 
+                 dilation=1, bias=False, depth_multiplier=1, depth_max_norm=None):
         super(SeparableConv2d, self).__init__()
-        self.depthwise = nn.Conv2d(in_channels, in_channels, kernel_size=kernel_size, 
-                                   groups=in_channels, bias=False, padding=padding)
-        self.pointwise = nn.Conv2d(in_channels, out_channels, 
-                                   kernel_size=1, bias=bias)
+        self.depthwise = DepthwiseConv2d( in_channels, depth_multiplier, kernel_size, 
+                                          stride, padding, dilation, bias, max_norm=None)
+        self.pointwise = nn.Conv2d(in_channels*depth_multiplier, out_channels, kernel_size=1, bias=bias)
 
     def forward(self, x):
         out = self.depthwise(x)
         out = self.pointwise(out)
         return out
+
+
+class ConstrainedDense(nn.Linear):
+    def __init__(self, in_features, out_features, bias=True, device=None, dtype=None, max_norm=None):
+        super(ConstrainedDense, self).__init__(in_features, out_features, bias, device, dtype)
+        
+        if max_norm is not None:
+            if max_norm <=0:
+                raise ValueError('max_norm can\'t be lower or equal than 0')
+            else:
+                self.max_norm=max_norm
+        else:
+            self.max_norm= max_norm
+        
+    @torch.no_grad()
+    def scale_norm(self, eps=1e-9):
+        """
+        CONSIDERING THE DESCRIPTION PROVIDED IN TENSORFLOW 
+        
+        integer, axis along which to calculate weight norms. For instance, in a Dense layer the weight matrix has shape 
+        (input_dim, output_dim), set axis to 0 to constrain each weight vector of length (input_dim,). 
+        In a Conv2D layer with data_format="channels_last", the weight tensor has shape (rows, cols, input_depth, output_depth), 
+        set axis to [0, 1, 2] to constrain the weights of each filter tensor of size (rows, cols, input_depth).
+        """
+        # calcuate the norm of each filter of size (row, cols, input_depth), here (1, kernel_size)
+        norm = self.weight.norm(dim=1, keepdim=True)
+
+        # rescale only those filters which have a norm bigger than the maximum allowed
+        if (norm>self.max_norm).sum()>self.max_norm:
+            desired = torch.clamp(norm, 0, self.max_norm)
+            self.weight = torch.nn.Parameter(self.weight*desired/ (eps + norm))
+    
+    
+    def forward(self, input):
+        if self.max_norm is not None:
+            self.scale_norm(self.max_norm)
+        return F.linear(input, self.weight, self.bias)
+    
+
+class ConstrainedConv2d(nn.Conv2d):
+    def forward(self, input):
+        return F.conv2d(input, self.weight.clamp(min=0, max=1.0), self.bias, self.stride,
+                        self.padding, self.dilation, self.groups)
+
 
 
 # ------------------------------
@@ -48,10 +124,12 @@ class EEGNetEncoder(nn.Module):
     Keras implementation of the full EEGnet (updated version) with more info at:
         https://github.com/vlawhern/arl-eegmodels/blob/master/EEGModels.py
     
-    NOTE: This implementation referres to the latest version of EEGNet which can be found in the 
+    NOTE: This implementation referres to the latest version of EEGNet which can be found in the official repository
     """
     def __init__(self, Chans, kernLength = 64, dropRate = 0.5, F1 = 8, 
-                 D = 2, F2 = 16, ELUalpha=1, dropType = 'Dropout'):
+                 D = 2, F2 = 16, dropType = 'Dropout', ELUalpha=1,
+                 pool1=4, pool2=8, separable_kernel=16, depthwise_max_norm=1.
+                ):
         
         
         if dropType not in ['SpatialDropout2D','Dropout']:
@@ -64,17 +142,17 @@ class EEGNetEncoder(nn.Module):
         self.batchnorm1 = nn.BatchNorm2d(F1, False)
         
         # Layer 2
-        self.conv2      = ConstrainedConv2d(F1, D*F1, (Chans, 1), bias=False)
+        self.conv2      = DepthwiseConv2d(F1, D, (Chans, 1), padding='valid', bias=False, max_norm=depthwise_max_norm)
         self.batchnorm2 = nn.BatchNorm2d(D*F1, False)
         self.elu2       = nn.ELU(alpha=ELUalpha)
-        self.pooling2   = nn.AvgPool2d((1,4))
+        self.pooling2   = nn.AvgPool2d((1,pool1))
         self.drop2      = nn.Dropout(p=dropRate) if dropType.lower()=='dropout' else nn.Dropout2d(p=dropRate)
 
         # Layer 3
-        self.sepconv3   = SeparableConv2d(D*F1, F2, (1,16), bias=False, padding='same')
+        self.sepconv3   = SeparableConv2d(D*F1, F2, (1, separable_kernel ), bias=False, padding='same')
         self.batchnorm3 = nn.BatchNorm2d(F2, False)
         self.elu3       = nn.ELU(alpha=ELUalpha)
-        self.pooling3   = nn.AvgPool2d((1,8))
+        self.pooling3   = nn.AvgPool2d((1,pool2))
         self.drop3      = nn.Dropout(p=dropRate) if dropType.lower()=='dropout' else nn.Dropout2d(p=dropRate)
         self.flatten3   = nn.Flatten()
 
@@ -115,21 +193,16 @@ class EEGNet(nn.Module):
     NOTE: This implementation referres to the latest version of EEGNet which can be found in the 
     """
     def __init__(self, nb_classes, Chans, Samples, dropRate = 0.5, kernLength = 64, F1 = 8, 
-                 D = 2, F2 = 16, norm_rate = 0.25, ELUalpha=1, dropType = 'Dropout', Constrain_dense: bool=True):
+                 D = 2, F2 = 16, norm_rate = 0.25, dropType = 'Dropout', ELUalpha=1,
+                 pool1=4, pool2=8, separable_kernel=16, depthwise_max_norm=1.0, 
+                ):
         
         super(EEGNet, self).__init__()
 
         self.nb_classes=nb_classes
-        
-        # Encoder
-        self.encoder    = EEGNetEncoder(Chans, dropRate = dropRate, kernLength = kernLength, 
-                                        F1 = F1, D = D, F2 = F2, ELUalpha=ELUalpha, dropType = dropType)
-        
-        # Classifier
-        if Constrain_dense:
-            self.Dense      = ConstrainedDense( F2*(Samples//32), nb_classes, norm_rate=norm_rate)
-        else:
-            self.Dense      = nn.Linear( F2*(Samples//32), nb_classes)
+        self.encoder    = EEGNetEncoder(Chans, kernLength, dropRate, F1, D, F2, dropType, ELUalpha,
+                                        pool1, pool2, separable_kernel, depthwise_max_norm)
+        self.Dense      = ConstrainedDense( F2*(Samples//int(pool1*pool2)), nb_classes, max_norm=norm_rate)
     
     def forward(self, x):
         x=self.encoder(x)
@@ -247,7 +320,7 @@ class ShallowNet(nn.Module):
         
         super(ShallowNet, self).__init__()
         
-        self.encoder    = ShallowNetEncoder(Chans, F = F, K1 = K1, Pool = Pool)
+        self.encoder   = ShallowNetEncoder(Chans, F = F, K1 = K1, Pool = Pool)
         self.Dense     = nn.Linear(F*((Samples-K1+1-Pool)//15 +1), nb_classes )
     
     def forward(self, x):
