@@ -114,6 +114,7 @@ def fine_tune(model,
 
             if X.device.type!=device.type:
                 X = X.to(device=device)
+                Ytrue = Ytrue.to(device=device)
             if augmenter != None:
                 X = augmenter(X)
             if label_encoder != None:
@@ -147,6 +148,7 @@ def fine_tune(model,
                     
                     if X.device.type!=device.type:
                         X = X.to(device=device)
+                        Ytrue = Ytrue.to(device=device)
                     if label_encoder != None:
                         Ytrue= label_encoder(Ytrue) + 0.
                         if Ytrue.device.type!=device.type:
@@ -198,9 +200,9 @@ class EarlyStopping:
                  patience: int=5, 
                  min_delta: float=1e-9,
                  improvement: str='decrease',
-                 monitored: str='validation', 
-                 record_best_weights: bool=False,
-                 start_from_epoch: int=0,   
+                 monitored: str='validation',
+                 record_best_weights: bool=True,
+                 start_from_epoch: int=0,
                 ):
         
         if patience < 0:
@@ -211,7 +213,7 @@ class EarlyStopping:
         if isinstance(monitored, str) and (monitored in ['validation', 'train']):
             self.monitored = monitored.lower()
         else:
-            raise ValueError('val')
+            raise ValueError('supported monitoring modes are train or validation')
                             
         if min_delta<0:
             msgErr='min_delta must be >= 0. '
@@ -241,24 +243,25 @@ class EarlyStopping:
     def __call__(self):
         return self.earlystop
     
-    def early_stop(self, loss):
+    def early_stop(self, loss, count_add=1):
         
         # The function can be compressed with a big if. This expansion is faster and better understandable
-        if self.improvement.lower()=='decrease':
+        if self.improvement=='decrease':
+            #Check if current loss is better than recorded best loss
             if loss < (self.best_loss - self.min_delta):
                 self.best_loss = loss
                 self.counter = 0  # During train if self.counter==0 record_best_weights will be called
             else:
-                self.counter += 1
+                self.counter += count_add
                 if self.counter >= self.patience:
                     self.earlystop=True
                      
-        elif self.improvement.lower()=='increase':
+        elif self.improvement=='increase': # mirror with increase option
             if loss > (self.best_loss + self.min_delta):
                 self.best_loss = loss
                 self.counter = 0    
             else:
-                self.counter += 1
+                self.counter += count_add
                 if self.counter >= self.patience:
                     self.earlystop=True
             

@@ -192,7 +192,7 @@ class EEGNet(nn.Module):
     
     NOTE: This implementation referres to the latest version of EEGNet which can be found in the 
     """
-    def __init__(self, nb_classes, Chans, Samples, dropRate = 0.5, kernLength = 64, F1 = 8, 
+    def __init__(self, nb_classes, Chans, Samples, kernLength = 64, dropRate = 0.5, F1 = 8, 
                  D = 2, F2 = 16, norm_rate = 0.25, dropType = 'Dropout', ELUalpha=1,
                  pool1=4, pool2=8, separable_kernel=16, depthwise_max_norm=1.0, 
                 ):
@@ -202,11 +202,11 @@ class EEGNet(nn.Module):
         self.nb_classes=nb_classes
         self.encoder    = EEGNetEncoder(Chans, kernLength, dropRate, F1, D, F2, dropType, ELUalpha,
                                         pool1, pool2, separable_kernel, depthwise_max_norm)
-        self.Dense      = ConstrainedDense( F2*(Samples//int(pool1*pool2)), nb_classes, max_norm=norm_rate)
+        self.Dense      = ConstrainedDense( F2*(Samples//int(pool1*pool2)), 1 if nb_classes<=2 else nb_classes, max_norm=norm_rate)
     
     def forward(self, x):
         x=self.encoder(x)
-        if self.nb_classes==1:
+        if self.nb_classes<=2:
             x=torch.sigmoid(self.Dense(x))
         else:
             x=F.softmax(self.Dense(x),dim=1)
@@ -500,17 +500,17 @@ class ResNet1D(nn.Module):
         # Classifier
         if classifier is None:
             if addConnection:
-                self.Classifier = nn.Linear(Chans*inplane + (((Samples+1)//2 - kernLength)//3 + 1)*2, nb_classes)
+                self.Dense = nn.Linear(Chans*inplane + (((Samples+1)//2 - kernLength)//3 + 1)*2, nb_classes)
             else:
-                self.Classifier = nn.Linear(Chans*inplane, nb_classes)
+                self.Dense = nn.Linear(Chans*inplane, nb_classes)
         else:
-            self.Classifier = classifier
+            self.Dense = classifier
     
     def forward(self, x):
         x=self.encoder(x)
         if self.nb_classes==1:
-            x=torch.sigmoid(self.Classifier(x))
+            x=torch.sigmoid(self.Dense(x))
         else:
-            x=F.softmax(self.Classifier(x), dim=1)
+            x=F.softmax(self.Dense(x), dim=1)
         return x
 

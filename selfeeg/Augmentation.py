@@ -1,11 +1,6 @@
-# Some functions are inspired from works using SSL on EEG 
-# See Jiang et al., https://github.com/XueJiang16/ssl-torch/blob/main/transform.py
-# Banville et al.
-
 import math
 import random
 import inspect
-import pkgutil
 import time
 from typing import Any, Callable, Iterable, TypeVar, Generic, Sequence, List, Dict, Optional, Union
 import numpy as np
@@ -13,21 +8,32 @@ import pandas as pd
 from scipy.io import loadmat
 from scipy import signal
 from scipy import interpolate
-if pkgutil.find_loader('torch') is not None:
-    import torch
-    import torch.nn.functional as F
-    from torchaudio.functional import lfilter, filtfilt
+from scipy import fft
+import torch
+import torch.nn.functional as F
+from torchaudio.functional import lfilter, filtfilt
 
-__all__ = ['shift_vertical', 'flip_vertical', 'flip_horizontal', 'add_gaussian_noise', 'add_noise_SNR',
-           'add_band_noise', 'moving_avg', 'filter_lowpass', 'filter_highpass', 'filter_bandpass',
-           'get_eeg_channel_network_names', 'get_channel_map_and_networks', 'permute_channels',
-           'permutation_signal', 'torch_pchip', 'warp_signal', 'crop_and_resize', 'change_ref', 
+__all__ = ['identity',
+           'shift_vertical', 'shift_horizontal', 'shift_frequency'
+           'flip_vertical', 'flip_horizontal',
+           'scaling','random_slope_scale', 'random_FT_phase',
+           'add_gaussian_noise', 'add_noise_SNR','add_band_noise', 'add_eeg_artifact',
+           'moving_avg', 'filter_lowpass', 'filter_highpass', 'filter_bandpass', 'filter_bandstop',
+           'get_eeg_channel_network_names', 'get_channel_map_and_networks', 
+           'permute_channels', 'permutation_signal', 
+           'torch_pchip', 'warp_signal', 'crop_and_resize', 
+           'change_ref', 
+           'masking', 'channel_dropout',
            'StaticSingleAug', 'DynamicSingleAug', 'SequentialAug'
           ]
 
 
 # ----- SHIFTS AND FLIPS -------
 def identity(x):
+    """
+    identity return the same array or tensor as it was given.
+    It can be used during augmentation composition to randomly avoid some augmentations
+    """
     return x
 
 def shift_vertical(x: "N-D Tensor of numpy Array", 
@@ -42,33 +48,230 @@ def shift_vertical(x: "N-D Tensor of numpy Array",
     value: scalar
         The value to add
     """
+    # To do: batch equal and random shift from +- 10 uV random number
     x_shift = x + value
     return x_shift
-    
-    
-def flip_vertical(x: "N-D Tensor of numpy Array"):
+
+def shift_horizontal(x: "N-D Tensor of numpy Array",
+                     shift_time: float,
+                     Fs: float,
+                     forward: bool=None,
+                     random_shift: bool=False,
+                     batch_equal: bool=True
+                    ):
     """
     
+    shift_horizontal shift temporally the elements of the last dimension of x by a constant.
+    
+    The empty elements at beginning or the ending part after shift are set to zero.
+    
+    Paramters
+    ---------
+    x: N-D Tensor or numpy array
+        Array to shift. Last dimension must have the EEG recordings
+    shift_time: float
+        Shift in seconds, of the desired time shift.
+    Fs: float
+        the EEG sampling rate in Hz
+    forward: bool
+        Whether to shift the EEG forward (True) or backward (False) in time. If left to None, a
+        random selection of the shift direction will be performed.
+        Default: None
+    random_shift: bool, optional
+        Wheter to choose a random shift length lower than or equal to shift_time, i.e. consider shift_time as
+        the exact value to shift or as an upper bound for a random selection
+        Default: False
+    batch_equal: bool, optional
+        whether to apply the same shift to all EEG record or not.
+        Note: if random shift is set to False and forward is None, then batch_equal will be equal to True since
+              no differences in the shift can be applied.
+        Default: True
+    """
+
+    if shift_time<0:
+        raise ValueError('shift time must be a positive value. To shift backward set forward to False')
+    Ndim= len(x.shape)
+    x_shift = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
+    if batch_equal:
+        if not(random_shift or (forward is None)):
+            print('set batch equal to true')
+            batch_equal=True
+    
+    if batch_equal or Ndim<3:
+        if forward is None:
+            forward= bool(random.getrandbits(1))
+
+        if random_shift:
+            shift = random.randint(1, int(shift_time*Fs))
+        else:
+            shift = int(shift_time*Fs)
+        
+        if forward:
+            x_shift[...,:shift] = 0
+            x_shift[...,shift:] = x[...,:-shift]
+        else:
+            x_shift[...,:-shift] = x[...,shift:]
+            x_shift[...,-shift:] = 0
+    else:
+        for i in range(x_shift.shape[0]):
+            x_shift[i] = shift_horizontal(x[i], shift_time=shift_time, Fs= Fs, forward= forward,
+                                          random_shift=random_shift, batch_equal=batch_equal)
+    return x_shift
+    
+
+def _UnitStep(x):
+    """
+    _UnitStep create a numpy array or pytorch tensor with shape equal to x 
+    and with the last dimension filled with the step function values used in the Hilbert Transform.
+    This is used to speed up the computation of shift_frequency when batch_equal is set to False.
+    In short, it avoids initializing the same h multiple times. 
+
+    For more info see SciPy's hilbert help and source code:
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.hilbert.html
+    
+    """
+    N = x.shape[-1]
+    h = torch.zeros_like(x, device=x.device) if isinstance(x, torch.Tensor) else np.zeros_like(x)
+    if N % 2 == 0:
+        h[..., 0] = h[..., N // 2] = 1
+        h[..., 1:N // 2] = 2
+    else:
+        h[..., 0] = 1
+        h[..., 1:(N + 1) // 2] = 2
+    return h
+    
+
+def torch_hilbert(x, h: torch.Tensor=None):
+    """
+    torch_hilbert is a minimal version of SciPy's hilbert function adapted for pytorch tensors.
+
+    Parameters
+    ----------
+    x : torch.Tensor
+        Tensor with signal data.
+    h : torch.Tensor, optional
+        Tensor with the UnitStep function. If not given, it will be initialized during call.
+        Default: None
+
+    Returns
+    -------
+    Xa : torch.Tensor
+        The analytic signal of x calculated along the last dimension of x
+
+    Notes
+    -----
+    For more info see SciPy's hilbert help and source code:
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.hilbert.html
+    """
+    if torch.is_complex(x):
+        raise ValueError("x must be real tensor.")
+
+    N = x.shape[-1]
+    f = torch.fft.fft(x, N, dim=-1)
+    if h is None:
+        h = torch.zeros_like(f, device=x.device)
+        if N % 2 == 0:
+            h[..., 0] = h[..., N // 2] = 1
+            h[..., 1:N // 2] = 2
+        else:
+            h[..., 0] = 1
+            h[..., 1:(N + 1) // 2] = 2
+    Xa = torch.fft.ifft(f * h, dim=-1)
+
+
+    return Xa
+    
+
+def _shift_frequency(x: "N-D Tensor of numpy Array",
+                     shift_freq: float,
+                     Fs: float,
+                     forward: bool=None,
+                     random_shift: bool=False,
+                     batch_equal: bool=True,
+                     t= None,
+                     h= None
+                    ):
+    if shift_freq<0:
+        raise ValueError('shift freq must be a positive value.'
+                         ' To shift backward set forward to False')
+    Ndim= len(x.shape)
+    x_shift = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
+    if not(batch_equal):
+        if not(random_shift or (forward is None)):
+            print('set batch equal to true')
+            batch_equal=True
+    
+    if batch_equal or Ndim<3:
+        shift = shift_freq
+        if forward is None:
+            forward= bool(random.getrandbits(1))
+        if random_shift:
+            shift = np.random.uniform(-shift_freq, shift_freq)
+        if not(forward) and shift>0:
+            shift = -shift
+        
+        if t is None:
+            if isinstance(x, torch.Tensor):
+                T= x.shape[-1]/Fs
+                t = torch.linspace(0, T-(1/Fs), int(Fs*T), device=x.device)
+            else:
+                t = np.r_[0:T:(1/Fs)] 
+
+        if isinstance(x, torch.Tensor):
+            Xa = torch_hilbert(x) if h is None else torch_hilbert(x,h)
+            x_shift = torch.real(Xa * torch.exp(1j*2*math.pi*shift*t))
+        else:
+            Xa = signal.hilbert(signal) if h is None else fft.ifft( fft.fft(x)*h )
+            x_shift = np.real(Xa * np.exp(1j*2*math.pi*shift*t))
+            
+    else:
+        for i in range(x_shift.shape[0]):
+            x_shift[i] = _shift_frequency(x[i], shift_freq=shift_freq, Fs= Fs, forward= forward,
+                                          random_shift=random_shift, batch_equal=batch_equal, 
+                                          t=t, h=h[i] if h is not None else None)
+    return x_shift
+
+
+def shift_frequency(x: "N-D Tensor of numpy Array",
+                    shift_freq: float,
+                    Fs: float,
+                    forward: bool=None,
+                    random_shift: bool=False,
+                    batch_equal: bool=True,
+                   ):
+    T= x.shape[-1]/Fs
+    if isinstance(x, torch.Tensor):
+        t = torch.linspace(0, T-(1/Fs), int(Fs*T), device=x.device)
+    else:
+        t = np.r_[0:T:(1/Fs)] 
+    h = _UnitStep(x)
+    return _shift_frequency(x, shift_freq, Fs, forward, random_shift, batch_equal, t, h)
+
+
+def flip_vertical(x: "Array like"):
+    """
     flip_vertical change the sign of all the elements of the input array x.
     
     Paramters
     ---------
-    x: N-D Tensor or numpy array
+    x: array like
+        Array to flip. Last dimension must have the EEG recordings
     """
+    # TO DO: add batch_equal to apply flip only on certain EEGs
     x_flip= x*(-1)
     return x_flip
 
 
-def flip_horizontal(x: "N-D Tensor of numpy Array"):
+def flip_horizontal(x: "array like"):
     """
-    
     flip_horizontal flip the elements of the last dimension of x.
     
     Paramters
     ---------
-    x: N-D Tensor or numpy array
+    x: array like
         Array to flip. Last dimension must have the EEG recordings
     """
+    # TO DO: add batch_equal to apply flip only on certain EEGs
     if isinstance(x, np.ndarray):
         x_flip = np.flip(x, len(x.shape)-1)
     else:
@@ -314,6 +517,37 @@ def add_band_noise(x: "numpy array or tensor",
     else:
         return x_noise
 
+def scaling(x: 'array like',
+            value: float=None,
+            batch_equal: bool=True
+           ):
+    """
+    scaling rescale the array by a given amplitude.
+    
+    Parameters
+    ----------
+    x: array like
+        Input array or tensor. Can be of any shape, but the last two dimensions must referres to EEG's Channel x Sample
+    value: float, optional
+        The rescaling factor. If not given, a random value is extracted from a uniform distribution in range [0.5, 2]
+        Default: None
+    batch_equal:
+        Whether to apply the same rescaling on all signals or not. If False, value must be left to None, otherwise
+        batch_equal will be reset to True.
+        Default: True
+    """
+    Ndim = len(x.shape)
+    x_scale = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
+    if not(batch_equal) and (value is None):
+        batch_equal=True # speed up computation
+    if batch_equal or Ndim<3:
+        if value is None:
+            value = random.uniform(0.5, 2)
+        x_scale *= value
+    else:
+        for i in range(x_scale.shape[0]):
+            x_scale[i] = scaling(x[i], value, batch_equal)
+    return x_scale
 
     
 def random_slope_scale(x: "N-D Tensor of numpy Array",
@@ -387,17 +621,76 @@ def random_slope_scale(x: "N-D Tensor of numpy Array",
         x_new[...,1:] =  x[...,:-1] + x_diff_scaled
     
     return x_new    
-    
+
+
+def new_random_fft_phase_odd(n, to_torch_tensor: bool=False, device='cpu'):
+    if to_torch_tensor:
+        random_phase = 2j*np.pi*torch.rand((n-1)//2)
+        new_random_phase = torch.cat((torch.tensor([0.0]), random_phase, -torch.flipud(random_phase))).to(device=device)
+    else:
+        random_phase = 2j*np.pi*np.random.rand((n-1)//2)
+        new_random_phase = np.concatenate([[0.0], random_phase, -random_phase[::-1]])
+    return new_random_phase
+
+def new_random_fft_phase_even(n, to_torch_tensor: bool=False, device='cpu'):
+    if to_torch_tensor:
+        random_phase = 2j*np.pi*torch.rand(n//2-1)
+        new_random_phase = torch.cat((torch.tensor([0.0]), random_phase,
+                                      torch.tensor([0.0]), -torch.flipud(random_phase))).to(device=device)
+    else:
+        random_phase = 2j*np.pi*np.random.rand(n//2-1)
+        new_random_phase = np.concatenate([[0.0], random_phase, [0.0], -random_phase[::-1]])
+    return new_random_phase
+
+
+def random_FT_phase(x: "array like", 
+                    value: float=1,
+                    batch_equal: bool=True
+                   ):
+    """
+    random_FT_phase randomize the phase of all signals in tensor/array x.
+
+    Parameters
+    ----------
+    x: array like
+        Input array or tensor. Can be of any shape, but the last two dimensions must referres to EEG's Channel x Sample
+    value: float, optional
+        The magnitude of the phase perturbation. It must be a value between (0,1], which will be used to rescale the interval
+        [0, 2* 'pi'] in [0, value * 2 * 'pi']
+        Default: None
+    batch_equal:
+        Whether to apply the same perturbation on all signals or not. Note that all channels of the same records will be 
+        perturbed in the same way to preserve cross-channel correlations.
+    """
+    if value<=0 or value>1:
+        raise ValueError('value must be a float in range (0,1]')
+    Ndim = len(x.shape)
+    x_phase = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
+    if batch_equal or Ndim<3:
+        n = x.shape[-1]
+        if isinstance(x, torch.Tensor):
+            random_phase = new_random_fft_phase_even(n, True, x.device) if n%2==0 else new_random_fft_phase_odd(n, True, x.device)
+            FT_coeff= torch.fft.fft(x)
+            x_phase = torch.fft.ifft(FT_coeff*torch.exp(value*random_phase)).real
+        else:
+            random_phase = new_random_fft_phase_even(n) if n%2==0 else new_random_fft_phase_odd(n)
+            FT_coeff = fft.fft(x)
+            x_phase =  fft.ifft(FT_coeff*np.exp(value*random_phase)).real      
+    else:
+        for i in range(x_phase.shape[0]):
+            x_phase[i] = random_FT_phase(x[i], value, batch_equal)
+    return x_phase
+
     
     
 # ---- FILTERING -----
-def moving_avg(x, order: int=5, pad_mode: str='same'):
+def moving_avg(x, order: int=5):
     """
     
     moving_avg apply a moving average filter to the signal x.
     
     moving_avg apply a moving average filter to the last dimension of the array or Tensor x. The filter order
-    and padding strategy can be given as function argument.
+    and can be given as function argument.
     
     Parameters
     ----------
@@ -406,8 +699,6 @@ def moving_avg(x, order: int=5, pad_mode: str='same'):
     order: int, optional
         The order of the filter.
         Default: 5
-    pad_mode: str or int or tuple of int
-        The padding strategy. 
     """
     
     if isinstance(x, np.ndarray):
@@ -418,9 +709,9 @@ def moving_avg(x, order: int=5, pad_mode: str='same'):
         # call recursively to handle different dimensions (made to handle problem with torch conv2d)
         if Ndim>1:
             for i in range(x.shape[0]):
-                x_avg[i] = moving_avg(x[i], order=order, pad_mode=pad_mode)
+                x_avg[i] = moving_avg(x[i], order=order)
         else:
-            x_avg = np.convolve( x, filt, pad_mode)
+            x_avg = np.convolve( x, filt, 'same')
             
     else:
         Ndim = len(x.shape)
@@ -437,9 +728,9 @@ def moving_avg(x, order: int=5, pad_mode: str='same'):
         # call recursively if the dimension is larger than 4
         if Ndim > 4:
             for i in range(x.shape[0]):
-                x_avg[i] = moving_avg(x[i], order=order, pad_mode=pad_mode)
+                x_avg[i] = moving_avg(x[i], order=order)
         else:
-            x_avg = F.conv2d(x, filt, padding= pad_mode)
+            x_avg = F.conv2d(x, filt, padding= 'same')
             x_avg = torch.reshape(x_avg, x.shape)
 
     
@@ -504,10 +795,11 @@ def get_filter_coeff(Fs: float,
         Default: None
     """
     
-    if btype.lower() == 'bandpass':
+    if btype.lower() in ['bandpass', 'bandstop']:
         if eeg_band is not None:
             if eeg_band.lower() == 'delta':
-                Wp, Ws, rp, rs, btype = 4, 8, -20*np.log10(.95), -20*np.log10(.1), 'lowpass'
+                Wp, Ws, rp, rs = 4, 8, -20*np.log10(.95), -20*np.log10(.1)
+                btype = 'highpass' if btype.lower()=='bandstop' else 'lowpass'
             elif eeg_band.lower() == 'theta':
                 Wp, Ws, rp, rs = [4, 8], [0, 15], -20*np.log10(.95), -20*np.log10(.1)
             elif eeg_band.lower() == 'alpha':
@@ -515,21 +807,31 @@ def get_filter_coeff(Fs: float,
             elif eeg_band.lower() == 'beta':
                 Wp, Ws, rp, rs = [13, 30], [8, 40], -20*np.log10(.95), -20*np.log10(.15)
             elif eeg_band.lower() == 'gamma_low':
-                Wp, Ws, rp, rs = [30, 70], [22, 78], -20*np.log10(.95), -20*np.log10(.1)
+                if Fs>=78*2:
+                    Wp, Ws, rp, rs = [30, 70], [20, 80], -20*np.log10(.95), -20*np.log10(.1)
+                else:
+                    Wp, Ws, rp, rs = 30, 20, -20*np.log10(.95), -20*np.log10(.1)
+                    btype = 'lowpass' if btype.lower()=='bandstop' else 'highpass'
             elif eeg_band.lower() == 'gamma_high':
                 if Fs>=158*2:
-                    Wp, Ws, rp, rs = [70, 150], [62, 158], -20*np.log10(.95), -20*np.log10(.1)
+                    Wp, Ws, rp, rs = [70, 150], [60, 160], -20*np.log10(.95), -20*np.log10(.1)
                 else:
-                    Wp, Ws, rp, rs, btype = 70, 62, -20*np.log10(.95), -20*np.log10(.1), 'highpass'
+                    Wp, Ws, rp, rs = 70, 60, -20*np.log10(.95), -20*np.log10(.1)
+                    btype = 'lowpass' if btype.lower()=='bandstop' else 'highpass'
             elif eeg_band.lower() == 'gamma':
                 if Fs>=158*2:
-                    Wp, Ws, rp, rs = [30, 150], [22, 158], -20*np.log10(.95), -20*np.log10(.1)
+                    Wp, Ws, rp, rs = [30, 150], [20, 160], -20*np.log10(.95), -20*np.log10(.1)
                 else:
-                    Wp, Ws, rp, rs, btype = 30, 22, -20*np.log10(.95), -20*np.log10(.1), 'highpass'
+                    Wp, Ws, rp, rs, btype = 30, 20, -20*np.log10(.95), -20*np.log10(.1), 'highpass'
+                    btype = 'lowpass' if btype.lower()=='bandstop' else 'highpass'
             else:
                 message  = 'Brainwave \"',bandwidth[i], '\" not exist. \n'
                 message += 'Choose between delta, theta, alpha, beta, gamma, gamma_low, gamma_high'
                 raise ValueError(message)
+
+            if btype.lower() == 'bandstop':
+                # simply reverse bandpass and stopband
+                Wp, Ws = Ws, Wp
     
     Wp, Ws = np.array(Wp)/(Fs/2), np.array(Ws)/(Fs/2)
     if (order is None) or (Wn is None):
@@ -830,6 +1132,104 @@ def filter_bandpass(x: "array or tensor",
     else:
         return x_filt
 
+
+def filter_bandstop(x: "array or tensor",
+                    Fs: float,
+                    Wp: list[float]=None,
+                    Ws: list[float]=None,
+                    rp: float=-20*np.log10(.95), 
+                    rs: float=-20*np.log10(.05),
+                    filter_type: str='butter',
+                    order: int=None, 
+                    Wn: float=None,
+                    a: Union[np.ndarray,float]=None,
+                    b: Union[np.ndarray,float]=None,
+                    eeg_band: str=None,
+                    return_filter_coeff: bool=False
+                   ):
+    """
+    
+    filter_bandstop apply a bandstop filter on the last dimension of the given input x.
+    
+    filter_bandstop apply a designed bandstop filter on the last dimension of x. If a and b coefficient are not 
+    given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:
+                            (Wp,Ws,rp,rs) ----> (Wn, order) -----> (a,b). 
+    Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.
+    
+    If eeg_band are given, (Wp,Ws,rp,rs) are bypassed and instantiated according to the eeg band specified. The
+    priority order remain, so if (Wn,order) or (a,b) are given, filter is created according to such parameters.
+
+    NOTE 1: lots of parameters are the ones used to call scipy's matlab style filters, ASIDE TO 'Wp' and 'Ws' which
+    you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample 
+    (i.e. Nyquist frequency) is done directly inside the get_filter_coeff function.
+
+    NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid 
+    restrictive condition which can increase the order of the filter.
+    
+    Parameters
+    ----------
+    x: N-D array or Tensor
+        The element to filter
+    Fs: float
+        the sampling frequency in Hz
+    Wp: float, optional
+        bandpass in Hz.
+        Default: 30
+    Ws: float, optional
+        stopband in Hz
+        Default: 13
+    rp: float, optional
+        ripple at bandpass in decibel. 
+        Default: -20*log10(0.95)
+    rs: float, optional
+        ripple at stopband in decibel. 
+        Default: -20*log10(0.15)
+    filter_type: str, optional
+        which filter design. Accepted values are 'butter', 'ellip', 'cheby1', 'cheby2'
+        Default: 'butter'
+    order: int, optional
+        the order of the filter
+        Default: None
+    Wn: array_like, optional
+        the critical frequency or frequencies.
+        Default: None
+    a: array_like, optional
+        the denominator coefficient of the filter
+        Default: None
+    b: array_like, optional
+        the numerator coefficient of the filer
+        Default: None
+    eeg_band: str, optional
+        any of the possible EEG bands. Accepted values are "delta", "theta", "alpha", "beta", 
+        "gamma", "gamma_low", "gamma_high". Note: eeg_band bypass any Wp and Ws, if given
+        Default: None
+    return_filter_coeff: bool, optional
+        whether to return the filter coefficient or not
+        Default: False
+        
+    NOTE: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid 
+    restrictive condition which can increase the order of the filter.
+    """
+    
+    if filter_type not in ['butter', 'ellip', 'cheby1', 'cheby2']:
+        raise ValueError('filter type not supported. Choose between butter, elliptic, cheby1, cheby2')
+    
+    if (a is None) or (b is None):
+        b, a = get_filter_coeff(Fs=Fs, Wp = Wp, Ws = Ws, rp = rp, rs = rs, btype = 'bandstop', 
+                                filter_type = filter_type, order = order, Wn = Wn, eeg_band = eeg_band 
+                               )
+    print(b, a)    
+    if isinstance(x, np.ndarray):
+        x_filt = signal.filtfilt(b, a, x, padtype='constant' )  
+    else:
+        a= torch.from_numpy(a).to(dtype=x.dtype, device=x.device)
+        b= torch.from_numpy(b).to(dtype=x.dtype, device=x.device)
+        x_filt = filtfilt(x, a, b, clamp=False) 
+    
+    if return_filter_coeff:
+        return x_filt, b, a
+    else:
+        return x_filt
 
 # --- PERMUTATIONS ---
 def get_eeg_channel_network_names():
@@ -1682,6 +2082,56 @@ def masking(x: "N-D Tensor of numpy Array",
             x_masked[i]= masking(x[i], mask_number=mask_number, masked_ratio=masked_ratio, batch_equal=batch_equal)
     
     return x_masked
+
+def channel_dropout(x: "N-D Tensor of numpy Array",
+                    Nchan: int= None,
+                    batch_equal: bool=True
+                   ):
+    """
+    
+    channel_dropout put to 0 a given (or random) amount of channels selected at random.
+    
+    Given a N-D tensor or numpy array, where the last two dimensions refers to Channels x Samples,
+    channel_dropout will choose a random a subset of Channels based on Nchan and put them to 0.
+    
+    If batch_equal is set to True, the function will be called recursively producing a different
+    augmentation for each EEG in the tensor.
+    
+    Paramters
+    ---------
+    x: N-D Tensor or numpy array
+        Array or Tensor to augment. Last two dimensions must be Channels x Samples
+    Nchan: int, optional
+        Number of channels to drop. If not given, the number of channels is chosen at random in the 
+        interval [1, (Channel_total // 4) +1 ]
+        Defult: None
+    batch_equal: bool, optional
+        whether to apply the same channel drop to all EEG records or not.
+        Default: True
+        
+    """
+    
+    Ndim= len(x.shape)
+    x_drop = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
+    
+    if batch_equal or Ndim<3:
+        if Nchan is None:
+            Nchan = random.randint(1, (x.shape[-2]//4)+1)
+        else:
+            if Nchan > x.shape[-2]:
+                raise ValueError('Nchan can\'t be higher than the actual number' 
+                                 ' of channels in the given EEG')
+            else:
+                Nchan = int(Nchan)
+        drop_chan= np.random.permutation(x.shape[-2])[:Nchan]
+        if isinstance(x, torch.Tensor):
+            drop_chan= torch.from_numpy(drop_chan).to(device=x.device)
+        x_drop[...,drop_chan,:] = 0 
+    else:
+        for i in range(x.shape[0]):
+            x_drop[i] = channel_dropout(x[i], Nchan=Nchan, batch_equal=batch_equal)
+        
+    return x_drop
 
 
 def add_eeg_artifact(x,
