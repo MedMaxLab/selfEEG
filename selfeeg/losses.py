@@ -32,12 +32,13 @@ def SimCLR_loss(projections: torch.Tensor,
     https://doi.org/10.48550/arXiv.2002.05709
     
     To check the original tensorflow implementation visit the following repository:
-    https://github.com/google-research/simclr (look at the function add_contrastive_loss in objective.py)
+    https://github.com/google-research/simclr (look at the function add_contrastive_loss 
+    in objective.py)
 
     NOTE:
-    looking at some implementations (e.g. the one in lightlyAI), the returned loss seems to be double. However
-    the function add_contrastive_loss in the original repo return the same value as this implementation, so we 
-    preferred to keep it the same.
+    looking at some implementations (e.g. the one in lightlyAI), the returned loss seems to be double. 
+    However the function add_contrastive_loss in the original repo return the same value as this 
+    implementation, so we preferred to keep it the same.
     """
     if projections_norm:
         projections =  F.normalize(projections, p=2.0, dim=1) #L2 norm along first dimension
@@ -122,13 +123,17 @@ def Moco_loss(q: torch.Tensor,
         2-D (NxC) Tensor with the queries, i.e. one augmented batch predictor or projection_head output.
         N = batch size, C = number of features 
     k: torch.Tensor
-        2-D (NxC) Tensor with the keys, i.e. one augmented batch projection_head output which will be added 
-        to the memory bank. N = batch size, C = number of features 
+        2-D (NxC) Tensor with the keys, i.e. one augmented batch projection_head output which will be 
+        added to the memory bank. 
+        N = batch size 
+        C = number of features 
     queue:  torch.Tensor
-        2-D (CxK) Tensor with the memory bank, i.e. a collection of previous augmented batch projection_head outputs
-        which acts as negative samples. C = number of features, K = memory bank size
+        2-D (CxK) Tensor with the memory bank, i.e. a collection of previous augmented batch 
+        projection_head outputs which acts as negative samples. 
+        C = number of features 
+        K = memory bank size
     projections_norm: bool, optional
-        whether to normalize the projections or not
+        whether to normalize the projections or not.
         Default= True
     temperature: float, optional
         temperature coefficient of the NTX_ent loss. (See references to check loss formula)
@@ -141,7 +146,8 @@ def Moco_loss(q: torch.Tensor,
     https://doi.org/10.48550/arXiv.2002.05709
     
     To check the original tensorflow implementation visit the following repository:
-    https://github.com/google-research/simclr (look at the function add_contrastive_loss in objective.py)
+    https://github.com/google-research/simclr (look at the function add_contrastive_loss 
+    in objective.py)
     """
     
     N, C =q.shape

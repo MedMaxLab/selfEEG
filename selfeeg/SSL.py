@@ -1,6 +1,7 @@
 import os
 import copy
 import datetime
+import tqdm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -56,13 +57,12 @@ def fine_tune(model,
               lr_scheduler=None,
               EarlyStopper=None,
               validation_dataloader=None,
-              verbose=0,
+              verbose=True,
               device: str or torch.device=None,
-              validation_freq: int=1,
               return_loss_info: bool=False
              ):
     
-    if device==None:
+    if device is None:
         device=torch.device('cpu')
     else:
         if isinstance(device, str):
@@ -74,117 +74,125 @@ def fine_tune(model,
     model.to(device=device)
     
     if not( isinstance(train_dataloader, torch.utils.data.DataLoader)):
-        raise ValueError('Current implementation accept only training data as a pytorch DataLoader')
+        raise ValueError('Current implementation accept only training data'
+                         ' as a pytorch DataLoader')
     if not(isinstance(epochs, int)):
         epochs= int(epochs)
     if epochs<1:
         raise ValueError('epochs must be bigger than 1')
-    if optimizer==None:
+    if optimizer is None:
         optimizer=torch.optim.Adam(self.parameters())
-    if loss_func==None:
+    if loss_func is None:
         raise ValueError('loss function not given') 
     if not( isinstance(loss_args,list) or isinstance(loss_args,dict)):
-        raise ValueError('loss_args must be a list or a dict with all optional arguments of the loss function')
-    if verbose<0:
-        verbose=0
-    else:
-        freq_list=[9e9, 10, 5, 3, 2, 1]
-        verbose_freq= freq_list[min(int(verbose),5)]
-    if validation_freq<1:
-        raise ValueError('validation_freq must be >=1')
+        raise ValueError('loss_args must be a list or a dict with '
+                         'all optional arguments of the loss function')
     
     perform_validation=False
     if validation_dataloader!=None:
         if not( isinstance(validation_dataloader, torch.utils.data.DataLoader)):
-            raise ValueError('Current implementation accept only training data as a pytorch DataLoader')
+            raise ValueError('Current implementation accept only'
+                             ' validation data as a pytorch DataLoader')
         else:
             perform_validation=True
+    if EarlyStopper is not None:
+        if EarlyStopper.monitored=='validation' and not(perform_validation):
+            print('Early stopper monitoring is set to validation loss'
+                  ', but not validation data are given. '
+                  'Internally changing monitoring to training loss')
+            EarlyStopper.monitored = 'train'
 
     loss_info={i: [None, None] for i in range(epochs)}
+    N_train = len(train_dataloader)
+    N_val = 0 if validation_dataloader is None else len(validation_dataloader)
     for epoch in range(epochs):
-        train_losses=[]
-        val_losses=[]
+        print(f'epoch [{epoch+1:6>}/{epochs:6>}]')
+        
+        train_loss=0
+        val_loss=0
+        train_loss_tot=0
+        val_loss_tot=0
         
         if not(model.training):
             model.train()
-        
-        for batch_idx, (X, Ytrue) in enumerate(train_dataloader):
-            
-            optimizer.zero_grad()
-
-            if X.device.type!=device.type:
-                X = X.to(device=device)
-                Ytrue = Ytrue.to(device=device)
-            if augmenter != None:
-                X = augmenter(X)
-            if label_encoder != None:
-                Ytrue= label_encoder(Ytrue) + 0.
+        with tqdm.tqdm(total=N_train+N_val, ncols=100, 
+                       bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
+                       ' [{rate_fmt}{postfix}]',
+                       disable=not(verbose), unit=' Batch') as pbar:
+            for batch_idx, (X, Ytrue) in enumerate(train_dataloader):
+                
+                optimizer.zero_grad()
+                if X.device.type!=device.type:
+                    X = X.to(device=device)
+                if augmenter is not None:
+                    X = augmenter(X)
+                if label_encoder is not None:
+                    Ytrue= label_encoder(Ytrue)
                 if Ytrue.device.type!=device.type:
                     Ytrue = Ytrue.to(device=device)                
+                
+                Yhat = model(X)
+                train_loss = evaluateLoss( loss_func, [Yhat , Ytrue], loss_args )
+    
+                train_loss.backward()
+                optimizer.step()
+                train_loss_tot += train_loss.item()
+                # verbose print
+                if verbose:
+                    pbar.set_description(f" train {batch_idx+1:8<}/{len(train_dataloader):8>}")
+                    pbar.set_postfix_str(f"train_loss={train_loss_tot/(batch_idx+1):.5f}, val_loss={val_loss_tot:.5f}")
+                    pbar.update()        
+            train_loss_tot /= (batch_idx+1)
+    
+            if lr_scheduler!=None:
+                lr_scheduler.step()
             
-            Yhat = model(X)
-            train_loss = evaluateLoss( loss_func, [Yhat , Ytrue], loss_args )
-
-            train_loss.backward()
-            optimizer.step()
-            train_losses.append(train_loss.item())
-            # verbose print
-            if verbose>0:
-                if batch_idx % verbose_freq == 0:
-                    print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                        epoch+1, (batch_idx+1) * train_dataloader.batch_size, len(train_dataloader.dataset),
-                        100. * (batch_idx+1) / len(train_dataloader), train_loss.item()))
-
-        if lr_scheduler!=None:
-            lr_scheduler.step()
-        
-        # Perform validation if validation dataloader were given
-        if perform_validation and ((epoch % validation_freq) == 0):
-            model.eval()
-            with torch.no_grad():
-                val_loss=0
-                val_loss_tot=0
-                for batch_idx, (X, Ytrue) in enumerate(validation_dataloader):
-                    
-                    if X.device.type!=device.type:
-                        X = X.to(device=device)
-                        Ytrue = Ytrue.to(device=device)
-                    if label_encoder != None:
-                        Ytrue= label_encoder(Ytrue) + 0.
+            # Perform validation if validation dataloader were given
+            if perform_validation:
+                model.eval()
+                with torch.no_grad():
+                    val_loss=0
+                    for batch_idx, (X, Ytrue) in enumerate(validation_dataloader):
+                        
+                        if X.device.type!=device.type:
+                            X = X.to(device=device)
+                        if label_encoder != None:
+                            Ytrue= label_encoder(Ytrue)
                         if Ytrue.device.type!=device.type:
                             Ytrue = Ytrue.to(device=device) 
-                                
-                    Yhat = model(X)
-                    val_loss = evaluateLoss( loss_func, [Yhat, Ytrue + 0.], loss_args )
-                    val_loss_tot += val_loss
-                
-                val_loss_tot /= len(validation_dataloader)
-                print(' -------------------------------------------------------------')
-                print(' ----------- VALIDATION LOSS AT EPOCH {}: {:.6f} ------------'.format(
-                    epoch+1, val_loss_tot.item()))
-                print(' -------------------------------------------------------------')
-                val_losses.append(val_loss_tot.item())
-                
-                # Deal with earlystopper if given
-                if EarlyStopper!=None:
-                    updated_mdl=False
-                    EarlyStopper.early_stop(val_loss_tot)
-                    if EarlyStopper.record_best_weights:
-                        if EarlyStopper.best_loss==val_loss_tot:
-                            EarlyStopper.rec_best_weights(model)
-                            updated_mdl=True
-                    if EarlyStopper():
-                        print('no improvement after {} epochs. Training stopped.'.format(
-                            EarlyStopper.patience*validation_freq))
-                        if EarlyStopper.record_best_weights and not(updated_mdl):
-                            EarlyStopper.restore_best_weights(model)
-                        if return_loss_info:
-                            return loss_info
-                        else:
-                            return
+                                    
+                        Yhat = model(X)
+                        val_loss = evaluateLoss( loss_func, [Yhat, Ytrue], loss_args )
+                        val_loss_tot += val_loss
+                        if verbose:
+                            pbar.set_description(f"   val {batch_idx+1:8<}/{len(validation_dataloader):8>}")
+                            pbar.set_postfix_str(f"train_loss={train_loss_tot:.5f}, val_loss={val_loss_tot/(batch_idx+1):.5f}")
+                            pbar.update()
+                    
+                    val_loss_tot /= (batch_idx+1)
+                    
+                    
+        # Deal with earlystopper if given
+        if EarlyStopper!=None:
+            updated_mdl=False
+            curr_monitored = val_loss_tot if EarlyStopper.monitored=='validation' else train_loss_tot
+            EarlyStopper.early_stop(curr_monitored)
+            if EarlyStopper.record_best_weights:
+                if EarlyStopper.best_loss==curr_monitored:
+                    EarlyStopper.rec_best_weights(model)
+                    updated_mdl=True
+            if EarlyStopper():
+                print('no improvement after {} epochs. Training stopped.'.format(
+                    EarlyStopper.patience))
+                if EarlyStopper.record_best_weights and not(updated_mdl):
+                    EarlyStopper.restore_best_weights(model)
+                if return_loss_info:
+                    return loss_info
+                else:
+                    return
         
         if return_loss_info:
-            loss_info[epoch]=[train_losses, val_losses]        
+            loss_info[epoch]=[train_loss_tot, val_loss_tot]        
     if return_loss_info:
         return loss_info
 
@@ -245,7 +253,8 @@ class EarlyStopping:
     
     def early_stop(self, loss, count_add=1):
         
-        # The function can be compressed with a big if. This expansion is faster and better understandable
+        # The function can be compressed with a big if. 
+        #This expansion is faster and better understandable
         if self.improvement=='decrease':
             #Check if current loss is better than recorded best loss
             if loss < (self.best_loss - self.min_delta):
@@ -272,6 +281,10 @@ class EarlyStopping:
     def restore_best_weights(self, model):
         model.to(device='cpu')
         model.load_state_dict(self.best_model)
+
+    def reset_counter(self):
+        self.counter=0
+        self.earlystop= False
         
 
 
@@ -282,7 +295,6 @@ class SSL_Base(nn.Module):
     """
     
     def __init__(self, encoder: nn.Module):
-        
         super(SSL_Base, self).__init__()
         self.encoder = encoder
         
@@ -395,15 +407,14 @@ class SimCLR(SSL_Base):
             lr_scheduler=None,
             EarlyStopper=None,
             validation_dataloader=None,
-            verbose=0,
+            verbose=True,
             device: str or torch.device=None,
-            validation_freq: int=1,
             cat_augmentations: bool=False,
             return_loss_info: bool=False
            ):
         
         # Various check on input parameters. If some arguments weren't given
-        if device==None:
+        if device is None:
             # If device is None cannot assume if the model is on gpu and so if to send the batch
             # on other device, so cpu will be used. If model is sent to another device set the 
             # device attribute with a proper string or torch device
@@ -418,118 +429,131 @@ class SimCLR(SSL_Base):
         self.to(device=device)
         
         if not( isinstance(train_dataloader, torch.utils.data.DataLoader)):
-            raise ValueError('Current implementation accept only training data as a pytorch DataLoader')
+            raise ValueError('Current implementation accept only training data'
+                             ' as a pytorch DataLoader')
         if not(isinstance(epochs, int)):
             epochs= int(epochs)
         if epochs<1:
             raise ValueError('epochs must be bigger than 1')
-        if optimizer==None:
+        if optimizer is None:
             optimizer=torch.optim.Adam(self.parameters())
-        if augmenter==None:
+        if augmenter is None:
             print('augmenter not given. Using a basic one with with flip + random noise')
             augmenter=Default_augmentation
-        if loss_func==None:
+        if loss_func is None:
             print('Use base SimCLR loss')
             loss_func=Loss.SimCLR_loss   
         if not( isinstance(loss_args,list) or isinstance(loss_args,dict) or loss_args==None):
-            raise ValueError('loss_args must be a list or a dict with all optional arguments of the loss function')
-        if verbose<0:
-            verbose=0
-        else:
-            freq_list=[9e9, 10, 5, 3, 2, 1]
-            verbose_freq= freq_list[min(int(verbose),5)]
-        if validation_freq<1:
-            raise ValueError('validation_freq must be >=1')
+            raise ValueError('loss_args must be a list or a dict with all'
+                             ' optional arguments of the loss function')
         perform_validation=False
         if validation_dataloader!=None:
             if not( isinstance(validation_dataloader, torch.utils.data.DataLoader)):
-                raise ValueError('Current implementation accept only training data as a pytorch DataLoader')
+                raise ValueError('Current implementation accept only '
+                                 'training data as a pytorch DataLoader')
             else:
                 perform_validation=True
-
+        
+        if EarlyStopper is not None:
+            if EarlyStopper.monitored=='validation' and not(perform_validation):
+                print('Early stopper monitoring is set to validation loss'
+                      ', but not validation data are given. '
+                      'Internally changing monitoring to training loss')
+                EarlyStopper.monitored = 'train'
+    
         loss_info={i: [None, None] for i in range(epochs)}
+        N_train = len(train_dataloader)
+        N_val = 0 if validation_dataloader is None else len(validation_dataloader)
         for epoch in range(epochs):
-            train_losses=[]
-            val_losses=[]
+            print(f'epoch [{epoch+1:6>}/{epochs:6>}]')
+        
+            train_loss=0
+            val_loss=0
+            train_loss_tot=0
+            val_loss_tot=0
             
             if not(self.training):
                 self.train()
-            
-            for batch_idx, X in enumerate(train_dataloader):
-                
-                optimizer.zero_grad()
 
-                if X.device.type!=device.type:
-                    X = X.to(device=device)
-
-                data_aug1 = augmenter(X)
-                data_aug2 = augmenter(X)
-                
-                if cat_augmentations:
-                    data_aug = torch.cat((data_aug1, data_aug2))
-                    z = self(data_aug)
-                    train_loss = self.evaluate_loss(loss_func, z, loss_args )
-                else:
-                    z1 = self(data_aug1)
-                    z2 = self(data_aug2)
-                    train_loss = self.evaluate_loss(loss_func, torch.cat((z1,z2)), loss_args )
-
-                train_loss.backward()
-                optimizer.step()
-                train_losses.append(train_loss.item())
-                # verbose print
-                if verbose>0:
-                    if batch_idx % verbose_freq == 0:
-                        print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                            epoch+1, (batch_idx+1) * train_dataloader.batch_size, len(train_dataloader.dataset),
-                            100. * (batch_idx+1) / len(train_dataloader), train_loss.item()))
-
-            if lr_scheduler!=None:
-                lr_scheduler.step()
-            
-            # Perform validation if validation dataloader were given
-            if perform_validation and ((epoch % validation_freq) == 0):
-                self.eval()
-                with torch.no_grad():
-                    val_loss=0
-                    val_loss_tot=0
-                    for batch_idx, X in enumerate(validation_dataloader):
-                        
-                        if X.device.type!=device.type:
-                            X = X.to(device=device)
-
-                        data_aug = torch.cat((augmenter(X), augmenter(X)), dim=0 )
+            with tqdm.tqdm(total=N_train+N_val, ncols=100, 
+                       bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
+                       ' [{rate_fmt}{postfix}]',
+                       disable=not(verbose), unit=' Batch') as pbar:
+                for batch_idx, X in enumerate(train_dataloader):
+                    
+                    optimizer.zero_grad()
+    
+                    if X.device.type!=device.type:
+                        X = X.to(device=device)
+    
+                    data_aug1 = augmenter(X)
+                    data_aug2 = augmenter(X)
+                    
+                    if cat_augmentations:
+                        data_aug = torch.cat((data_aug1, data_aug2))
                         z = self(data_aug)
-                        val_loss = self.evaluate_loss(loss_func, z, loss_args )
-                        val_loss_tot += val_loss
+                        train_loss = self.evaluate_loss(loss_func, z, loss_args )
+                    else:
+                        z1 = self(data_aug1)
+                        z2 = self(data_aug2)
+                        train_loss = self.evaluate_loss(loss_func, torch.cat((z1,z2)), loss_args )
+    
+                    train_loss.backward()
+                    optimizer.step()
+                    train_loss_tot += train_loss.item()
+                    # verbose print
+                    if verbose:
+                        pbar.set_description(f" train {batch_idx+1:8<}/{len(train_dataloader):8>}")
+                        pbar.set_postfix_str(f"train_loss={train_loss_tot/(batch_idx+1):.5f}, val_loss={val_loss_tot:.5f}")
+                        pbar.update()        
+                train_loss_tot /= (batch_idx+1)
+    
+                if lr_scheduler!=None:
+                    lr_scheduler.step()
+                
+                # Perform validation if validation dataloader were given
+                if perform_validation:
+                    self.eval()
+                    with torch.no_grad():
+                        val_loss=0
+                        val_loss_tot=0
+                        for batch_idx, X in enumerate(validation_dataloader):
+                            
+                            if X.device.type!=device.type:
+                                X = X.to(device=device)
+    
+                            data_aug = torch.cat((augmenter(X), augmenter(X)), dim=0 )
+                            z = self(data_aug)
+                            val_loss = self.evaluate_loss(loss_func, z, loss_args )
+                            val_loss_tot += val_loss
+                            if verbose:
+                                pbar.set_description(f"   val {batch_idx+1:8<}/{len(validation_dataloader):8>}")
+                                pbar.set_postfix_str(f"train_loss={train_loss_tot:.5f}, val_loss={val_loss_tot/(batch_idx+1):.5f}")
+                                pbar.update()
+                        
+                        val_loss_tot /= (batch_idx+1)
                     
-                    val_loss_tot /= len(validation_dataloader)
-                    print(' -------------------------------------------------------------')
-                    print(' ----------- VALIDATION LOSS AT EPOCH {}: {:.6f} ------------'.format(
-                        epoch+1, val_loss_tot.item()))
-                    print(' -------------------------------------------------------------')
-                    val_losses.append(val_loss_tot.item())
-                    
-                    # Deal with earlystopper if given
-                    if EarlyStopper!=None:
-                        updated_mdl=False
-                        EarlyStopper.early_stop(val_loss_tot)
-                        if EarlyStopper.record_best_weights:
-                            if EarlyStopper.best_loss==val_loss_tot:
-                                EarlyStopper.rec_best_weights(self)
-                                updated_mdl=True
-                        if EarlyStopper():
-                            print('no improvement after {} epochs. Training stopped.'.format(
-                                EarlyStopper.patience*validation_freq))
-                            if EarlyStopper.record_best_weights and not(updated_mdl):
-                                EarlyStopper.restore_best_weights(self)
-                            if return_loss_info:
-                                return loss_info
-                            else:
-                                return
+            # Deal with earlystopper if given
+            if EarlyStopper!=None:
+                updated_mdl=False
+                curr_monitored = val_loss_tot if EarlyStopper.monitored=='validation' else train_loss_tot
+                EarlyStopper.early_stop(curr_monitored)
+                if EarlyStopper.record_best_weights:
+                    if EarlyStopper.best_loss==curr_monitored:
+                        EarlyStopper.rec_best_weights(self)
+                        updated_mdl=True
+                if EarlyStopper():
+                    print('no improvement after {} epochs. Training stopped.'.format(
+                        EarlyStopper.patience))
+                    if EarlyStopper.record_best_weights and not(updated_mdl):
+                        EarlyStopper.restore_best_weights(self)
+                    if return_loss_info:
+                        return loss_info
+                    else:
+                        return
             
             if return_loss_info:
-                loss_info[epoch]=[train_losses, val_losses]        
+                loss_info[epoch]=[train_loss_tot, val_loss_tot]        
         if return_loss_info:
             return loss_info
                     
@@ -540,7 +564,7 @@ class SimCLR(SSL_Base):
              augmenter=None,
              loss_func: 'function'= None, 
              loss_args: list or dict=[],
-             verbose: int=0,
+             verbose: bool=True,
              device: str=None
             ):
         if device==None:
@@ -557,49 +581,45 @@ class SimCLR(SSL_Base):
                 raise ValueError('device must be a string or a torch.device instance')
         self.to(device=device)
         if not( isinstance(test_dataloader, torch.utils.data.DataLoader)):
-            raise ValueError('Current implementation accept only training data as a pytorch DataLoader')
+            raise ValueError('Current implementation accept only test data'
+                             ' as a pytorch DataLoader')
         if augmenter==None:
             print('augmenter not given. Using a basic one with with flip + random noise')
             augmenter=Default_augmentation
         if loss_func==None:
             loss_func=Loss.SimCLR_loss   
         if not( isinstance(loss_args,list) or isinstance(loss_args,dict) or loss_args==None):
-            raise ValueError('loss_args must be a list or a dict with all optional arguments of the loss function')
-        if verbose<0:
-            verbose=0
-        else:
-            freq_list=[1e9, 10, 5, 3, 2, 1]
-            verbose_freq= freq_list[min(int(verbose),5)]
+            raise ValueError('loss_args must be a list or a dict with all optional'
+                             ' arguments of the loss function')
         
         self.eval()
         with torch.no_grad():
             test_loss=0
             test_loss_tot=0
-            for batch_idx, X in enumerate(test_dataloader):
-                
-                if X.device.type!=device.type:
-                    X = X.to(device=device)
-
-                # two forward may be slower but uses less memory
-                data_aug1 = augmenter(X)
-                z1 = self(data_aug1)
-                data_aug2 = augmenter(X)
-                z2 = self(data_aug2)
-                test_loss = self.evaluate_loss(loss_func, torch.cat((z1,z2)), loss_args )
-                test_loss_tot += test_loss   
-                # verbose print
-                if verbose>0:
-                    if batch_idx % verbose_freq == 0:
-                        print('Test loss :{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                            (batch_idx+1) * len(test_dataloader), len(test_dataloader.dataset),
-                            100. * (batch_idx+1) / len(test_dataloader), test_loss.item()))
-                        
-
-            test_loss_tot /= len(test_dataloader)
-            if verbose>0:
-                print(' -------------------------------------------------------------')
-                print(' -----------    TEST LOSS AT EPOCH: {:.6f}    ------------'.format(test_loss_tot.item()))
-                print(' -------------------------------------------------------------')
+            with tqdm.tqdm(total=len(test_dataloader), ncols=100, 
+                           bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
+                           ' [{rate_fmt}{postfix}]',
+                           disable=not(verbose), unit=' Batch') as pbar:
+                for batch_idx, X in enumerate(test_dataloader):
+                    
+                    if X.device.type!=device.type:
+                        X = X.to(device=device)
+    
+                    # two forward may be slower but uses less memory
+                    data_aug1 = augmenter(X)
+                    z1 = self(data_aug1)
+                    data_aug2 = augmenter(X)
+                    z2 = self(data_aug2)
+                    test_loss = self.evaluate_loss(loss_func, torch.cat((z1,z2)), loss_args )
+                    test_loss_tot += test_loss   
+                    # verbose print
+                    if verbose:
+                        pbar.set_description(f"   test {batch_idx+1:8<}/{len(test_dataloader):8>}")
+                        pbar.set_postfix_str(f"test_loss={test_loss_tot/(batch_idx+1):.5f}")
+                        pbar.update()
+                            
+    
+                test_loss_tot /= (batch_idx+1)
         return test_loss_tot
     
     

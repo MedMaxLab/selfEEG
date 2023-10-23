@@ -1,17 +1,22 @@
 import math
 import random
 import inspect
-import time
-from typing import Any, Callable, Iterable, TypeVar, Generic, Sequence, List, Dict, Optional, Union
+
 import numpy as np
 import pandas as pd
+
 from scipy.io import loadmat
 from scipy import signal
 from scipy import interpolate
 from scipy import fft
+
 import torch
 import torch.nn.functional as F
 from torchaudio.functional import lfilter, filtfilt
+
+from typing import Any, Callable, Iterable, TypeVar, Generic, Sequence, List, Dict, Optional, Union
+
+from .utils import torch_pchip
 
 __all__ = ['identity',
            'shift_vertical', 'shift_horizontal', 'shift_frequency'
@@ -21,7 +26,7 @@ __all__ = ['identity',
            'moving_avg', 'filter_lowpass', 'filter_highpass', 'filter_bandpass', 'filter_bandstop',
            'get_eeg_channel_network_names', 'get_channel_map_and_networks', 
            'permute_channels', 'permutation_signal', 
-           'torch_pchip', 'warp_signal', 'crop_and_resize', 
+           'warp_signal', 'crop_and_resize', 
            'change_ref', 
            'masking', 'channel_dropout',
            'StaticSingleAug', 'DynamicSingleAug', 'SequentialAug'
@@ -1569,127 +1574,6 @@ def permutation_signal(x,
     
 
 # --- CROP AND RESIZE ---
-def torch_pchip(x: "1D Tensor", 
-                y: "ND Tensor", 
-                xv: "1D Tensor",
-                save_memory: bool=True,
-                new_y_max_numel: int=4194304
-               ):
-    """
-    
-    torch_pchip perform pchip interpolation on the last dimension of the input tensor y.
-    
-    This function is a pytorch adaptation of the scipy's pchip_interpolate. It performs sp-pchip interpolation
-    (Shape Preserving Piecewise Cubic Hermite Interpolating Polynomial) on the last dimension of the y tensor.
-    x is the original time grid and xv new virtual grid. So, the new values of y at time xv are given by the 
-    polynomials evaluated at the time grid x.
-    
-    Parameter
-    ---------
-    
-    x: 1D Tensor
-        Tensor with the original time grid. Must be the same length as the last dimension of y
-    y: ND Tensor
-        Tensor to interpolate. The last dimension must have the signals to interpolate
-    xv: 1D Tensor
-        Tensor with the new virtual grid, i.e. the time points where to interpolate
-    save_memory: bool, optional
-        whether to perform the interpolation on subsets of the y tensor by recursively function calls or not.
-        Does not apply if y is a 1-D tensor. If set to False memory usage can drastically increase 
-        (for example with a 128 MB tensor, the memory usage of the function is 1.2 GB), but in some devices 
-        it can speed up the process. However, this is not the case for all devices and performance may increase
-        (see example below run on an old computer).
-        Default: True
-    new_y_max_numel: int, optional
-        The number of elements which the tensor needs to surpass to make the function starting recursive calls.
-        It can be considered as an indicator of the maximum allowed memory usage since slower the number, slower
-        the memory used. 
-        Default: 256*1024*16 (approximately 16s of recording of a 256 Channel EEG sampled at 1024 Hz)
-    
-    
-    Some technical information and difference with other interpolation:
-        https://blogs.mathworks.com/cleve/2012/07/16/splines-and-pchips/
-        https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.PchipInterpolator.html
-    Some parts of the code are inspired from: 
-        https://github.com/scipy/scipy/blob/v1.10.1/scipy/interpolate/_cubic.py#L157-L302
-    
-    Example
-    -------
-    # result on my (old) computer with a 4D tensor/array with dim (1024,1,96,512) and xv with dim (1024,)
-    #         torch_pchip no save memory | torch_pchip save memory | scipy pchip_interpolate
-    #                   15.48s                     5.33s                     21.96s
-    
-    """
-    
-    if len(x.shape)!= 1:
-        raise ValueError(['Expected 1D Tensor for x but received a ', str(len(x.shape)), '-D Tensor']) 
-    if len(xv.shape)!= 1:
-        raise ValueError(['Expected 1D Tensor for xv but received a ', str(len(xv.shape)), '-D Tensor'])
-    if x.shape[0] != y.shape[-1]:
-        raise ValueError('x must have the same length than the last dimension of y')
-
-    # Initialize the new interpolated tensor
-    Ndim=len(y.shape)
-    new_y=torch.empty(( *y.shape[:(Ndim-1)], xv.shape[0]), device=y.device)
-    
-    # If save_memory and the new Tensor size is huge, call recursively for each element in the first dimension 
-    if save_memory:
-        if Ndim>1:
-            if ((torch.numel(y)/y.shape[-1])*xv.shape[0])>new_y_max_numel:
-                for i in range(new_y.shape[0]):
-                    new_y[i] = torch_pchip(x, y[i], xv)
-                return new_y
-    
-    
-    # This is a common part for every channel
-    if x.device.type=='mps' or xv.device.type=='mps':
-        # torch bucketize is not already implemented in mps unfortunately
-        # need to pass in cpu and return to mps. Note that this is very slow
-        # like 500 times slower. But at least it doesn't throw an error 
-        bucket=torch.bucketize(xv.to(device='cpu'), x.to(device='cpu')) -1
-        bucket= bucket.to(device=x.device)
-    else:
-        bucket = torch.bucketize(xv, x) -1
-    bucket = torch.clamp(bucket, 0, x.shape[0]-2)
-    tv_minus = (xv - x[bucket]).unsqueeze(1)
-    infer_tv = torch.cat(( tv_minus**3, tv_minus**2, tv_minus, torch.ones(tv_minus.shape, device=tv_minus.device)), 1) 
-    
-    h = (x[1:]-x[:-1])
-    Delta = (y[...,1:] - y[...,:-1]) /h
-    k = (torch.sign(Delta[...,:-1]*Delta[...,1:]) > 0)
-    w1 = 2*h[1:] + h[:-1]
-    w2 = h[1:] + 2*h[:-1]
-    whmean = (w1/Delta[...,:-1] + w2/Delta[...,1:]) / (w1 + w2)
-    
-    slope = torch.zeros(y.shape, device=y.device)
-    slope[...,1:-1][k] = whmean[k].reciprocal()
-
-    slope[...,0] = ((2*h[0]+h[1])*Delta[...,0] - h[0]*Delta[...,1])/(h[0]+h[1])
-    slope_cond = torch.sign(slope[...,0]) != torch.sign(Delta[...,0])
-    slope[...,0][slope_cond] = 0
-    slope_cond = torch.logical_and( torch.sign(Delta[...,0]) != torch.sign(Delta[...,1]), 
-                                   torch.abs(slope[...,0]) > torch.abs(3*Delta[...,0]) )
-    slope[...,0][ slope_cond ] = 3*Delta[...,0][slope_cond]
-    
-    slope[...,-1] = ((2*h[-1]+h[-2])*Delta[...,-1] - h[-1]*Delta[...,-2])/(h[-1]+h[-2])
-    slope_cond = torch.sign(slope[...,-1]) != torch.sign(Delta[...,-1])
-    slope[...,-1][ slope_cond ] = 0
-    slope_cond = torch.logical_and( torch.sign(Delta[...,-1]) != torch.sign(Delta[...,-1]), 
-                                   torch.abs(slope[...,-1]) > torch.abs(3*Delta[...,1]) )
-    slope[...,-1][ slope_cond ] = 3*Delta[...,-1][slope_cond]
-
-
-    t = (slope[...,:-1] + slope[...,1:] - Delta - Delta)  / h 
-    a = ( t )/ h
-    b = (Delta - slope[...,:-1]) / h - t
-    
-    
-
-    py_coef = torch.stack((a, b, slope[...,:-1], y[...,:-1]),-1)
-    new_y = (py_coef[...,bucket,:] * infer_tv ).sum(axis=-1)
-    return new_y
-
-
 def warp_signal(x,
                 segments: int=10,
                 stretch_strength: float=2.,
@@ -1771,20 +1655,26 @@ def warp_signal(x,
                 new_piece_dim = int(np.ceil(piece.shape[-1] * squeeze_strength))
 
             if isinstance(x, np.ndarray):
-                warped_piece = interpolate.pchip_interpolate(np.linspace(0, seglen-1, piece.shape[-1]), piece, 
-                                                             np.linspace(0, seglen-1, new_piece_dim), axis=-1)
+                warped_piece = interpolate.pchip_interpolate(np.linspace(0, seglen-1, 
+                                                                         piece.shape[-1]), piece, 
+                                                             np.linspace(0, seglen-1, new_piece_dim), 
+                                                             axis=-1)
             else:
-                warped_piece = torch_pchip( torch.linspace(0, seglen-1, piece.shape[-1], device=x.device), 
+                warped_piece = torch_pchip( torch.linspace(0, seglen-1, piece.shape[-1],
+                                                           device=x.device), 
                                             piece, 
-                                            torch.linspace(0, seglen-1, new_piece_dim, device=x.device))
+                                            torch.linspace(0, seglen-1, new_piece_dim,
+                                                           device=x.device))
 
             x_warped[..., idx_cnt : idx_cnt+new_piece_dim]=warped_piece
             idx_cnt += new_piece_dim
             
         # resample x_warped to fit original size
         if isinstance(x_warped, np.ndarray):
-            x_warped_final = interpolate.pchip_interpolate(np.linspace(0, warped_len-1, warped_len), x_warped, 
-                                                             np.linspace(0, warped_len-1, x.shape[-1]), axis=-1)
+            x_warped_final = interpolate.pchip_interpolate(np.linspace(0, warped_len-1, warped_len), 
+                                                           x_warped, 
+                                                             np.linspace(0, warped_len-1, 
+                                                                         x.shape[-1]), axis=-1)
         else:
             x_warped_final = torch_pchip(torch.linspace(0, warped_len-1, warped_len, device=x.device), 
                                          x_warped, 
