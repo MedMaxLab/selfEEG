@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>filter_bandpass &mdash; SelfEEG 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SelfEEG
+          </a>
+              <div class="version">
+                0.0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">selfeeg</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SelfEEG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">filter_bandpass</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/selfeeg.augmentation.functional.filter_bandpass.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="filter-bandpass">
+<h1>filter_bandpass<a class="headerlink" href="#filter-bandpass" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.filter_bandpass">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">filter_bandpass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span> <span class="pre">or</span> <span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ws</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.4455278942230451</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">26.020599913279625</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'butter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eeg_band</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_filter_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/selfeeg/augmentation/functional.html#filter_bandpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.filter_bandpass" title="Permalink to this definition"></a></dt>
+<dd><p>filter_bandpass apply a bandpass filter on the last dimension of the given input x.</p>
+<p>filter_bandpass apply a designed bandpass filter on the last dimension of x. If a and b coefficient are not
+given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:</p>
+<blockquote>
+<div><p>(Wp,Ws,rp,rs) —-&gt; (Wn, order) —–&gt; (a,b).</p>
+</div></blockquote>
+<p>Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.</p>
+<p>If eeg_band are given, (Wp,Ws,rp,rs) are bypassed and instantiated according to the eeg band specified. The
+priority order remain, so if (Wn,order) or (a,b) are given, filter is created according to the described priority
+order</p>
+<p>NOTE 1: lots of parameters are the ones used to call scipy’s matlab style filters, ASIDE TO ‘Wp’ and ‘Ws’ which
+you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample
+(i.e. Nyquist frequency) is done directly inside the get_filter_coeff function</p>
+<p>NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid
+restrictive condition which can increase the order of the filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D array</em><em> or </em><em>Tensor</em>) – The element to filter</p></li>
+<li><p><strong>Fs</strong> (<em>float</em>) – the sampling frequency in Hz</p></li>
+<li><p><strong>Wp</strong> (<em>float</em><em>, </em><em>optional</em>) – bandpass in Hz.
+Default: 30</p></li>
+<li><p><strong>Ws</strong> (<em>float</em><em>, </em><em>optional</em>) – stopband in Hz
+Default: 13</p></li>
+<li><p><strong>rp</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at bandpass in decibel.
+Default: -20*log10(0.95)</p></li>
+<li><p><strong>rs</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at stopband in decibel.
+Default: -20*log10(0.15)</p></li>
+<li><p><strong>filter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – which filter design. Accepted values are ‘butter’, ‘ellip’, ‘cheby1’, ‘cheby2’
+Default: ‘butter’</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – the order of the filter
+Default: None</p></li>
+<li><p><strong>Wn</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the critical frequency or frequencies.
+Default: None</p></li>
+<li><p><strong>a</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the denominator coefficient of the filter
+Default: None</p></li>
+<li><p><strong>b</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the numerator coefficient of the filer
+Default: None</p></li>
+<li><p><strong>eeg_band</strong> (<em>str</em><em>, </em><em>optional</em>) – any of the possible EEG bands. Accepted values are “delta”, “theta”, “alpha”, “beta”,
+“gamma”, “gamma_low”, “gamma_high”. Note: eeg_band bypass any Wp and Ws, if given
+Default: None</p></li>
+<li><p><strong>return_filter_coeff</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the filter coefficient or not
+Default: False</p></li>
+<li><p><strong>NOTE</strong> (<em>pytorch filtfilt works differently on edges and is pretty unstable with high order filters</em><em>, </em><em>so avoid</em>) – </p></li>
+<li><p><strong>filter.</strong> (<em>restrictive condition which can increase the order of the</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MedMax Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

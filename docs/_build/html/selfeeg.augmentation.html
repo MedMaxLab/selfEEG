@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>selfeeg.augmentation package &mdash; SelfEEG 0.0.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="selfeeg.dataloading package" href="selfeeg.dataloading.html" />
+    <link rel="prev" title="selfeeg package" href="selfeeg.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SelfEEG
+          </a>
+              <div class="version">
+                0.0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">selfeeg</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="selfeeg.html">selfeeg package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="selfeeg.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">selfeeg.augmentation package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="selfeeg.dataloading.html">selfeeg.dataloading package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="selfeeg.losses.html">selfeeg.losses package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="selfeeg.models.html">selfeeg.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="selfeeg.ssl.html">selfeeg.ssl package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="selfeeg.utils.html">selfeeg.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="selfeeg.html#module-selfeeg">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SelfEEG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">selfeeg</a></li>
+          <li class="breadcrumb-item"><a href="selfeeg.html">selfeeg package</a></li>
+      <li class="breadcrumb-item active">selfeeg.augmentation package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/selfeeg.augmentation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="selfeeg-augmentation-package">
+<h1>selfeeg.augmentation package<a class="headerlink" href="#selfeeg-augmentation-package" title="Permalink to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
+</section>
+<section id="module-selfeeg.augmentation.compose">
+<span id="selfeeg-augmentation-compose-module"></span><h2>selfeeg.augmentation.compose module<a class="headerlink" href="#module-selfeeg.augmentation.compose" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="selfeeg.augmentation.compose.DynamicSingleAug">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.compose.</span></span><span class="sig-name descname"><span class="pre">DynamicSingleAug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">augmentation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discrete_arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_arg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/compose.html#DynamicSingleAug"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.compose.DynamicSingleAug" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>DynamicSingleAug is a class designed to perform a single data augmentation where the optional arguments
+are chosen at random from a given discrete set or a given range. Random choice of the arguments is performed
+at each call.</p>
+<p>At least one of discrete_arg or range_arg arguments must be given, otherwise simply use a StaticSingleAug</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>augmentation</strong> (<em>function</em>) – The augmentation function to apply. It can be a custom function, but the first
+argument must be the element to augment</p></li>
+<li><p><strong>discrete_arg</strong> (<em>dict</em><em>, </em><em>optional</em>) – <dl class="simple">
+<dt>A dictionary specifying arguments whose value must be chosen within a discrete set. The dict must have:</dt><dd><ul>
+<li><p>Keys as string with the name of one of the optional arguments</p></li>
+<li><p>Values as lists of elements to be randomly chosen. Single elements are accepted if a specific
+value for an argument needs to be set. In this case it’s not mandatory to give it as list, as
+automatic conversion will be performed.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Default: None</p>
+</p></li>
+<li><p><strong>range_arg</strong> (<em>dict</em><em>, </em><em>optional</em>) – <dl class="simple">
+<dt>A dictionary specifying arguments whose value must be chosen within a continuous range. The dict must have:</dt><dd><ul>
+<li><p>Keys as string with the name of one of the optional arguments</p></li>
+<li><p>Values as two element lists specifying the range of values where to randomly select the argument value.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Default: None</p>
+</p></li>
+<li><p><strong>range_type</strong> (<em>dict</em><em> or </em><em>list</em><em>, </em><em>optional</em>) – <p>A dictionary or a list specifying if values in range_arg must be given to the augmentation function as integers:
+If given as a dict, keys must be the same as the one of range_arg (no more or less, the same). If given as a list,
+the length must be the same of range_arg. In particular:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><dl class="simple">
+<dt>if range_type is a dict.</dt><dd><ul>
+<li><p>Keys must be the ones in range_arg</p></li>
+<li><p>Values must be single element specifying if the argument must be an integer. In this case, use a boolean
+True or a string ‘int’ to specify if the argument must be converted to an int.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>if range_arg is a list.</dt><dd><ul>
+<li><p>Values must be set as the values in the dict. The order is the one used when iterating along the
+range_arg dict</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>if None is given, a list of True with length equal to range_arg is automatically created, since int
+arguments are more compatible with float ones.</p></li>
+</ol>
+</div></blockquote>
+<p>Default: None</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="selfeeg.augmentation.compose.DynamicSingleAug.PerformAugmentation">
+<span class="sig-name descname"><span class="pre">PerformAugmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/compose.html#DynamicSingleAug.PerformAugmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.compose.DynamicSingleAug.PerformAugmentation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selfeeg.augmentation.compose.RandomAug">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.compose.</span></span><span class="sig-name descname"><span class="pre">RandomAug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">augmentations</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/compose.html#RandomAug"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.compose.RandomAug" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>RandomAug perform a random augmentation from a list of arguments.
+Class must be initialized giving a sequence</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="selfeeg.augmentation.compose.RandomAug.PerformAugmentation">
+<span class="sig-name descname"><span class="pre">PerformAugmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/compose.html#RandomAug.PerformAugmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.compose.RandomAug.PerformAugmentation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selfeeg.augmentation.compose.SequentialAug">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.compose.</span></span><span class="sig-name descname"><span class="pre">SequentialAug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">augmentations</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/compose.html#SequentialAug"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.compose.SequentialAug" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="selfeeg.augmentation.compose.SequentialAug.PerformAugmentation">
+<span class="sig-name descname"><span class="pre">PerformAugmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/compose.html#SequentialAug.PerformAugmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.compose.SequentialAug.PerformAugmentation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="selfeeg.augmentation.compose.StaticSingleAug">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.compose.</span></span><span class="sig-name descname"><span class="pre">StaticSingleAug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">augmentation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arguments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/compose.html#StaticSingleAug"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.compose.StaticSingleAug" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>StaticSingleAug is a class designed to perform a single data augmentation where the optional arguments
+are previously set and given during initialization. No random choice of the arguments is performed. The
+class accepts multiple set of optional arguments. In this case they are called individually at each class
+call, in a sequential manner. This means that the first call use the first set of arguments, the second
+will use the second set of arguments, and so on. When the last set is used, the class will restart from the
+first set of arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>augmentation</strong> (<em>function</em>) – The augmentation function to apply. It can be a custom function, but the first
+argument must be the element to augment</p></li>
+<li><p><strong>arguments</strong> (<em>list</em><em>, </em><em>dict</em><em>, </em><em>list</em><em>[</em><em>list</em><em> or </em><em>dict</em><em>]</em><em>, </em><em>optional</em>) – <dl class="simple">
+<dt>The arguments to give to the augmentation function. It can be:</dt><dd><ol class="arabic simple">
+<li><p>None. In this case the default parameters of the function are used. Remember that if there are
+other non optional arguments, the call will throw an error.</p></li>
+<li><p>a simple list. In this case the function is called with the sintax “augmentation(x, <a href="#id1"><span class="problematic" id="id2">*</span></a>arguments)”</p></li>
+<li><p>a simple dict. In this case the function is called with the sintax “augmentation(x, <a href="#id3"><span class="problematic" id="id4">**</span></a>arguments)”</p></li>
+<li><p>a list of dict or list. This is a particular case where multiple combination of arguments are given.
+Each element of the list must be a list or a dict with the specific argument combination. Every time
+the class is called, one of the given combination is used to perform the data augmentation. The list
+is followed sequentially with repetion, meaning that the first call use the first set of arguments of the
+list, the second the second set of arguments, and so on. When the last element of the list is used, the
+function will restart scrolling the given list</p></li>
+</ol>
+</dd>
+</dl>
+<p>Default: None</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="selfeeg.augmentation.compose.StaticSingleAug.PerformAugmentation">
+<span class="sig-name descname"><span class="pre">PerformAugmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/compose.html#StaticSingleAug.PerformAugmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.compose.StaticSingleAug.PerformAugmentation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-selfeeg.augmentation.functional">
+<span id="selfeeg-augmentation-functional-module"></span><h2>selfeeg.augmentation.functional module<a class="headerlink" href="#module-selfeeg.augmentation.functional" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.add_band_noise">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">add_band_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x:</span> <span class="pre">array</span> <span class="pre">like,</span> <span class="pre">bandwidth:</span> <span class="pre">list[tuple[float,</span> <span class="pre">float],</span> <span class="pre">str,</span> <span class="pre">float],</span> <span class="pre">samplerate:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">256,</span> <span class="pre">noise_range:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">std:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">get_noise:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#add_band_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.add_band_noise" title="Permalink to this definition"></a></dt>
+<dd><p>add_band noise add random noise filtered at specific bandwidths.</p>
+<p>Given a set of bandwidths or a set of specific frequency, add_band_noise create a noise whose
+spectrum is bigger than zero only on those bands. It can be used to alter only specific
+frequency components of the original signal. The noise generated will have the same standard
+deviation as x, but it can be rescaled so to be within a specific range or to have a specific
+standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array like</em>) – array to add noise</p></li>
+<li><p><strong>bandwidth</strong> (<em>list</em>) – <p>The frequency components which the noise must have. Must be a LIST with the following
+values:</p>
+<ul>
+<li><p>strings: add noise to specific EEG components. Can be any of “delta”, “theta”, “alpha”, “beta”, “gamma”, “gamma_low”, “gamma_high”.</p></li>
+<li><p>scalar: add noise to a specifi component</p></li>
+<li><p>tuple with 2 scalar: add noise to a specific band set with the tuple (start_component,end_component)</p></li>
+</ul>
+</p></li>
+<li><p><strong>samplerate</strong> (<em>float</em><em>, </em><em>optional</em>) – The sampling rate, given in Hz. Remember to change this value according to the signal
+sampling rate
+Default = <strong>256</strong></p></li>
+<li><p><strong>noise_range</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>The range within the noise is scaled. Must be a single sclar or a two element list. If given
+as a single scalar, then the range is considered the interval [-noise_range, noise_range]. If
+this parameter is given, then std value is ignored, since the two conditions cannot be
+satisfied at the same time. To rescale, the following formula is applied:</p>
+<div class="math notranslate nohighlight">
+\[noise_new = ( (noise - \max_{noise})/(\max_{noise}-\min_{noise}) )*(target_range_max - target_range_min) + target_range_min\]</div>
+<p>Default = <strong>None</strong></p>
+</p></li>
+<li><p><strong>std</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>The desired standard deviation of the noise. If noise_range is given, this argument is
+ignored. It simply scale the noise by applying:</p>
+<div class="math notranslate nohighlight">
+\[noise_new = noise * (target_std / std(noise))\]</div>
+<p>Default = <strong>None</strong></p>
+</p></li>
+<li><p><strong>get_noise</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the generated noise or not
+Default = <strong>False</strong></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.add_eeg_artifact">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">add_eeg_artifact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifact</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line_at_60Hz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lost_time</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drift_slope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#add_eeg_artifact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.add_eeg_artifact" title="Permalink to this definition"></a></dt>
+<dd><p>add_eeg_artifact add one common artifacts of EEG signals.</p>
+<p>Given a N-dim tensor or a numpy array, add_eeg_artifact add one of the artifact listed in
+– Fickling et al., (2019) Good data? The EEG Quality Index for Automated Assessment of Signal Quality –
+along the last dimension of the input element. Supported artifacts are:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>white: simple white noise</p></li>
+<li><p>line: noise at 50 Hz or 60 Hz</p></li>
+<li><p>eye: noise in range [1, 3] Hz</p></li>
+<li><p>muscle: noise in range [20, 60] Hz</p></li>
+<li><p>drift: straight line with non-zero slope</p></li>
+<li><p>lost: cancellation of one portion of the signal</p></li>
+</ol>
+</div></blockquote>
+<p>Line, eye and muscle artifact are generated with the add_band_noise function.
+Lost artifact is generated with the masking function.
+White and drift are generated inside this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – The element to add the artifact. It accepts any dimensions but the last 2 must be Channel x Signal,
+since the function is performed along the last dimension but equally for each channel of the signal.</p></li>
+<li><p><strong>Fs</strong> (<em>float</em>) – The sampling rate of the signal in Hz</p></li>
+<li><p><strong>amplitude</strong> (<em>float</em><em>, </em><em>optional</em>) – The amplitude of the noise to add. If not given, amplitude=std(x)
+Default: None</p></li>
+<li><p><strong>line_at_60Hz</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to apply the line artifact at 60Hz (True) or 50Hz (False).
+Default: True</p></li>
+<li><p><strong>lost_time</strong> (<em>float</em><em>, </em><em>optional</em>) – The amount of time the signal is canceled. Must be given in seconds. Internally masking function is called
+by converting the given time to the percentage of masked signal with the function
+(Fs*lost_time)/x.shape[-1]. Alternatively, to convert the percentage of the signal masked to the amount of
+time is masked, just revert the formula, so lost_time= (masking_percentage * x.shape[-1]) / Fs.
+If None is given, 20% of the signal is masked
+Default: None</p></li>
+<li><p><strong>drift_slope</strong> (<em>float</em><em>, </em><em>optional</em>) – The difference between to consecutive points of the straight line to add. If None is given, slope is
+calculated with the amplitude parameter as drift_slope = amplitude/x.shape[-1]. If also amplitude is not
+given drift_slope = std(x)/x.shape[-1]</p></li>
+<li><p><strong>batch_equal</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to apply the same masking to all elements in the batch or not. Does apply only if x has more than 2 dimensions
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.add_gaussian_noise">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">add_gaussian_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_noise:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#add_gaussian_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.add_gaussian_noise" title="Permalink to this definition"></a></dt>
+<dd><p>add_gaussian_noise add gaussian noise with the desired mean and standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>'array like'</em>) – array to add noise</p></li>
+<li><p><strong>mean</strong> (<em>scalar</em><em>, </em><em>optional</em>) – the mean of the gaussian distribution
+Default: 0</p></li>
+<li><p><strong>std</strong> (<em>scalar</em><em>, </em><em>optional</em>) – the std of the gaussian distribution
+Default: 1</p></li>
+<li><p><strong>get_noise</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the generated noise or not
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.add_noise_SNR">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">add_noise_SNR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_snr:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_noise:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#add_noise_SNR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.add_noise_SNR" title="Permalink to this definition"></a></dt>
+<dd><p>add_noise_SNR add noise such that the SNR (Signal to Noise Ratio) will be the one desired.</p>
+<p>Since the signal is supposed to be already noisy, it makes more sense to say that this
+function reduce the SNR by a factor equal to 1/P_noise_new, where P_noise_new is the power
+of the new added noise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – array to add noise</p></li>
+<li><p><strong>target_SNR</strong> (<em>scalar</em><em>, </em><em>optional</em>) – the target SNR
+Default: 5</p></li>
+<li><p><strong>get_noise</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the generated noise or not
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple">
+<dt>created using the following reference:</dt><dd><p><a class="reference external" href="https://stackoverflow.com/questions/14058340/adding-noise-to-a-signal-in-python">https://stackoverflow.com/questions/14058340/adding-noise-to-a-signal-in-python</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.change_ref">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">change_ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">'avg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_from_ref:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#change_ref"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.change_ref" title="Permalink to this definition"></a></dt>
+<dd><p>change_ref change the reference of all EEG record in x.</p>
+<p>Given an input tensor or array x where the last two dimension must be (EEG_channels x EEG_samples),
+change_ref change the reference of the all the EEG records according to the modality specified.
+Currently, reference can be changed to:</p>
+<ol class="arabic simple">
+<li><p>Channel reference (e.g. Cz). Each record of a channel is subtracted to the record of the Cz channel.
+Cz(t) becomes 0 for all t</p></li>
+<li><p>Common Average Reference (CAR). Each record is subtracted with the average of all electrodes. Currently,
+it doesn’t cover all particular cases as this implementation is minimalist.</p></li>
+</ol>
+<p>To get a more detailed description about re-referencing, check this brief background page of the EEGlab library
+at the following link: <a class="reference external" href="https://eeglab.org/tutorials/ConceptsGuide/rereferencing_background.html">https://eeglab.org/tutorials/ConceptsGuide/rereferencing_background.html</a></p>
+<dl>
+<dt>x: N-D Tensor or numpy array</dt><dd><p>The element to re-reference. It can be a batch of EEGs, but the last two dimensions
+must be (EEG_channel x EEG_samples)</p>
+</dd>
+<dt>mode: str or int, optional</dt><dd><dl class="simple">
+<dt>The re-reference modality. Accepted arguments:</dt><dd><ol class="arabic simple">
+<li><p>0, ‘chan’, ‘channel’. Single Channel re-referencing.</p></li>
+<li><p>1, ‘avg’, ‘average’, ‘car’. Common Avarage re-referencing.</p></li>
+</ol>
+</dd>
+</dl>
+<p>Default: ‘avg’</p>
+</dd>
+<dt>reference: int, optional</dt><dd><p>The reference electrode, given as an int referring to the position in the EEG_channels dimension of X
+(remember that this means the first dim if x is a matrix or the second to last if x is N-dim)
+Default: None</p>
+</dd>
+<dt>exclude_from_ref: int or list[int]</dt><dd><p>Argument designed to exclude some channels during average re-referencing. This apply for example when x
+has records from nose tip or ear lobe.
+Default: None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.channel_dropout">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">channel_dropout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nchan:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#channel_dropout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.channel_dropout" title="Permalink to this definition"></a></dt>
+<dd><p>channel_dropout put to 0 a given (or random) amount of channels selected at random.</p>
+<p>Given a N-D tensor or numpy array, where the last two dimensions refers to Channels x Samples,
+channel_dropout will choose a random a subset of Channels based on Nchan and put them to 0.</p>
+<p>If batch_equal is set to True, the function will be called recursively producing a different
+augmentation for each EEG in the tensor.</p>
+<dl class="simple">
+<dt>x: N-D Tensor or numpy array</dt><dd><p>Array or Tensor to augment. Last two dimensions must be Channels x Samples</p>
+</dd>
+<dt>Nchan: int, optional</dt><dd><p>Number of channels to drop. If not given, the number of channels is chosen at random in the
+interval [1, (Channel_total // 4) +1 ]
+Defult: None</p>
+</dd>
+<dt>batch_equal: bool, optional</dt><dd><p>whether to apply the same channel drop to all EEG records or not.
+Default: True</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.crop_and_resize">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">crop_and_resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">or</span> <span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segments:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_cut:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#crop_and_resize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.crop_and_resize" title="Permalink to this definition"></a></dt>
+<dd><p>crop_and_resize crop some segments of the last dimension of the input x and resize to the original dimension.</p>
+<p>Given x a N-D Tensor where the last two dim are EEG_Channel x EEG_Signal, crop_and_resize:
+1) divide the last dimension of x into N segments
+2) select at random a subset segments
+3) remove the selected segments from x
+4) create a new cropped version of x
+5) resample the new cropped version to the original dimension. For this part pchip interpolation</p>
+<blockquote>
+<div><p>with a uniform virtual grid is used</p>
+</div></blockquote>
+<p>If batch_equal is set to False, call the function recursively and repeat step 1 to 5 for each
+(N_{1}*N_{2}…*N{-3}) elements of the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – The array to crop and resize. It accepts any dimensions but the last 2 must be EEG_Channel x EEG_Signal.
+For example, if x is 4-D, it must be in the form (N1 x N2 x Channels x Signal), where N1 and N2 are usually
+the batch size and channels</p></li>
+<li><p><strong>segments</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of segments to consider when dividing the last dimension of x.
+Default: 10</p></li>
+<li><p><strong>N_cut</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of segments to cut.
+Default: 1</p></li>
+<li><p><strong>batch_equal</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply the same crop to all EEG record or not. True means faster computation but more memory
+consuption and less variability, False the opposite
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>dim = (16,1,64,512)
+segments=15
+N_cut=6</p>
+<p>x = torch.sin(torch.linspace(0,20*math.pi, dim[-1]))
+zero_tensor = torch.zeros(dim)
+x = zero_tensor + x
+# x = x.numpy() #the result won’t change if x is a numpy array</p>
+<p>x_crop = crop_and_resize(x, segments= segments, N_cut= N_cut, batch_equal=True)
+print(torch.equal(x_crop[1], x_crop[2])) # True
+x_crop = crop_and_resize(x, segments= segments, N_cut= N_cut, batch_equal=False)
+print(torch.equal(x_crop[1], x_crop[2])) # False</p>
+<p># plot the results
+plt.plot(xnp[0,0,0,:])
+plt.show()
+plt.plot(x_crop[0,0,0,:])
+plt.plot(x_crop[2,0,0,:])
+plt.show()</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.filter_bandpass">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">filter_bandpass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span> <span class="pre">or</span> <span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ws</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.4455278942230451</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">26.020599913279625</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'butter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eeg_band</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_filter_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#filter_bandpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.filter_bandpass" title="Permalink to this definition"></a></dt>
+<dd><p>filter_bandpass apply a bandpass filter on the last dimension of the given input x.</p>
+<p>filter_bandpass apply a designed bandpass filter on the last dimension of x. If a and b coefficient are not
+given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:</p>
+<blockquote>
+<div><p>(Wp,Ws,rp,rs) —-&gt; (Wn, order) —–&gt; (a,b).</p>
+</div></blockquote>
+<p>Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.</p>
+<p>If eeg_band are given, (Wp,Ws,rp,rs) are bypassed and instantiated according to the eeg band specified. The
+priority order remain, so if (Wn,order) or (a,b) are given, filter is created according to the described priority
+order</p>
+<p>NOTE 1: lots of parameters are the ones used to call scipy’s matlab style filters, ASIDE TO ‘Wp’ and ‘Ws’ which
+you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample
+(i.e. Nyquist frequency) is done directly inside the get_filter_coeff function</p>
+<p>NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid
+restrictive condition which can increase the order of the filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D array</em><em> or </em><em>Tensor</em>) – The element to filter</p></li>
+<li><p><strong>Fs</strong> (<em>float</em>) – the sampling frequency in Hz</p></li>
+<li><p><strong>Wp</strong> (<em>float</em><em>, </em><em>optional</em>) – bandpass in Hz.
+Default: 30</p></li>
+<li><p><strong>Ws</strong> (<em>float</em><em>, </em><em>optional</em>) – stopband in Hz
+Default: 13</p></li>
+<li><p><strong>rp</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at bandpass in decibel.
+Default: -20*log10(0.95)</p></li>
+<li><p><strong>rs</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at stopband in decibel.
+Default: -20*log10(0.15)</p></li>
+<li><p><strong>filter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – which filter design. Accepted values are ‘butter’, ‘ellip’, ‘cheby1’, ‘cheby2’
+Default: ‘butter’</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – the order of the filter
+Default: None</p></li>
+<li><p><strong>Wn</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the critical frequency or frequencies.
+Default: None</p></li>
+<li><p><strong>a</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the denominator coefficient of the filter
+Default: None</p></li>
+<li><p><strong>b</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the numerator coefficient of the filer
+Default: None</p></li>
+<li><p><strong>eeg_band</strong> (<em>str</em><em>, </em><em>optional</em>) – any of the possible EEG bands. Accepted values are “delta”, “theta”, “alpha”, “beta”,
+“gamma”, “gamma_low”, “gamma_high”. Note: eeg_band bypass any Wp and Ws, if given
+Default: None</p></li>
+<li><p><strong>return_filter_coeff</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the filter coefficient or not
+Default: False</p></li>
+<li><p><strong>NOTE</strong> (<em>pytorch filtfilt works differently on edges and is pretty unstable with high order filters</em><em>, </em><em>so avoid</em>) – </p></li>
+<li><p><strong>filter.</strong> (<em>restrictive condition which can increase the order of the</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.filter_bandstop">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">filter_bandstop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span> <span class="pre">or</span> <span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ws</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.4455278942230451</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">26.020599913279625</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'butter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eeg_band</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_filter_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#filter_bandstop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.filter_bandstop" title="Permalink to this definition"></a></dt>
+<dd><p>filter_bandstop apply a bandstop filter on the last dimension of the given input x.</p>
+<p>filter_bandstop apply a designed bandstop filter on the last dimension of x. If a and b coefficient are not
+given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:</p>
+<blockquote>
+<div><p>(Wp,Ws,rp,rs) —-&gt; (Wn, order) —–&gt; (a,b).</p>
+</div></blockquote>
+<p>Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.</p>
+<p>If eeg_band are given, (Wp,Ws,rp,rs) are bypassed and instantiated according to the eeg band specified. The
+priority order remain, so if (Wn,order) or (a,b) are given, filter is created according to such parameters.</p>
+<p>NOTE 1: lots of parameters are the ones used to call scipy’s matlab style filters, ASIDE TO ‘Wp’ and ‘Ws’ which
+you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample
+(i.e. Nyquist frequency) is done directly inside the get_filter_coeff function.</p>
+<p>NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid
+restrictive condition which can increase the order of the filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D array</em><em> or </em><em>Tensor</em>) – The element to filter</p></li>
+<li><p><strong>Fs</strong> (<em>float</em>) – the sampling frequency in Hz</p></li>
+<li><p><strong>Wp</strong> (<em>float</em><em>, </em><em>optional</em>) – bandpass in Hz.
+Default: 30</p></li>
+<li><p><strong>Ws</strong> (<em>float</em><em>, </em><em>optional</em>) – stopband in Hz
+Default: 13</p></li>
+<li><p><strong>rp</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at bandpass in decibel.
+Default: -20*log10(0.95)</p></li>
+<li><p><strong>rs</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at stopband in decibel.
+Default: -20*log10(0.15)</p></li>
+<li><p><strong>filter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – which filter design. Accepted values are ‘butter’, ‘ellip’, ‘cheby1’, ‘cheby2’
+Default: ‘butter’</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – the order of the filter
+Default: None</p></li>
+<li><p><strong>Wn</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the critical frequency or frequencies.
+Default: None</p></li>
+<li><p><strong>a</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the denominator coefficient of the filter
+Default: None</p></li>
+<li><p><strong>b</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the numerator coefficient of the filer
+Default: None</p></li>
+<li><p><strong>eeg_band</strong> (<em>str</em><em>, </em><em>optional</em>) – any of the possible EEG bands. Accepted values are “delta”, “theta”, “alpha”, “beta”,
+“gamma”, “gamma_low”, “gamma_high”. Note: eeg_band bypass any Wp and Ws, if given
+Default: None</p></li>
+<li><p><strong>return_filter_coeff</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the filter coefficient or not
+Default: False</p></li>
+<li><p><strong>NOTE</strong> (<em>pytorch filtfilt works differently on edges and is pretty unstable with high order filters</em><em>, </em><em>so avoid</em>) – </p></li>
+<li><p><strong>filter.</strong> (<em>restrictive condition which can increase the order of the</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.filter_highpass">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">filter_highpass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span> <span class="pre">or</span> <span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ws</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">13</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.4455278942230451</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16.478174818886377</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'butter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_filter_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#filter_highpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.filter_highpass" title="Permalink to this definition"></a></dt>
+<dd><p>filter_highpass apply a highpass filter on the last dimension of the given input x.</p>
+<p>filter_highpass apply a designed highpass filter on the last dimension of x. If a and b coefficient are not
+given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:</p>
+<blockquote>
+<div><p>(Wp,Ws,rp,rs) —-&gt; (Wn, order) —–&gt; (a,b).</p>
+</div></blockquote>
+<p>Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.</p>
+<p>NOTE 1: lots of parameters are the ones used to call scipy’s matlab style filters, ASIDE TO ‘Wp’ and ‘Ws’ which
+you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample
+(i.e. Nyquist frequency) is done directly inside the get_filter_coeff function</p>
+<p>NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid
+restrictive condition which can increase the order of the filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D array</em><em> or </em><em>Tensor</em>) – The element to filter</p></li>
+<li><p><strong>Wp</strong> (<em>float</em><em>, </em><em>optional</em>) – bandpass in Hz
+Default: 30</p></li>
+<li><p><strong>Ws</strong> (<em>float</em><em>, </em><em>optional</em>) – stopband in Hz
+Default: 13</p></li>
+<li><p><strong>rp</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at bandpass in decibel.
+Default: -20*log10(0.95)</p></li>
+<li><p><strong>rs</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at stopband in decibel.
+Default: -20*log10(0.15)</p></li>
+<li><p><strong>filter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – which filter design. Accepted values are ‘butter’, ‘ellip’, ‘cheby1’, ‘cheby2’
+Default: ‘butter’</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – the order of the filter
+Default: None</p></li>
+<li><p><strong>Wn</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the critical frequency or frequencies.
+Default: None</p></li>
+<li><p><strong>a</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the denominator coefficient of the filter
+Default: None</p></li>
+<li><p><strong>b</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the numerator coefficient of the filer
+Default: None</p></li>
+<li><p><strong>return_filter_coeff</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the filter coefficient or not
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.filter_lowpass">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">filter_lowpass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">array</span> <span class="pre">or</span> <span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Fs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ws</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">70</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.4455278942230451</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16.478174818886377</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'butter'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_filter_coeff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#filter_lowpass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.filter_lowpass" title="Permalink to this definition"></a></dt>
+<dd><p>filter_lowpass apply a lowpass filter on the last dimension of the given input x.</p>
+<p>filter_lowpass apply a designed lowpass filter on the last dimension of x. If a and b coefficient are not
+given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:</p>
+<blockquote>
+<div><p>(Wp,Ws,rp,rs) —-&gt; (Wn, order) —–&gt; (a,b).</p>
+</div></blockquote>
+<p>Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.</p>
+<p>NOTE 1: lots of parameters are the ones used to call scipy’s matlab style filters, ASIDE TO ‘Wp’ and ‘Ws’ which
+you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample
+(i.e. Nyquist frequency) is done directly inside the get_filter_coeff function</p>
+<p>NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid
+restrictive condition which can increase the order of the filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D array</em><em> or </em><em>Tensor</em>) – The element to filter</p></li>
+<li><p><strong>Fs</strong> (<em>float</em>) – the sampling frequency in Hz</p></li>
+<li><p><strong>Wp</strong> (<em>float</em><em>, </em><em>optional</em>) – bandpass in Hz
+Default: 50</p></li>
+<li><p><strong>Ws</strong> (<em>float</em><em>, </em><em>optional</em>) – stopband in Hz
+Default: 70</p></li>
+<li><p><strong>rp</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at bandpass in decibel.
+Default: -20*log10(0.95)</p></li>
+<li><p><strong>rs</strong> (<em>float</em><em>, </em><em>optional</em>) – ripple at stopband in decibel.
+Default: -20*log10(0.15)</p></li>
+<li><p><strong>filter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – which filter design. Accepted values are ‘butter’, ‘ellip’, ‘cheby1’, ‘cheby2’
+Default: ‘butter’</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – the order of the filter
+Default: None</p></li>
+<li><p><strong>Wn</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the critical frequency or frequencies.
+Default: None</p></li>
+<li><p><strong>a</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the denominator coefficient of the filter
+Default: None</p></li>
+<li><p><strong>b</strong> (<em>array_like</em><em>, </em><em>optional</em>) – the numerator coefficient of the filer
+Default: None</p></li>
+<li><p><strong>return_filter_coeff</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the filter coefficient or not
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.flip_horizontal">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">flip_horizontal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">array</span> <span class="pre">like</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#flip_horizontal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.flip_horizontal" title="Permalink to this definition"></a></dt>
+<dd><p>flip_horizontal flip the elements of the last dimension of x.</p>
+<dl class="simple">
+<dt>x: array like</dt><dd><p>Array to flip. Last dimension must have the EEG recordings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.flip_vertical">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">flip_vertical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">Array</span> <span class="pre">like</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#flip_vertical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.flip_vertical" title="Permalink to this definition"></a></dt>
+<dd><p>flip_vertical change the sign of all the elements of the input array x.</p>
+<dl class="simple">
+<dt>x: array like</dt><dd><p>Array to flip. Last dimension must have the EEG recordings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.get_channel_map_and_networks">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">get_channel_map_and_networks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channel_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chan_net</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#get_channel_map_and_networks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.get_channel_map_and_networks" title="Permalink to this definition"></a></dt>
+<dd><p>get_channel_map_and_networks simply return the channel_map and chan_net argument for permute_channels.
+Run help(permute_channels) to get more informations.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.get_eeg_channel_network_names">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">get_eeg_channel_network_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#get_eeg_channel_network_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.get_eeg_channel_network_names" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.identity">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">identity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#identity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.identity" title="Permalink to this definition"></a></dt>
+<dd><p>identity return the same array or tensor as it was given.
+It can be used during augmentation composition to randomly avoid some augmentations</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.masking">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">masking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_number:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masked_ratio:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#masking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.masking" title="Permalink to this definition"></a></dt>
+<dd><p>masking put portions of the input argument to 0.</p>
+<p>Given a N-dim tensor or a numpy array, masking put a portion of the tensor/array to 0 along the last dimension.
+If the tensor has more than the one dimension, the last two dimensions must be (Channel x Signal) and the function
+will mask each channel of the signal equally.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – The element to mask. It accepts any dimensions but the last 2 must be Channel x Signal, since the function is
+performed along the last dimension but equally for each channel of the signal.</p></li>
+<li><p><strong>mask_number</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of portion to mask. It must be a positive integer
+Default: 1</p></li>
+<li><p><strong>masked_ratio</strong> (<em>float</em><em>, </em><em>optional</em>) – The percentage of the signal to mask. It must be a scalar in range 0&lt;maskef_ratio&lt;1.
+Default: 0.1</p></li>
+<li><p><strong>batch_equal</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to apply the same masking to all elements in the batch or not. Does apply only if x has more than 2 dimensions
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.moving_avg">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">moving_avg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#moving_avg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.moving_avg" title="Permalink to this definition"></a></dt>
+<dd><p>moving_avg apply a moving average filter to the signal x.</p>
+<p>moving_avg apply a moving average filter to the last dimension of the array or Tensor x. The filter order
+and can be given as function argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – The element to filter. Signals must be on the last dimension.</p></li>
+<li><p><strong>order</strong> (<em>int</em><em>, </em><em>optional</em>) – The order of the filter.
+Default: 5</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.permutation_signal">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">permutation_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seg_to_per</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#permutation_signal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.permutation_signal" title="Permalink to this definition"></a></dt>
+<dd><p>permutation_signal permute some portion of the last dimension of the input N-D array_like x</p>
+<p>Given an input x where the last two dimension must be (EEG_channels x EEG_samples), permutation_signal
+divides the elements of the last dimension of x into N segments, then chooses M&lt;=N segments and shuffle it.
+Permutations are equally performed along each Channel of the same EEG.
+If batch_equal is set to False, call the function recursively along each of the (N_{1}*N_{2}…*N{-3})
+dimensions of the tensor.</p>
+<dl class="simple">
+<dt>x: N-D Tensor or numpy array</dt><dd><p>The element to shuffle. The last two dimensions must be (EEG_channel x EEG_samples), which means that the
+same permutation is applied to all the channels of the EEG signal.</p>
+</dd>
+<dt>segments: int, optional</dt><dd><p>The number of segments in which the last dimension of x must be divided. Must be greater than 1
+Default: 1</p>
+</dd>
+<dt>seg_to_per: int, optional</dt><dd><p>The number of segments to permute. Must be greater than 1 and lower than segments. -1 is the only
+accepted negative number and means permute all the segments.
+Default: -1</p>
+</dd>
+<dt>batch_equal: bool, optional</dt><dd><p>whether to apply the same permutation to all EEG record or not. If True, permute_signal is called
+recursively for each dimension of the batch until the last two are reached (e.g. given a tensor x
+of dimension (16,8,64,512) the function permute each of the 16*8 EEG signals (64 channels of 512 samples)
+individually).
+Default: False</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.permute_channels">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">permute_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chan2shuf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'random'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chan_net</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#permute_channels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.permute_channels" title="Permalink to this definition"></a></dt>
+<dd><p>permutation_channels permute the input tensor EEG signals x along the channel dimension (second to last).</p>
+<p>Given an input x where the last two dimension must be (EEG_channels x EEG_samples), permutation_channels
+shuffles all or a subset of the eeg along its channels. Shuffles can be done randomly or using specific
+networks (based on resting state functional connectivity networks).
+If batch_equal is set to False, call the function recursively along each of the (N_{1}*N_{2}…*N{-3})
+dimensions of the tensor.</p>
+<dl>
+<dt>x: N-D Tensor or numpy array</dt><dd><p>The element to shuffle. The last two dimensions must be (EEG_channel x EEG_samples), which means that the
+permutation is applied on the second to last dimension.</p>
+</dd>
+<dt>chan2shuf: int, optional</dt><dd><p>The number of channels to shuffle. Must be greater than 1. -1 is the only accepted negative number and
+means permute all the segments.
+Default: -1</p>
+</dd>
+<dt>mode: str, optional</dt><dd><dl>
+<dt>How to permute the channels. Can be any of:</dt><dd><p>‘random’: shuffle channels at random
+‘network’: shuffle channels which belongs to the same network. A network is a subset of channels whose</p>
+<blockquote>
+<div><p>activity is (with a minumum degree) between each other. This mode support only a subset of
+61 channels of the 10-10 system</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>Default: ‘random’</p>
+</dd>
+<dt>channel_map: list of str, optional</dt><dd><p>The channel map of EEG acquisitions. Must be a list of string or a numpy array of dtype=’&lt;U4’ with channel
+names as elements. Channel name must be defined with capital letters (e.g. ‘P04’, ‘FC5’).
+Default: np.array([‘FP1’, ‘AF7’, ‘AF3’, ‘F1’, ‘F3’, ‘F5’, ‘F7’, ‘FT7’, ‘FC5’, ‘FC3’, ‘FC1’, ‘C1’, ‘C3’,</p>
+<blockquote>
+<div><p>‘C5’, ‘T7’, ‘TP7’, ‘CP5’, ‘CP3’,’CP1’, ‘P1’, ‘P3’, ‘P5’, ‘P7’, ‘PO7’, ‘PO3’, ‘O1’,
+‘OZ’, ‘POZ’, ‘PZ’, ‘CPZ’, ‘FPZ’, ‘FP2’, ‘AF8’, ‘AF4’, ‘AFZ’, ‘FZ’, ‘F2’, ‘F4’, ‘F6’,
+‘F8’, ‘FT8’, ‘FC6’, ‘FC4’, ‘FC2’, ‘FCZ’, ‘CZ’, ‘C2’, ‘C4’, ‘C6’, ‘T8’, ‘TP8’, ‘CP6’,
+‘CP4’, ‘CP2’, ‘P2’, ‘P4’, ‘P6’, ‘P8’, ‘PO8’, ‘PO4’],dtype=’&lt;U4’)</p>
+</div></blockquote>
+</dd>
+<dt>chan_net: str or list of str, optional</dt><dd><p>The list of networks to use if network mode is selected. Must be a list of string or a single string.
+Supported networks are DMN, DAN, VAN, SMN, VFN, FPN. Use ‘all’ to select all networks. To get a list of
+the channel names per network use get_eeg_network_channel_names()
+Default: ‘all’</p>
+</dd>
+<dt>batch_equal: bool, optional</dt><dd><p>whether to apply the same permutation to all EEG record or not. If True, permute_signal is called
+recursively for each dimension of the batch until the last two are reached (e.g. given a tensor x
+of dimension (16,8,64,512) the function permute each of the 16*8 EEG signals (64 channels of 512 samples)
+individually).
+Default: False</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.random_FT_phase">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">random_FT_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">array</span> <span class="pre">like</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#random_FT_phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.random_FT_phase" title="Permalink to this definition"></a></dt>
+<dd><p>random_FT_phase randomize the phase of all signals in tensor/array x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array like</em>) – Input array or tensor. Can be of any shape, but the last two dimensions must referres to EEG’s Channel x Sample</p></li>
+<li><p><strong>value</strong> (<em>float</em><em>, </em><em>optional</em>) – The magnitude of the phase perturbation. It must be a value between (0,1], which will be used to rescale the interval
+[0, 2* ‘pi’] in [0, value * 2 * ‘pi’]
+Default: None</p></li>
+<li><p><strong>batch_equal</strong> – Whether to apply the same perturbation on all signals or not. Note that all channels of the same records will be
+perturbed in the same way to preserve cross-channel correlations.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.random_slope_scale">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">random_slope_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_scale:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_scale:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_memory:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#random_slope_scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.random_slope_scale" title="Permalink to this definition"></a></dt>
+<dd><p>random_slope_scale randomly scale the first derivative of x</p>
+<p>Given a tensor N-D tensor or numpy array where the last two dimensions represents (EEG_channels x EEG_samples)
+(1D tensor are also accepted), random_slope_scale calculates the first derivatives of each EEG records, here
+simplified as the difference between two consecutive values of the last dimension, and rescale each of them with
+a random factor selected from an uniform distribution between min_scale and max_scale. This transformation
+is similar to adding a random noise, but with the constraint that first derivatise must keep the sign of the
+original EEG (e.g. if a value is bigger than the previous one, then this is also true in the transformed data,
+although with the difference is not same).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – The element to rescale. x can be one dimensional. If x has more than one dimension, the last two must
+represent (EEG_channels x EEG_samples)</p></li>
+<li><p><strong>min_scale</strong> (<em>float</em><em>, </em><em>optional</em>) – The minimum rescaling factor to be applied. Must be a value bigger than 0
+Default: 0.9</p></li>
+<li><p><strong>max_scale</strong> (<em>float</em><em>, </em><em>optional</em>) – The maximum rescaling factor to be applied. Must be a value bigger than min_scale
+Default: 1.2</p></li>
+<li><p><strong>batch_equal</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply the same rescale to all EEGs in the batch or not. This apply if x has more than 2 dimensions.
+Default: False</p></li>
+<li><p><strong>keep_memory</strong> (<em>bool</em><em>, </em><em>optional</em>) – <p>whether to keep memory of the previous changes in slope and accumulate them during transformation or not.
+Basically, instead of using:</p>
+<blockquote>
+<div><p>x_hat(n)= x(n-1) + scaling*( x(n)-x(n-1) ) ; n&gt;1, x_hat transformed signal, x original signal</p>
+</div></blockquote>
+<dl class="simple">
+<dt>keep_memory apply the following:</dt><dd><p>x_hat(n)= x_hat(n-1) + scaling*( x(n)-x(n-1) ) ; n&gt;1, x_hat transformed signal, x original signal</p>
+</dd>
+</dl>
+<p>Keep in mind that this may completely change the range of values, as consecutive increase in the slopes
+may cause a strong vertical shift of the signal. If set to True, set scaling factor in the range [0.8, 1.2]
+Default: False</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.scaling">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">scaling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">array</span> <span class="pre">like</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#scaling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.scaling" title="Permalink to this definition"></a></dt>
+<dd><p>scaling rescale the array by a given amplitude.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array like</em>) – Input array or tensor. Can be of any shape, but the last two dimensions must referres to EEG’s Channel x Sample</p></li>
+<li><p><strong>value</strong> (<em>float</em><em>, </em><em>optional</em>) – The rescaling factor. If not given, a random value is extracted from a uniform distribution in range [0.5, 2]
+Default: None</p></li>
+<li><p><strong>batch_equal</strong> – Whether to apply the same rescaling on all signals or not. If False, value must be left to None, otherwise
+batch_equal will be reset to True.
+Default: True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.shift_frequency">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">shift_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_freq:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Fs:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_shift:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#shift_frequency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.shift_frequency" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.shift_horizontal">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">shift_horizontal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_time:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Fs:</span> <span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_shift:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#shift_horizontal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.shift_horizontal" title="Permalink to this definition"></a></dt>
+<dd><p>shift_horizontal shift temporally the elements of the last dimension of x by a constant.</p>
+<p>The empty elements at beginning or the ending part after shift are set to zero.</p>
+<dl class="simple">
+<dt>x: N-D Tensor or numpy array</dt><dd><p>Array to shift. Last dimension must have the EEG recordings</p>
+</dd>
+<dt>shift_time: float</dt><dd><p>Shift in seconds, of the desired time shift.</p>
+</dd>
+<dt>Fs: float</dt><dd><p>the EEG sampling rate in Hz</p>
+</dd>
+<dt>forward: bool</dt><dd><p>Whether to shift the EEG forward (True) or backward (False) in time. If left to None, a
+random selection of the shift direction will be performed.
+Default= None</p>
+</dd>
+<dt>random_shift: bool, optional</dt><dd><p>Wheter to choose a random shift length lower than or equal to shift_time,
+i.e. consider shift_time as the exact value to shift or as an upper bound for
+a random selection.
+Default= False</p>
+</dd>
+<dt>batch_equal: bool, optional</dt><dd><p>whether to apply the same shift to all EEG record or not.
+Note: if random shift is set to False and forward is None, then batch_equal will be equal
+to True since no differences in the shift can be applied.
+Default= True</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.shift_vertical">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">shift_vertical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">of</span> <span class="pre">numpy</span> <span class="pre">Array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value:</span> <span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#shift_vertical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.shift_vertical" title="Permalink to this definition"></a></dt>
+<dd><p>shift_vertical add a scalar value to the input array x.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – </p></li>
+<li><p><strong>value</strong> (<em>scalar</em>) – The value to add</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.warp_signal">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">warp_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stretch_strength</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">squeeze_strength</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/selfeeg/augmentation/functional.html#warp_signal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.warp_signal" title="Permalink to this definition"></a></dt>
+<dd><p>warp_signal stretch and squeeze portion of the last dimension of the input x
+and resize to the original size.</p>
+<p>Given x a N-D Tensor where the last two dim are Channel x Signal, warp_signal:
+1) divide the last dimension of x into N segments
+2) select at random a subset segments
+3) stretch those segments according to stretch_strength
+4) squeeze other segments according to squeeze_strength
+5) resample x to the original dimension. For this part pchip interpolation</p>
+<blockquote>
+<div><p>with a uniform virtual grid is used</p>
+</div></blockquote>
+<p>If batch_equal is set to False, call the function recursively and repeat step 1 to 5 for each
+(N_{1}*N_{2}…*N{-3}) elements of the tensor, until the recursion gets a 2-dimensional sub-tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – The array to warp. It accepts any dimensions but the last 2 must be Channel x Signal.
+For example, if x is 4-D, it must be in the form (N1 x N2 x Channels x Signal), where N1 and N2 are usually
+the batch size and channels</p></li>
+<li><p><strong>segments</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of segments to consider when dividing the last dimension of x.
+Default: 10</p></li>
+<li><p><strong>stretch_strength</strong> (<em>float</em><em>, </em><em>optional</em>) – The stretch power, i.e. a multiplication factor which determines the number of samples the stretched
+segment must have.
+Default: 2.</p></li>
+<li><p><strong>squeeze_strength</strong> (<em>float</em><em>, </em><em>optional</em>) – The squeeze power. The same as stretch but for the segments to squeeze
+Default: 0.5</p></li>
+<li><p><strong>batch_equal</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply the same warp to all records or not. True means faster computation but more memory
+consuption and less variability, False the opposite.
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-selfeeg.augmentation">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-selfeeg.augmentation" title="Permalink to this heading"></a></h2>
+<p>This is the import of the data augmentation module</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="selfeeg.html" class="btn btn-neutral float-left" title="selfeeg package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="selfeeg.dataloading.html" class="btn btn-neutral float-right" title="selfeeg.dataloading package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MedMax Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

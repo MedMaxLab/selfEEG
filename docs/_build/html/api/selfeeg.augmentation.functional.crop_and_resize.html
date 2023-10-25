@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>crop_and_resize &mdash; SelfEEG 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SelfEEG
+          </a>
+              <div class="version">
+                0.0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">selfeeg</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SelfEEG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">crop_and_resize</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/selfeeg.augmentation.functional.crop_and_resize.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="crop-and-resize">
+<h1>crop_and_resize<a class="headerlink" href="#crop-and-resize" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.crop_and_resize">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">crop_and_resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x:</span> <span class="pre">N-D</span> <span class="pre">Tensor</span> <span class="pre">or</span> <span class="pre">array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segments:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_cut:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/selfeeg/augmentation/functional.html#crop_and_resize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.crop_and_resize" title="Permalink to this definition"></a></dt>
+<dd><p>crop_and_resize crop some segments of the last dimension of the input x and resize to the original dimension.</p>
+<p>Given x a N-D Tensor where the last two dim are EEG_Channel x EEG_Signal, crop_and_resize:
+1) divide the last dimension of x into N segments
+2) select at random a subset segments
+3) remove the selected segments from x
+4) create a new cropped version of x
+5) resample the new cropped version to the original dimension. For this part pchip interpolation</p>
+<blockquote>
+<div><p>with a uniform virtual grid is used</p>
+</div></blockquote>
+<p>If batch_equal is set to False, call the function recursively and repeat step 1 to 5 for each
+(N_{1}*N_{2}…*N{-3}) elements of the tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>N-D Tensor</em><em> or </em><em>numpy array</em>) – The array to crop and resize. It accepts any dimensions but the last 2 must be EEG_Channel x EEG_Signal.
+For example, if x is 4-D, it must be in the form (N1 x N2 x Channels x Signal), where N1 and N2 are usually
+the batch size and channels</p></li>
+<li><p><strong>segments</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of segments to consider when dividing the last dimension of x.
+Default: 10</p></li>
+<li><p><strong>N_cut</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of segments to cut.
+Default: 1</p></li>
+<li><p><strong>batch_equal</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to apply the same crop to all EEG record or not. True means faster computation but more memory
+consuption and less variability, False the opposite
+Default: False</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>dim = (16,1,64,512)
+segments=15
+N_cut=6</p>
+<p>x = torch.sin(torch.linspace(0,20*math.pi, dim[-1]))
+zero_tensor = torch.zeros(dim)
+x = zero_tensor + x
+# x = x.numpy() #the result won’t change if x is a numpy array</p>
+<p>x_crop = crop_and_resize(x, segments= segments, N_cut= N_cut, batch_equal=True)
+print(torch.equal(x_crop[1], x_crop[2])) # True
+x_crop = crop_and_resize(x, segments= segments, N_cut= N_cut, batch_equal=False)
+print(torch.equal(x_crop[1], x_crop[2])) # False</p>
+<p># plot the results
+plt.plot(xnp[0,0,0,:])
+plt.show()
+plt.plot(x_crop[0,0,0,:])
+plt.plot(x_crop[2,0,0,:])
+plt.show()</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MedMax Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

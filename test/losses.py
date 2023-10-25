@@ -67,7 +67,7 @@ def SimSiam_loss(p1: torch.Tensor,
                  z1: torch.Tensor, 
                  p2: torch.Tensor, 
                  z2: torch.Tensor,
-                 projections_norm: bool=False,
+                 projections_norm: bool=True,
                 ):
     """
     Simple implementation of the SimSiam loss with the possibility to not normalize tensors.

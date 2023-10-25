@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>permute_channels &mdash; SelfEEG 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SelfEEG
+          </a>
+              <div class="version">
+                0.0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">selfeeg</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SelfEEG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">permute_channels</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/selfeeg.augmentation.functional.permute_channels.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="permute-channels">
+<h1>permute_channels<a class="headerlink" href="#permute-channels" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.permute_channels">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">permute_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chan2shuf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'random'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chan_net</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_equal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/selfeeg/augmentation/functional.html#permute_channels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.permute_channels" title="Permalink to this definition"></a></dt>
+<dd><p>permutation_channels permute the input tensor EEG signals x along the channel dimension (second to last).</p>
+<p>Given an input x where the last two dimension must be (EEG_channels x EEG_samples), permutation_channels
+shuffles all or a subset of the eeg along its channels. Shuffles can be done randomly or using specific
+networks (based on resting state functional connectivity networks).
+If batch_equal is set to False, call the function recursively along each of the (N_{1}*N_{2}…*N{-3})
+dimensions of the tensor.</p>
+<dl>
+<dt>x: N-D Tensor or numpy array</dt><dd><p>The element to shuffle. The last two dimensions must be (EEG_channel x EEG_samples), which means that the
+permutation is applied on the second to last dimension.</p>
+</dd>
+<dt>chan2shuf: int, optional</dt><dd><p>The number of channels to shuffle. Must be greater than 1. -1 is the only accepted negative number and
+means permute all the segments.
+Default: -1</p>
+</dd>
+<dt>mode: str, optional</dt><dd><dl>
+<dt>How to permute the channels. Can be any of:</dt><dd><p>‘random’: shuffle channels at random
+‘network’: shuffle channels which belongs to the same network. A network is a subset of channels whose</p>
+<blockquote>
+<div><p>activity is (with a minumum degree) between each other. This mode support only a subset of
+61 channels of the 10-10 system</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>Default: ‘random’</p>
+</dd>
+<dt>channel_map: list of str, optional</dt><dd><p>The channel map of EEG acquisitions. Must be a list of string or a numpy array of dtype=’&lt;U4’ with channel
+names as elements. Channel name must be defined with capital letters (e.g. ‘P04’, ‘FC5’).
+Default: np.array([‘FP1’, ‘AF7’, ‘AF3’, ‘F1’, ‘F3’, ‘F5’, ‘F7’, ‘FT7’, ‘FC5’, ‘FC3’, ‘FC1’, ‘C1’, ‘C3’,</p>
+<blockquote>
+<div><p>‘C5’, ‘T7’, ‘TP7’, ‘CP5’, ‘CP3’,’CP1’, ‘P1’, ‘P3’, ‘P5’, ‘P7’, ‘PO7’, ‘PO3’, ‘O1’,
+‘OZ’, ‘POZ’, ‘PZ’, ‘CPZ’, ‘FPZ’, ‘FP2’, ‘AF8’, ‘AF4’, ‘AFZ’, ‘FZ’, ‘F2’, ‘F4’, ‘F6’,
+‘F8’, ‘FT8’, ‘FC6’, ‘FC4’, ‘FC2’, ‘FCZ’, ‘CZ’, ‘C2’, ‘C4’, ‘C6’, ‘T8’, ‘TP8’, ‘CP6’,
+‘CP4’, ‘CP2’, ‘P2’, ‘P4’, ‘P6’, ‘P8’, ‘PO8’, ‘PO4’],dtype=’&lt;U4’)</p>
+</div></blockquote>
+</dd>
+<dt>chan_net: str or list of str, optional</dt><dd><p>The list of networks to use if network mode is selected. Must be a list of string or a single string.
+Supported networks are DMN, DAN, VAN, SMN, VFN, FPN. Use ‘all’ to select all networks. To get a list of
+the channel names per network use get_eeg_network_channel_names()
+Default: ‘all’</p>
+</dd>
+<dt>batch_equal: bool, optional</dt><dd><p>whether to apply the same permutation to all EEG record or not. If True, permute_signal is called
+recursively for each dimension of the batch until the last two are reached (e.g. given a tensor x
+of dimension (16,8,64,512) the function permute each of the 16*8 EEG signals (64 channels of 512 samples)
+individually).
+Default: False</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MedMax Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

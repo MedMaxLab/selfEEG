@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>add_band_noise &mdash; SelfEEG 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SelfEEG
+          </a>
+              <div class="version">
+                0.0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">selfeeg</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SelfEEG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">add_band_noise</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/selfeeg.augmentation.functional.add_band_noise.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="add-band-noise">
+<h1>add_band_noise<a class="headerlink" href="#add-band-noise" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="selfeeg.augmentation.functional.add_band_noise">
+<span class="sig-prename descclassname"><span class="pre">selfeeg.augmentation.functional.</span></span><span class="sig-name descname"><span class="pre">add_band_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">x:</span> <span class="pre">array</span> <span class="pre">like,</span> <span class="pre">bandwidth:</span> <span class="pre">list[tuple[float,</span> <span class="pre">float],</span> <span class="pre">str,</span> <span class="pre">float],</span> <span class="pre">samplerate:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">256,</span> <span class="pre">noise_range:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">std:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">get_noise:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/selfeeg/augmentation/functional.html#add_band_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#selfeeg.augmentation.functional.add_band_noise" title="Permalink to this definition"></a></dt>
+<dd><p>add_band noise add random noise filtered at specific bandwidths.</p>
+<p>Given a set of bandwidths or a set of specific frequency, add_band_noise create a noise whose
+spectrum is bigger than zero only on those bands. It can be used to alter only specific
+frequency components of the original signal. The noise generated will have the same standard
+deviation as x, but it can be rescaled so to be within a specific range or to have a specific
+standard deviation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array like</em>) – array to add noise</p></li>
+<li><p><strong>bandwidth</strong> (<em>list</em>) – <p>The frequency components which the noise must have. Must be a LIST with the following
+values:</p>
+<ul>
+<li><p>strings: add noise to specific EEG components. Can be any of “delta”, “theta”, “alpha”, “beta”, “gamma”, “gamma_low”, “gamma_high”.</p></li>
+<li><p>scalar: add noise to a specifi component</p></li>
+<li><p>tuple with 2 scalar: add noise to a specific band set with the tuple (start_component,end_component)</p></li>
+</ul>
+</p></li>
+<li><p><strong>samplerate</strong> (<em>float</em><em>, </em><em>optional</em>) – The sampling rate, given in Hz. Remember to change this value according to the signal
+sampling rate
+Default = <strong>256</strong></p></li>
+<li><p><strong>noise_range</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>The range within the noise is scaled. Must be a single sclar or a two element list. If given
+as a single scalar, then the range is considered the interval [-noise_range, noise_range]. If
+this parameter is given, then std value is ignored, since the two conditions cannot be
+satisfied at the same time. To rescale, the following formula is applied:</p>
+<div class="math notranslate nohighlight">
+\[noise_new = ( (noise - \max_{noise})/(\max_{noise}-\min_{noise}) )*(target_range_max - target_range_min) + target_range_min\]</div>
+<p>Default = <strong>None</strong></p>
+</p></li>
+<li><p><strong>std</strong> (<em>float</em><em>, </em><em>optional</em>) – <p>The desired standard deviation of the noise. If noise_range is given, this argument is
+ignored. It simply scale the noise by applying:</p>
+<div class="math notranslate nohighlight">
+\[noise_new = noise * (target_std / std(noise))\]</div>
+<p>Default = <strong>None</strong></p>
+</p></li>
+<li><p><strong>get_noise</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to return the generated noise or not
+Default = <strong>False</strong></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, MedMax Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
