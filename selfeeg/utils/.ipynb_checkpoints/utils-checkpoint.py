@@ -1,7 +1,9 @@
-from typing import Union, Sequence
+from __future__ import annotations
+from typing import Union, Sequence, Optional
 import copy
 import random
 import numpy as np
+from numpy.typing import ArrayLike
 import torch
 
 __all__ = ['get_subarray_closest_sum',
@@ -9,26 +11,39 @@ __all__ = ['get_subarray_closest_sum',
            'torch_pchip'
           ]
 
-def subarray_closest_sum(arr, n, k):
+def subarray_closest_sum(arr: list, 
+                         n: int, 
+                         k: float
+                        ) -> list:
     """
-    subarrat_closest_sum return a subarray whose element sum is closest to k.
+    ``subarrat_closest_sum`` returns a subarray whose element sum is closest to k.
     
-    This function is taken from geeksforgeeks at the following link:
-    https://www.geeksforgeeks.org/subarray-whose-sum-is-closest-to-k/
+    This function is taken from geeksforgeeks at the following link [link1]_
     
     It is important to note that this function return a subarray and not a subset of the array.
     A subset is a collection of elements in the array taken from any index, a subarray here is 
-    a slice of the array (arr[start:end]). If you are looking for a subset with closest sum, which is more
-    accurate but more computationally and memory demanding, search for another function.
+    a slice of the array (arr[start:end]). If you are looking for a subset with closest sum,
+    which is more accurate but more computationally and memory demanding, 
+    search for another function.
     
-    Arguments
-    ---------
+    Parameters
+    ----------
     arr: list
         the array to search
     n: int
         the length of the array
     k: float
         the target value
+
+    Returns
+    -------
+    best_arr: list
+        The subarray whose element sum is closest to k
+
+    References
+    ----------
+    .. [link1] https://www.geeksforgeeks.org/subarray-whose-sum-is-closest-to-k/
+    
     """
     
     # Initialize start and end pointers, current sum, and minimum difference
@@ -79,33 +94,44 @@ def get_subarray_closest_sum(arr: Sequence[int],
                              tolerance: float=0.01,
                              perseverance: int=1000,
                              return_subarray: bool=True 
-                            ):
+                            ) -> tuple[list, Optional[list]]:
     """
-    get_subarray_closest_sum find the subarray of arr whose values sum is 
+    ``get_subarray_closest_sum`` find the subarray of whose values sum is 
     closer to a target up to a specified tolerance (if possible) and return the index of the 
     selected values in the original array.
     
-    To find the subarray, get_subarray_closest_sum calls multiple times subarray_closest_sum, 
-    until the subarray has the sum within [target*(1-tolerance), target*(1+tolerance).
+    To find the subarray, get_subarray_closest_sum calls multiple times the 
+    ``subarray_closest_sum`` function until the subarray has the sum within 
+    [target*(1-tolerance), target*(1+tolerance)].
     At each try the array is shuffled in order to get a different solution. Keep in mind that 
     the solution is not always the optimal, but is the first which satisfy the requirements 
     given.
     
-     Arguments
-    ---------
+    Parameters
+    ----------
     arr: list
         the array to search
     target: float
         the target sum
     tolerance: float, optional
         the tolerance to apply to the sum in percentage. It must be a value between 0 and 1.
-        Default: 0.01
+        
+        Default = 0.01
     return_subarray: bool, optional
         whether to also return the subarray or not
-        Default: True
+        
+        Default = True
     perseverance: int, optional
         The maximum number of tries before stopping searching the subarray with closest sum.
-        Default: 1000
+        
+        Default = 1000
+
+    Returns
+    -------
+    final_idx: list
+        a list with the index of the identified subarray
+    best_sub_arr: list, optional
+        the identified subarray
     
     """
     
@@ -146,7 +172,59 @@ def get_subarray_closest_sum(arr: Sequence[int],
         return final_idx
 
 
-def scale_range_soft_clip(x, Range=200, asintote=1.2, scale='mV', exact=True):
+def scale_range_soft_clip(x: ArrayLike, 
+                          Range: float=200, 
+                          asintote: float=1.2, 
+                          scale: str='mV', 
+                          exact: bool=True
+                         ) -> ArrayLike:
+    """
+    ``scale_range_soft_clip`` rescale the EEG data.
+    The function will rescale the data in the following way:
+
+        1. Values in Range will be rescaled in the range [-1,1] linearly
+        2. Values outside the range will be either clipped or soft clipped with 
+           an exponential saturating curve with first derivative in -1 and 1
+           preserved and horizontal asintote (the saturating point) given by the user
+
+    To provide faster computation, this function can also be approximated with a 
+    sigmoid scaled with the given input range and asintote. To check the difference
+    in those functions see the geogebra file provided in the extra folder of the github
+    repository.
+
+    Parameters
+    ----------
+    x: ArrayLike
+        The array or tensor to rescale. Rescaling can be perfomed along the last dimension.
+        Tensors can also be placed in a GPU. Computation in this case is much faster
+    Range: float, optional
+        The range of values to rescale given in microVolt. It rescale linearly the 
+        values in [-range, range] to [-1, 1]. Must be a positive value.
+
+        Default = 200
+    asintote: float, optional
+        The horizontal asintote of the soft clipping part. Must be a value bigger than 1
+
+        Default = 1.2
+    scale: str, optional
+        The scale of the EEG Samples. It can be:
+
+            - 'mV' for milliVolt
+            - 'uV' for microVolt
+            - 'nV' for nanoVolt
+
+        Default = 'mV'
+    exact: bool, optional
+        whether to approximate the composed function (linear + exponential function) with 
+        a sigmoid. It will make the rescaling much faster but won't preserve the linearity 
+        in the range [-1, 1]
+
+    Returns
+    -------
+    x_scaled: ArrayLike
+        The rescaled array
+    
+    """
     
     if Range<0:
         raise ValueError('Range cannot be lower than 0')
@@ -198,6 +276,50 @@ def scale_range_soft_clip(x, Range=200, asintote=1.2, scale='mV', exact=True):
 
 
 class RangeScaler():
+    """
+    ``RangeScaler`` is the class adaptation of the 
+    ``scale_range_with_soft_clip`` function. 
+    It rescale the EEG data.
+    The class will rescale the data in the following way:
+
+        1. Values in Range will be rescaled in the range [-1,1] linearly
+        2. Values outside the range will be either clipped or soft clipped with 
+           an exponential saturating curve with first derivative in -1 and 1
+           preserved and horizontal asintote (the saturating point) given by the user
+
+    To provide faster computation, this function can also be approximated with a 
+    sigmoid scaled with the given input range and asintote. To check the difference
+    in those functions see the geogebra file provided in the extra folder of the github
+    repository.
+
+    Parameters
+    ----------
+    x: ArrayLike
+        The array or tensor to rescale. Rescaling can be perfomed along the last dimension.
+        Tensors can also be placed in a GPU. Computation in this case is much faster
+    Range: float, optional
+        The range of values to rescale given in microVolt. It rescale linearly the 
+        values in [-range, range] to [-1, 1]. Must be a positive value.
+
+        Default = 200
+    asintote: float, optional
+        The horizontal asintote of the soft clipping part. Must be a value bigger than 1
+
+        Default = 1.2
+    scale: str, optional
+        The scale of the EEG Samples. It can be:
+
+            - 'mV' for milliVolt
+            - 'uV' for microVolt
+            - 'nV' for nanoVolt
+
+        Default = 'mV'
+    exact: bool, optional
+        whether to approximate the composed function (linear + exponential function) with 
+        a sigmoid. It will make the rescaling much faster but won't preserve the linearity 
+        in the range [-1, 1]
+
+    """
 
     def __init__(self, Range=200, asintote=1.2, scale='mV', exact=True):
         if Range<0:
@@ -215,6 +337,9 @@ class RangeScaler():
         self.exact    = exact
     
     def __call__(self,x):
+        """
+        :meta private:
+        """
         print('called function')
         return scale_range_soft_clip(x, self.Range, self.asintote, self.scale, self.exact)
 
@@ -227,18 +352,17 @@ def torch_pchip(x: "1D Tensor",
                 new_y_max_numel: int=4194304
                ):
     """
+    ``torch_pchip`` performs the pchip interpolation on 
+    the last dimension of the input tensor y.
     
-    torch_pchip perform pchip interpolation on the last dimension of the input tensor y.
-    
-    This function is a pytorch adaptation of the scipy's pchip_interpolate. 
+    This function is a pytorch adaptation of the scipy's pchip_interpolate [pchip]_ . 
     It performs sp-pchip interpolation (Shape Preserving Piecewise Cubic Hermite Interpolating 
     Polynomial) on the last dimension of the y tensor.
     x is the original time grid and xv new virtual grid. So, the new values of y at time xv are 
     given by the polynomials evaluated at the time grid x.
     
-    Parameter
-    ---------
-    
+    Parameters
+    ----------
     x: 1D Tensor
         Tensor with the original time grid. Must be the same length as the last dimension of y
     y: ND Tensor
@@ -248,29 +372,34 @@ def torch_pchip(x: "1D Tensor",
     save_memory: bool, optional
         whether to perform the interpolation on subsets of the y tensor by recursively function 
         calls or not. Does not apply if y is a 1-D tensor. If set to False memory usage can 
-        drastically increase (for example with a 128 MB tensor, the memory usage of the function is 
-        1.2 GB), but in some devices it can speed up the process. However, this is not the case for 
-        all devices and performance may increase (see example below run on an old computer).
-        Default: True
+        drastically increase (for example with a 128 MB tensor, the memory usage of the 
+        function is 1.2 GB), but in some devices it can speed up the process. 
+        However, this is not the case for all devices and performance may also decrease.
+        
+        Default = True
     new_y_max_numel: int, optional
-        The number of elements which the tensor needs to surpass to make the function starting
-        recursive calls. It can be considered as an indicator of the maximum allowed memory usage 
-        since slower the number, lower the memory used. 
-        Default: 256*1024*16 (approximately 16s of recording of a 256 Channel EEG sampled at 1024 Hz)
+        The number of elements which the tensor needs to surpass in order to make the function 
+        start doing recursive calls. It can be considered as an indicator of the maximum 
+        allowed memory usage since lower the number, lower the memory used. 
+        
+        Default = 256*1024*16 (approximately 16s of recording of a 256 Channel 
+        EEG sampled at 1024 Hz)
     
+    Note
+    ----
+    Some technical information and difference with other interpolation can be found here:
+    https://blogs.mathworks.com/cleve/2012/07/16/splines-and-pchips/
     
-    Some technical information and difference with other interpolation:
-        https://blogs.mathworks.com/cleve/2012/07/16/splines-and-pchips/
-        https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.PchipInterpolator.html
-    Some parts of the code are inspired from: 
-        https://github.com/scipy/scipy/blob/v1.10.1/scipy/interpolate/_cubic.py#L157-L302
-    
-    Example
-    -------
-    # result on my (old) computer with a 4D tensor/array with dim (1024,1,96,512) and xv with dim
-    # (1024,)
-    #         torch_pchip no save memory | torch_pchip save memory | scipy pchip_interpolate
-    #                   15.48s                     5.33s                     21.96s
+    Note
+    ----
+    have a look also at the Scipy's documentation: 
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.PchipInterpolator.html
+    Some parts of the code are inspired from:
+    https://github.com/scipy/scipy/blob/v1.10.1/scipy/interpolate/_cubic.py#L157-L302
+
+    References
+    ----------
+    .. [pchip] https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.pchip_interpolate.html
     
     """
     

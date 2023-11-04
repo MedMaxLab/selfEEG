@@ -11,8 +11,10 @@ import pandas as pd
 import tqdm
 from scipy.io import loadmat
 import torch
+from numpy.typing import ArrayLike
 from torch.utils.data import Dataset, Sampler
 from ..utils.utils import subarray_closest_sum, get_subarray_closest_sum
+
 
 __all__ = ['GetEEGPartitionNumber', 
            'GetEEGSplitTable', 'GetEEGSplitTableKfold',
@@ -36,67 +38,95 @@ def GetEEGPartitionNumber(EEGpath: str,
                           verbose: bool=False
                          ) -> pd.DataFrame :
     """
-    GetEEGPartitionNumber(EEGpath, freq, window, overlap=0)
-    Find the number of unique partitions from EEG signals stored inside a given directory.
-    Some default parameters are designed to work with the 'auto-BIDS' library. For more info,
-    See: Link
+    ``GetEEGPartitionNumber`` find the number of unique partitions from the EEG signals 
+    stored inside a given directory. Some default parameters are designed to work with 
+    the 'BIDSAlign' library. For more info, see [bids].
+    To further check how to use this function see the introductory notebook provided 
+    in the documentation
     
-    Return a Pandas DataFrame with the exact number of samples which can be extracted from each 
-    EEG file in the EEGpath directory.
     
     Parameters
     ----------
-    EEGpath : string 
-        Directory with all EEG files. If the last element of the string is not "/", the character will
-        be added automatically
+    EEGpath : str 
+        Directory with all EEG files. If the last element of the string is not 
+        "/", the character will be added automatically.
     freq : int or float, optional 
         EEG sampling rate. Must be the same for all EEG files. 
-        Default: 250
+        
+        Default = 250
     window : int or float, optional
-        Time window length in seconds.
-        Default: 2
+        The window length give in seconds.
+        
+        Default = 2
     overlap : float, optional 
-        Same EEG recording overlap percentage. Must be in the interval [0,1)
-        Default: 0.10
+        Same EEG contiguous partitions overlap in percentage. Must be in the interval [0,1)
+        
+        Default = 0.1
     includePartial : bool, optional
-        Count also final EEG partitions at least half of the time windows filled with EEG recording
-        Default: True
+        Whether to also count also the final EEG portions which could potentially cover 
+        at least half of the time windows. In this case the the overlap between the last
+        included partition and the previous one will increase in order to fill the incomplete
+        partition with real values. Note that this apply only if at least half of such partition
+        will include new values
+        
+        Default = True
     file_format : str or list[str], optional
-        A string used to detect a set of specific EEG files inside the give EEGpath. It is directly put after 
-        EEGpath during call of the glob.glob() method. Therefore, it can contain shell-style wildcards (see glob.glob()
-        help for more info). This parameter might be helpful if you have other files other than the EEGs in your 
-        directory.
-        Alternatively, you can provide a list of strings to cast multiple glob.glob() searches. This might be useful if
-        you want to combine multiple identification criteria (e.g. specific file extensions, specific file names, etc.)
-        Default: '*'
+        A string used to detect a set of specific EEG files inside the give EEGpath. 
+        It is directly put after ``EEGpath`` during call of the glob.glob() method. 
+        Therefore, it can contain shell-style wildcards (see glob.glob() help for more info). 
+        This parameter might be helpful if you have other files other than the EEGs in your 
+        directory. Alternatively, you can provide a list of strings to cast multiple 
+        glob.glob() searches. This might be useful if you want to combine multiple 
+        identification criteria (e.g. specific file extensions, specific file names, etc.)
+        
+        Default = '*'
     load_function : 'function', optional
         A custom EEG file loading function. It will be used instead of the default: 
-        loadmat(ii, simplify_cells=True)['DATA_STRUCT']['data'] (for files preprocessed with the AUTO-BIDS library)
-        The function must take only one required argument, which is the full path to the EEG file 
-        (e.g. the function will be called in this way: load_function(fullpath, optional_arguments) )
-        Default: None
+        
+        ``loadmat(ii, simplify_cells=True)['DATA_STRUCT']['data']`` 
+        
+        which is the default output format for files preprocessed with the BIDSalign library.
+        The function must take only one required argument, which is the full path to the 
+        EEG file (e.g. the function will be called in this way: 
+        load_function(fullpath, optional_arguments) )
+        
+        Default = None
     optional_load_fun_args: list or dict, optional
         Optional arguments to give to the custom loading function. Can be a list or a dict.
-        Default: None
+        
+        Default = None
     transform_function : 'function', optional
-        A custom transformation to be applied after the EEG is loaded. Might be useful if there are portion of 
-        the signal to cut. 
-        The function must take only one required argument, which is the EEG file to transform
-        (e.g. the function will be called in this way: transform_function(EEG, optional_arguments) )
-        Default: None
+        A custom transformation to be applied after the EEG is loaded. 
+        Might be useful if there are portions of the signal to cut (usually the initial or the
+        final). The function must take only one required argument, which is the loaded EEG 
+        file to transform (e.g. the function will be called in this way: 
+        transform_function(EEG, optional_arguments) )
+        
+        Default = None
     optional_transform_fun_args: list or dict, optional
         Optional arguments to give to the EEG transformation function. Can be a list or a dict.
-        Default: None
+        
+        Default = None
     keep_zero_sample : bool, optional
-        Whether to preserve Dataframe rows where the number of samples to extract is equal to zero.
+        Whether to preserve Dataframe's rows with calculated zero number of samples or not.
+
+        Default = True
     save : bool, optional
-        Save the resulted DataFrame as a .csv file 
+        Whether to save the resulted DataFrame as a .csv file.
+
+        Default = False
     save_path: str, optional
-        A custom path to be used instead of the current working directory. It's the string given to the 
-        pandas.DataFrame.to_csv() method.
-        Default: None
+        A custom path to be used instead of the current working directory. 
+        It's the string given to the ``pandas.DataFrame.to_csv()`` method.
+        Note that if save is True and no save_path is given, the file will be saved as
+        `EEGPartitionNumber.csv` or `EEGPartitionNumber_k.csv` with k integer used to
+        avoid overwriting a file
+        
+        Default = None
     verbose: bool, optional
-        whether to print or not some information during function excecution. Useful to keep track
+        whether to print or not some information during function excecution. 
+        Useful to keep track of the calculation process. Might be useful for large
+        datasets
                 
     Returns
     -------
@@ -108,6 +138,15 @@ def GetEEGPartitionNumber(EEGpath: str,
     Note
     ----
     freq*window must give an integer with the number of samples
+
+    Note
+    ----
+    This function can handle array with more than 2 dimensions. In this case a warning will
+    be generated and calculation will be performed in this way. First the length of the last 
+    dimension will be used to calculate the number of partitions, then the number will be 
+    multiplied by the product of the shape of all dimensions from the first to the second to
+    last (the last two dimensions are supposed to be the Channel and Sample dimension of a
+    single EEG file
     
     """
     # Check Inputs
@@ -255,7 +294,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
                      val_data_id: list or dict =None,
                      val_ratio_on_all_data: bool=True,
                      stratified: bool=False,
-                     labels: 'array like'=None,
+                     labels: ArrayLike=None,
                      dataset_id_extractor: 'function'=None,
                      subject_id_extractor: 'function'=None,
                      split_tolerance=0.01,
@@ -265,109 +304,155 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
                     ) -> pd.DataFrame:
 
     """   
-    GetEEGSplitTable create a table defining the files to use for train, validation and test of the models
-    
-    Return a Pandas DataFrame defining which file should be included in the training, validation or test set
+    ``GetEEGSplitTable`` create a table defining the files to use for train, 
+    validation and test of the models.
     
     Split is done in the following way:
-    Dataset --> Train / Test 
-                Train --> Train / Validation
-    If specific ID are given, the split is done using them ignoring split ratio, otherwise split is done randomly
-    using the given ratio. Keep in mind that Test or Validation can be empty, if for example you want to split 
-    the dataset only in two subsets.
+
+        1. Dataset is split in Train and Test sets
+        2. Train set is split in Train and Validation sets
+    
+    If specific ID are given, the split is done using them ignoring any split ratio, 
+    otherwise split is done randomly using the given ratio. Note that Test or Validation 
+    sets can be empty, if for example you want to split the dataset only in two subsets.
+    To further check how to use this function see the introductory notebook provided 
+    in the documentation
     
     Parameters
     ----------
-    partition_table: pd.Dataframe, optional
+    partition_table: pd.Dataframe
         A two columns dataframe where:
-            1-the first column has name 'file_name' and contain all the file names
-            2-the second column has name 'N_samples' and has the number of samples which can be extracted from the file
-        This table can be automatically created with a custom setting with the provided function GetEEGPartitionNumber()
-        Default: None
+            
+            1. the first column has name 'file_name' and contain all the file names
+            2. the second column has name 'N_samples' and has the number of samples 
+               which can be extracted from the file
+        
+        This table can be automatically created with a custom setting with the provided 
+        function ``GetEEGPartitionNumber()`` .
     test_ratio: float, optional
-        The percentage of data with respect to the whole number of samples (partitions) of the dataset to be included 
-        in the test set. Must be a number in [0,1]. 0 means that the test split is skipped if test_data_id isn't given
-        Default: None
+        The percentage of data with respect to the whole number of samples (partitions) 
+        of the dataset to be included in the test set. Must be a number in [0,1]. 
+        0 means that the test split is skipped if test_data_id isn't given
+        
+        Default = None
     val_ratio: float, optional
-        The percentage of data with respect to the whole number of samples (partitions) of the dataset or the remaining 
-        ones after test split (see val_ratio_on_all_data argument) to be included in the validation set. 
-        Must be a number in [0,1]. 0 means that the validation split is skipped if val_data_id isn't given
-        Default: None
+        The percentage of data with respect to the whole number of samples (partitions) 
+        of the dataset or the remaining ones after test split 
+        (see val_ratio_on_all_data argument) to be included in the validation set. 
+        Must be a number in [0,1]. 0 means that the validation split is skipped 
+        if val_data_id isn't given. 
+        
+        Default = None
     test_split_mode: int or str, optional
-        The type of split to perform in the step not_excluded_data --> train / test sets. It can be one of the following:
-            1) any of [0, 'd', 'set', 'dataset'] = split will be performed using dataset ids, i.e. all files of the same
-                dataset will be put in the same split set
-            2) any of [1, 's', 'subj', 'subject'] = split will be performed using subjects ids, i.e. all files of the same
-                subjects will be put in the same split set
-            3) any of [2, 'file', 'record'] = split will be performed looking at single files
-        Default: 2
+        The type of split to perform in the step train test split. It can be one of the
+        following:
+        
+            1. any of [0, 'd', 'set', 'dataset']: split will be performed using dataset 
+               IDs, i.e. all files of the same dataset will be put in the same split set
+            2. any of [1, 's', 'subj', 'subject']: split will be performed using subjects IDs, 
+               i.e. all files of the same subjects will be put in the same split set
+            3. any of [2, 'file', 'record']: split will be performed looking at single files
+            
+        Default = 2
     val_split_mode: int or str, optional
-        The type of split to perform in the step train --> train / validation sets. Input allowed are the same as in
-        test_split_mode.
-        Default: 2
+        The type of split to perform in the step train to train - validation split. 
+        Input allowed are the same as in test_split_mode.
+        
+        Default = 2
     exclude_data_id  : list or dict, optional 
-        Dataset ID to be excluded. It can be:
-            1) a list with all dataset ids to exclude
-            2) a dictionary where keys are the dataset ids and values its relative subject ids. If a key is store with 
-                None as a value, then all the files from that dataset will be included
-        Note1: To work, the function must be able to identify the dataset or subject IDs from the file name in order to check
-            if it is in the list/dict. Custom extraction function can be given as arguments; however, if nothing is given, 
-            the function will try to extract IDs considering that file names are in the format a_b_c_d.extension 
-            (the output of the AUTO-BIDS library), where "a" is an integer with the dataset ID and "b" an integer 
-            with the subject ID. If this fail, all files will be considered from the same datasets (id=0), and each file from a 
-            different subject (id from 0 to N-1).
-        Note2: if the input argument is not a list or a dict, it will be automatically converted to a list
-        Default: None
+        Dataset ID to be excluded. It can be given in the following formats:
+        
+            1. a list with all dataset IDs to exclude
+            2. a dictionary where keys are the dataset IDs and values its relative subject IDs. 
+               If a key is store with None as a value, then all the files from that dataset 
+               will be included
+        
+        Note that to work, the function must be able to identify the dataset or subject IDs 
+        from the file name in order to check if they are in the given list or dict. 
+        Custom extraction function can be given as arguments; however, if nothing is given, 
+        the function will try to extract IDs considering that file names are in the format 
+        a_b_c_d.extension (the output of the BIDSalign library), 
+        where "a" is an integer with the dataset ID and "b" an integer with the subject ID. 
+        If this fail, all files will be considered from the same datasets (id=0), 
+        and each file from a different subject (id from 0 to N-1).
+        
+        Also note that if the input argument is not a list or a dict, it will be 
+        automatically converted to a list. This may generate errors
+        
+        Default = None
     test_data_id: list or dict, optional 
         Same as exclude_data_id but for the test split
-        Defaul: None
+        
+        Defaul = None
     val_data_id: list or dict, optional  
         Same as exclude_data_id but for validation split
-        Default: None
+        
+        Default = None
     val_ratio_on_all_data: bool, optional
-        Whether to calculate the validation split ratio only on the training set size (False) or on the entire considered
-        dataset (True), i.e. the size of all files except for the ones excluded
-        files not excluded  placed in the test set.
-        Default: True
+        Whether to calculate the validation split ratio only on the training 
+        set size (False) or on the entire considered dataset (True), i.e. the size 
+        of all files except for the ones excluded files not excluded  placed in the test set.
+        
+        Default = True
     stratified: bool, optional
-        Whether to apply stratification to the split or not. Might be used for fine-tuning split (the only phase where labels
-        are involved). Stratification will preserve, if possible, the label's ratio on the training/validation/test sets.
+        Whether to apply stratification to the split or not. Might be used for fine-tuning 
+        split (the typical phase where labels are involved). Stratification will preserve, 
+        if possible, the label's ratio on the training, validation, and test sets.
         Works only when each file has an unique label, which must be given in input.
-        Default: False
-    labels: list, array like, optional
-        A list or array like objects with the label of each file listed in the partition table. 
-        Must be given if stratification is set to True
-        Indeces of labels must match row indeces in the partition table, i.e. label1 --> row1, label2 --> row2.
-        Default: None
+        
+        Default = False
+    labels: list or ArrayLike, optional
+        A list or 1d ArrayLike objects with the label of each file listed 
+        in the partition table. Must be given if stratification is set to True
+        Indeces of labels must match row indeces in the partition table, i.e. 
+        label1 -> row1, label2 -> row2, etc.
+        
+        Default = None
     dataset_id_extractor: function, optional
-        A custom function to be used to extract the dataset ID from file the file name. It must accept only one argument,
-        which is the file name
-        Default: None
+        A custom function to be used to extract the dataset ID from file the file name. 
+        It must accept only one argument, which is the file name (not the path, only the file
+        name).
+        
+        Default = None
     subject_id_extractor: function, optional
-        A custom function to be used to extract the subject ID from file the file name. It must accept only one argument,
-        which is the file name
-        Default: None
+        A custom function to be used to extract the subject ID from file the file name. 
+        It must accept only one argument, which is the file name (not the path, only the file
+        name).
+        
+        Default = None
     split_tolerance: float, optional
-        Argument for get_subarray_closest_sum function. Set the maximum accepted tolerance between the given split ratio
+        Argument for ``get_subarray_closest_sum`` function. 
+        Set the maximum accepted tolerance between the given split ratio
         and the one got with the obtained subset. Must be a number in [0,1]
-        Default: 0.01
+        
+        Default = 0.01
     perseverance: int, optional
-        Argument for get_subarray_closest_sum function. Set the maximum number of tries before stop searching for a split 
-        whose ratio is in the range [target_ratio - tolerance, target_ratio + tolerance]
-        Default: 1000
+        Argument for ``get_subarray_closest_sum`` function. Set the maximum number 
+        of tries before stop searching for a split whose ratio is in the range 
+        [target_ratio - tolerance, target_ratio + tolerance]
+        
+        Default = 1000
     save : bool, optional
-        Whether to save the resulted DataFrame as a .csv file or not
-        Default: False
+        Whether to save the resulted DataFrame as a .csv file or not.
+        
+        Default = False
     save_path: str, optional
-        A custom path to be used instead of the current working directory. It's the string given to the 
-        pandas.DataFrame.to_csv() method.
-        Default: None
+        A custom path to be used instead of the current working directory. 
+        It's the string given to the ``pandas.DataFrame.to_csv()`` method.
+        
+        Default = None
                  
     Returns
     -------
     EEGSplit : DataFrame
         Two columns Pandas DataFrame. The first column has the EEG file name, 
-        the second define the file usage with 0-1, Train-Test
+        the second define the split. 
+        The split will assign the following labels to a file:
+
+           1. -1 : the file is excluded 
+           2. 0  : the file is included in the training set
+           3. 1  : the file is included in the validation set
+           4. 2  : the file is included in the test set
             
     """ 
     
@@ -429,33 +514,33 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
             for i, n in enumerate(N_classes):
                 #classIdx= np.where(labels==n)[0]
                 classIdx = [ index_i for index_i, label_i in enumerate(labels) if label_i==n]
-                subClassTable= partition_table.iloc[classIdx]
-                classSplit[i] = GetEEGSplitTable(partition_table=subClassTable,  
-                                                 test_ratio=test_ratio, 
+                subClassTable = partition_table.iloc[classIdx]
+                classSplit[i] = GetEEGSplitTable(partition_table = subClassTable,  
+                                                 test_ratio = test_ratio, 
                                                  val_ratio = val_ratio,
-                                                 test_split_mode=test_split_mode,
-                                                 val_split_mode=val_split_mode,
-                                                 exclude_data_id= exclude_data_id,  
-                                                 test_data_id =test_data_id,  
+                                                 test_split_mode = test_split_mode,
+                                                 val_split_mode = val_split_mode,
+                                                 exclude_data_id = exclude_data_id,  
+                                                 test_data_id = test_data_id,  
                                                  val_data_id = val_data_id,
-                                                 val_ratio_on_all_data=val_ratio_on_all_data,
-                                                 stratified= False,
+                                                 val_ratio_on_all_data = val_ratio_on_all_data,
+                                                 stratified = False,
                                                  labels = None,
                                                  dataset_id_extractor = dataset_id_extractor,
                                                  subject_id_extractor = subject_id_extractor,
-                                                 split_tolerance=split_tolerance,
-                                                 perseverance=perseverance,
-                                                 save= False,
+                                                 split_tolerance = split_tolerance,
+                                                 perseverance = perseverance,
+                                                 save = False,
                                                 )
             
             # merge subclass tables and check for mysterious duplicates
-            EEGsplit= pd.concat(classSplit, axis=0, ignore_index=True)
+            EEGsplit = pd.concat(classSplit, axis=0, ignore_index=True)
             try:
                 EEGsplit.drop(columns='index') #useless but to be sure
             except:
                 pass
             EEGsplit= EEGsplit.drop_duplicates(ignore_index=True)
-            EEGsplit = EEGsplit.sort_values(by='file_name')
+            EEGsplit = EEGsplit.sort_values(by='file_name').reset_index().drop(columns='index')
 
     else:
 
@@ -677,101 +762,150 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
                           save_path: str=None
                          ):
     """   
-    GetEEGSplitTableKfold create a table with multiple splits for cross-validation.
-    
-    Return a Pandas DataFrame defining multiple training-validation for cross validation applications.
+    ``GetEEGSplitTableKfold`` create a table with multiple splits for cross-validation.
     Test split, if calculated, is kept equal in every CV split.
-    
     Split is done in the following way:
-    Dataset --> Train / Test (optional)
-                Train --> Train / Validation  * Fold Number
-    Test split is optional and can be done with the same modalities described in GetEEGSplitTable function, i.e.
-    by giving specific ID or by giving a split ratio. 
-    CV's train/validation split can't be done in this way, since this does not guarantee the preservation of 
-    the split ratio.
+
+        1. Dataset is split in Train and Test sets
+        2. Train set is split in Train and Validation sets
+    
+    Test split is optional and can be done with the same modalities described 
+    in the ``GetEEGSplitTable`` function, i.e. by giving specific ID or by giving a split ratio. 
+    CV's train/validation split can't be done in this way, since this does not 
+    guarantee the preservation of the split ratio, which is the core of cross validation.
     
     Parameters
     ----------
-    partition_table: pd.Dataframe, optional
+    partition_table: pd.Dataframe
         A two columns dataframe where:
-            1-the first column has name 'file_name' and contain all the file names
-            2-the second column has name 'N_samples' and has the number of samples which can be extracted from the file
-        This table can be automatically created with a custom setting with the provided function GetEEGPartitionNumber()
-        Default: None
+            
+            1. the first column has name 'file_name' and contain all the file names
+            2. the second column has name 'N_samples' and has the number of samples 
+               which can be extracted from the file
+        
+        This table can be automatically created with a custom setting with the provided 
+        function ``GetEEGPartitionNumber()`` .
     Kfold: int, optional
-        The number of folds to extract. Must be a number higher or equal than 2.
-        Default: 10
+        The number of folds to extract. Must be a number higher or equal than 2. 
+        
+        Default = 10
     test_ratio: float, optional
-        The percentage of data with respect to the whole number of samples (partitions) of the dataset to be included 
-        in the test set. Must be a number in [0,1]. 0 means that the test split is skipped if test_data_id isn't given
-        Default: None
+        The percentage of data with respect to the whole number of samples (partitions) 
+        of the dataset to be included in the test set. Must be a number in [0,1]. 
+        0 means that the test split is skipped if test_data_id isn't given.
+        
+        Default = None
     test_split_mode: int or str, optional
-        The type of split to perform in the step not_excluded_data --> train / test sets. It can be one of the following:
-            1) any of [0, 'd', 'set', 'dataset'] = split will be performed using dataset ids, i.e. all files of the same
-                dataset will be put in the same split set
-            2) any of [1, 's', 'subj', 'subject'] = split will be performed using subjects ids, i.e. all files of the same
-                subjects will be put in the same split set
-            3) any of [2, 'file', 'record'] = split will be performed looking at single files
-        Default: 2
+        The type of split to perform in the step train test split. It can be one of the
+        following:
+        
+            1. any of [0, 'd', 'set', 'dataset']: split will be performed using dataset 
+               IDs, i.e. all files of the same dataset will be put in the same split set
+            2. any of [1, 's', 'subj', 'subject']: split will be performed using subjects IDs, 
+               i.e. all files of the same subjects will be put in the same split set
+            3. any of [2, 'file', 'record']: split will be performed looking at single files
+            
+        Default = 2
     val_split_mode: int or str, optional
-        The type of split to perform in the step train --> train / validation sets. Input allowed are the same as in
-        test_split_mode.
-        Default: 2
+        The type of split to perform in the step train to train - validation split. 
+        Input allowed are the same as in test_split_mode.
+        
+        Default = 2
     exclude_data_id  : list or dict, optional 
-        Dataset ID to be excluded. It can be:
-            1) a list with all dataset ids to exclude
-            2) a dictionary where keys are the dataset ids and values its relative subject ids. If a key is store with 
-                None as a value, then all the files from that dataset will be included
-        Note1: To work, the function must be able to identify the dataset or subject IDs from the file name in order to check
-            if it is in the list/dict. Custom extraction function can be given as arguments; however, if nothing is given, 
-            the function will try to extract IDs considering that file names are in the format a_b_c_d.extension 
-            (the output of the AUTO-BIDS library), where "a" is an integer with the dataset ID and "b" an integer 
-            with the subject ID. If this fail, all files will be considered from the same datasets (id=0), and each file from a 
-            different subject (id from 0 to N-1).
-        Note2: if the input argument is not a list or a dict, it will be automatically converted to a list
-        Default: None
+        Dataset ID to be excluded. It can be given in the following formats:
+        
+            1. a list with all dataset IDs to exclude
+            2. a dictionary where keys are the dataset IDs and values its relative subject IDs. 
+               If a key is store with None as a value, then all the files from that dataset 
+               will be included
+        
+        Note that to work, the function must be able to identify the dataset or subject IDs 
+        from the file name in order to check if they are in the given list or dict. 
+        Custom extraction function can be given as arguments; however, if nothing is given, 
+        the function will try to extract IDs considering that file names are in the format 
+        a_b_c_d.extension (the output of the BIDSalign library), 
+        where "a" is an integer with the dataset ID and "b" an integer with the subject ID. 
+        If this fail, all files will be considered from the same datasets (id=0), 
+        and each file from a different subject (id from 0 to N-1).
+        
+        Also note that if the input argument is not a list or a dict, it will be 
+        automatically converted to a list. This may generate errors
+        
+        Default = None
     test_data_id: list or dict, optional 
-        Same as exclude_data_id but for the test split
-        Defaul: None
+        Same as exclude_data_id but for the test split.
+        
+        Defaul = None
     stratified: bool, optional
-        Whether to apply stratification to the split or not. Might be used for fine-tuning split (the only phase where labels
-        are involved). Stratification will preserve, if possible, the label's ratio on the training/validation/test sets.
+        Whether to apply stratification to the split or not. Might be used for fine-tuning 
+        split (the typical phase where labels are involved). Stratification will preserve, 
+        if possible, the label's ratio on the training, validation, and test sets.
         Works only when each file has an unique label, which must be given in input.
-        Default: False
-    labels: list, array like, optional
-        A list or array like objects with the label of each file listed in the partition table. 
-        Must be given if stratification is set to True
-        Indeces of labels must match row indeces in the partition table, i.e. label1 --> row1, label2 --> row2.
-        Default: None
+        
+        Default = False
+    labels: list or ArrayLike, optional
+        A list or 1d ArrayLike objects with the label of each file listed 
+        in the partition table. Must be given if stratification is set to True
+        Indeces of labels must match row indeces in the partition table, i.e. 
+        label1 -> row1, label2 -> row2, etc.
+        
+        Default = None
     dataset_id_extractor: function, optional
-        A custom function to be used to extract the dataset ID from file the file name. It must accept only one argument,
-        which is the file name
-        Default: None
+        A custom function to be used to extract the dataset ID from file the file name. 
+        It must accept only one argument, which is the file name (not the path, only the file
+        name).
+        
+        Default = None
     subject_id_extractor: function, optional
-        A custom function to be used to extract the subject ID from file the file name. It must accept only one argument,
-        which is the file name
-        Default: None
+        A custom function to be used to extract the subject ID from file the file name. 
+        It must accept only one argument, which is the file name (not the path, only the file
+        name).
+        
+        Default = None
     split_tolerance: float, optional
-        Argument for get_subarray_closest_sum function. Set the maximum accepted tolerance between the given split ratio
+        Argument for ``get_subarray_closest_sum`` function. 
+        Set the maximum accepted tolerance between the given split ratio
         and the one got with the obtained subset. Must be a number in [0,1]
-        Default: 0.01
+        
+        Default = 0.01
     perseverance: int, optional
-        Argument for get_subarray_closest_sum function. Set the maximum number of tries before stop searching for a split 
-        whose ratio is in the range [target_ratio - tolerance, target_ratio + tolerance]
-        Default: 1000
+        Argument for ``get_subarray_closest_sum`` function. Set the maximum number 
+        of tries before stop searching for a split whose ratio is in the range 
+        [target_ratio - tolerance, target_ratio + tolerance]
+        
+        Default = 1000
     save : bool, optional
-        Whether to save the resulted DataFrame as a .csv file or not
-        Default: False
+        Whether to save the resulted DataFrame as a .csv file or not.
+        
+        Default = False
     save_path: str, optional
-        A custom path to be used instead of the current working directory. It's the string given to the 
-        pandas.DataFrame.to_csv() method.
-        Default: None
+        A custom path to be used instead of the current working directory. 
+        It's the string given to the ``pandas.DataFrame.to_csv()`` method.
+        
+        Default = None
                  
     Returns
     -------
-    EEGSplit : DataFrame
-        Two columns Pandas DataFrame. The first column has the EEG file name, 
-        the second define the file usage with 0-1, Train-Test
+    EEGSplitKfold : pd.DataFrame
+       Panda's DataFrame where the first column has the EEG file names, while the
+       others will have the assigned split for each CV split. Each split is included 
+       in a column with the name "split_k" with k from 1 to the given Kfold argument.
+       Each split will assign the following labels to a file:
+
+           1. -1 : the file is excluded 
+           2. 0  : the file is included in the training set
+           3. 1  : the file is included in the validation set
+           4. 2  : the file is included in the test set
+
+    See Also
+    --------
+    getsplit : extract a specific split from the output dataframe.
+    
+    Warnings
+    --------
+    Some configurations may produce strange results. For example, if you want to do a 10 fold
+    CV with a subject based split, but your dataset has only 5 subjects, the function will
+    not throw an error, but some splits won't have a validation split.
             
     """ 
     if kfold<2:
@@ -788,11 +922,11 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     # simply have all zeros.
     EEGsplit = GetEEGSplitTable(partition_table=partition_table,
                                 test_ratio= test_ratio,
+                                val_ratio= 0.0,
                                 test_split_mode=test_split_mode,
                                 val_split_mode= val_split_mode,
                                 exclude_data_id=exclude_data_id,
                                 test_data_id=test_data_id,
-                                val_data_id=[],
                                 stratified= stratified,
                                 labels = labels,
                                 dataset_id_extractor = dataset_id_extractor,
@@ -847,73 +981,216 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     
     return EEGsplit
 
+def getsplit(split_table: pd.DataFrame, 
+             split: int
+            ) -> pd.DataFrame:
+    """
+    ``getsplit`` extract a split from the output of the ``GetEEGSplitTableKfold`` .
+    It also change column names in order to make them equals to the output DataFrame
+    of the ``GetEEGSplitTable`` function
+
+    Parameters
+    ----------
+    split_table: pd.DataFrame
+        The table with all the Cross Validation Splits. It's the output of the 
+        ``GetEEGSplitTableKfold`` function. Such table has a first column named "file_name",
+        where the EEG file names are placed, and other sets of columns named "split_k",
+        where the k-th is placed.
+    split: int
+        An integer indicating the specific split to extract. Note that the output of the 
+        ``GetEEGSplitTableKfold`` function has split starting from 1, i.e. "split_0" doesn't 
+        exist.
+
+    Returns
+    -------
+    new_table: pd.DataFrame
+        A 2 columns DataFrame with same format as GetEEGSplitTable, i.e. first column with file
+        names and second their split ID
+
+    """
+    split_str = 'split_'+str(int(split))
+    new_table = split_table.loc[:,('file_name',split_str)]
+    new_table.rename(columns={"file_name": "file_name", split_str: "split_set"}, inplace=True)
+    return new_table
+
+def check_split(EEGlen, EEGsplit, Labels=None):
+    """
+    check_split control if the split has been done correctly.
+
+    Parameters
+    ----------
+    EEGlen: pd.DataFrame
+        The output of the ``GetEEGPartitionNumber`` function.
+    EEGsplit: pd.DataFrame
+        The output of the ``GetEEGSplitTable`` function. If you have used the 
+        ``GetEEGSplitTableKfold`` function, make sure to get a specific split by
+        calling the ``getsplit`` function.
+    Labels: pd.DataFrame
+        A list or 1d array like objects with the label of each file listed in the 
+        partition table. It is the same object given to the called split function
+
+    Returns
+    -------
+    None   
+
+    """
+    # Check split ratio
+    total_list=EEGsplit[EEGsplit['split_set']!=-1].index.tolist()
+    total = EEGlen.iloc[total_list]['N_samples'].sum()
+    train_list = EEGsplit[EEGsplit['split_set']==0].index.tolist()
+    train_ratio = EEGlen.iloc[train_list]['N_samples'].sum()/total
+    val_list = EEGsplit[EEGsplit['split_set']==1].index.tolist()
+    val_ratio = EEGlen.iloc[val_list]['N_samples'].sum()/total
+    test_list = EEGsplit[EEGsplit['split_set']==2].index.tolist()
+    test_ratio = EEGlen.iloc[test_list]['N_samples'].sum()/total
+    
+    print(f"\ntrain ratio:      {train_ratio:.2f}")
+    print(f"validation ratio: {val_ratio:.2f}")
+    print(f"test ratio:       {test_ratio:.2f}")
+    
+    # Check class ratio
+    if Labels is not None:
+        Labels = np.array(Labels)
+        if len(Labels.shape)!=1:
+            raise ValueError('Labels must be a 1d array or a list')
+        lab_unique = np.unique(Labels)
+        EEGlen2 = EEGlen.copy()
+        EEGlen2['split_set']=EEGsplit['split_set']
+        EEGlen2['Labels'] = Labels
+        tottrain = EEGlen2.iloc[train_list]['N_samples'].sum()
+        totval = EEGlen2.iloc[val_list]['N_samples'].sum()
+        tottest = EEGlen2.iloc[test_list]['N_samples'].sum()
+        class_ratio = np.zeros((3,4))
+        for i in range(3):
+            for k in range(len(lab_unique)):
+                if i==0:
+                    train_k = EEGlen2.loc[ ((EEGlen2['split_set']==0) & 
+                                           (EEGlen2['Labels']==lab_unique[k])),'N_samples'].sum()
+                    class_ratio[i,k] = train_k/tottrain
+                elif i==1:
+                    val_k = EEGlen2.loc[ ((EEGlen2['split_set']==1) &
+                                           (EEGlen2['Labels']==lab_unique[k])),'N_samples'].sum()
+                    class_ratio[i,k] = val_k/totval
+                else:
+                    test_k = EEGlen2.loc[ ((EEGlen2['split_set']==2) & 
+                                           (EEGlen2['Labels']==lab_unique[k])),'N_samples'].sum()
+                    class_ratio[i,k] = test_k/tottest
+        print(f"\ntrain labels ratio:", 
+              *[f"{lab_unique[k]}={class_ratio[0,k]:.3f}, " for k in range(len(lab_unique))])
+        print(f"val   labels ratio:", 
+              *[f"{lab_unique[k]}={class_ratio[1,k]:.3f}, " for k in range(len(lab_unique))])
+        print(f"test  labels ratio:", 
+              *[f"{lab_unique[k]}={class_ratio[2,k]:.3f}, " for k in range(len(lab_unique))])
+        print('')
+    return None
 
 
 class EEGDataset(Dataset):
     """
+    ``EEGDataset`` is a custom pytorch.Dataset class designed to manage different
+    loading configuration, both for pretraining and fine tuning.
+    Its main functionalities resides in its ability to accepts different ways to 
+    load, transform and extract optional labels from the data without preallocate
+    the entire dataset, which is especially useful in SSL experiments, where multiple
+    datasets are involved.
+    To further check how to use this class see the introductory notebook provided 
+    in the documentation.
+    
     Parameters
     ----------
     EEGlen : DataFrame
-        DataFrame with the number of partition per EEG record. Must be the output of GetEEGPartitionNumber()
+        DataFrame with the number of partition per EEG record. 
+        Must be the output of the ``GetEEGPartitionNumber()`` function.
     EEGsplit : DataFrame 
-        DataFrame with the train/test split info. Must be the output of GetEEGSplitTable()
+        DataFrame with the train/test split info. Must be the output of the
+        ``GetEEGSplitTable()`` or a split extracted from the ``GetEEGSplitTableKfold`` function
+        output with the ``getsplit`` function.
     EEGpartition_spec : list
-        3-element list with the input gave to GetEEGPartitionNumber() in 
+        3-element list with the input gave to ``GetEEGPartitionNumber()`` in 
         [sampling_rate, window_length, overlap_percentage] format.
     mode: string, optional
-        if the dataset is intended for train, test or validation. It accept only 'train','test','validation'
-        strings.
-        Default: 'train'
+        if the dataset is intended for train, test or validation. 
+        It accept only 'train','test','validation' strings.
+        
+        Default = 'train'
     supervised: bool, optional
-        Whether the getItem method must return a label or not
-        Default: False
+        Whether the class ``__getItem__()`` method must return a label or not. Must be
+        set to True during fine-tuning.
+        
+        Default = False
     load_function : 'function', optional
-        A pointer to a custom EEG file loading function. It will be used instead of the default: 
-        loadmat(ii, simplify_cells=True)['DATA_STRUCT']['data']
-        The function:
-            1) must take only one required argument, which is the full path to the EEG file 
-            2) can output one or two arguments where the first must be the EEG file and the second its (if there is one)
-               label
-        (e.g. the function will be called in this way: load_function(fullpath, optional_arguments) )
-        Note: the assumed number of output is based on the parameter label_on_load. So if the function will return only the 
-              EEG remember to set label_on_load on False
-        Default: None
+        A custom EEG file loading function. It will be used instead of the default: 
+        
+        ``loadmat(ii, simplify_cells=True)['DATA_STRUCT']['data']`` 
+        
+        which is the default output format for files preprocessed with the BIDSalign library.
+        The function must take only one required argument, which is the full path to the 
+        EEG file (e.g. the function will be called in this way: 
+        load_function(fullpath, optional_arguments) )
+
+        The function can output one or two arguments where the first must be the EEG file 
+        and the second its (if there is one) label.
+        Note that the assumed number of output is based on the parameter label_on_load. 
+        So if the function will return only the EEG remember to set label_on_load on False.
+        Note also that this function must load the EEGs in the same way as during 
+        ``GetEEGPartitionNumber`` call.
+        
+        Default = None
     transform_function : 'function', optional
-        A pointer to a custom transformation to be applied after the EEG is loaded. Might be useful if there are portion of 
-        the signal to cut. 
-        The function must take only one required argument, which is the EEG file to transform
-        (e.g. the function will be called in this way: transform_function(EEG, optional_arguments) )
-        Default: None
+        A custom transformation to be applied after the EEG is loaded. 
+        Might be useful if there are portions of the signal to cut (usually the initial or the
+        final). The function must take only one required argument, which is the loaded EEG 
+        file to transform (e.g. the function will be called in this way: 
+        transform_function(EEG, optional_arguments) ).
+        Note that this function must transform the EEGs in the same way as during 
+        ``GetEEGPartitionNumber`` call.
+        
+        Default = None
     label_function : 'function', optional
-        A pointer to a custom function for the label extraction. Might be useful for the fine-tuning phase. 
-        Considering that an EEG file can have single or multiple labels the function will be called with
-        2 required arguments:
-            1) full path to the EEG file 
-            2) list with all indeces necessary to identify the extracted partition (if EEG is a 2-D array 
-                the list will have only the starting and ending indeces of the slice of the last axis, if the
-                EEG is N-D the list will also add all the other indeces from the first to the second to last axis)
+        A custom transformation to be applied for the label extraction.
+        Might be useful for the fine-tuning phase. 
+        Considering that an EEG file can have single or multiple labels the function 
+        will be called with 2 required arguments:
+            
+            1. full path to the EEG file 
+            2. list with all indeces necessary to identify the extracted partition 
+               (if EEG is a 2-D array the list will have only the starting and ending 
+               indeces of the slice of the last axis, if the EEG is N-D the list will 
+               also add all the other indeces from the first to the second to last axis)
+               
         e.g. the function will be called in this way: 
-                      label_function(full_path, [*first_axis_idx, start, end], optional arguments)
-        NOTE: it is strongly suggested to save EEG labels in a separate file in order to avoid loading every time
-              the entire EEG file which is the purpose of this entire module implementation
-        Default: None
+        
+        ``label_function(full_path, [*first_axis_idx, start, end], optional arguments)``
+        
+        It is strongly suggested to save EEG labels in a separate file in order to avoid 
+        loading every time the entire EEG file which is the purpose of this entire 
+        module implementation
+        
+        Default = None
     optional_load_fun_args: list or dict, optional
         Optional arguments to give to the custom loading function. Can be a list or a dict.
-        Default: None
+        
+        Default = None
     optional_transform_fun_args: list or dict, optional
         Optional arguments to give to the EEG transformation function. Can be a list or a dict.
-        Default: None
+        
+        Default = None
     optional_label_fun_args: list or dict, optional
         Optional arguments to give to the EEG transformation function. Can be a list or a dict.
-        Default: None
+        
+        Default = None
     label_on_load: bool, optional
         Whether the custom loading function will also load a label associated to the eeg file 
-        Default: True
+        
+        Default = True
     label_key: str or list of str, optional
-        A single or set of dictionary keys given as list of strings to use to get access to the label. Might be useful if
-        the loading function will return a dictionary of labels associated to the file, for example when you have a set of 
-        patient info but you want to use only a specific one (as in the AUTO-BIDS library)
-        Default: None
+        A single or set of dictionary keys given as list of strings to use to get access 
+        to a specific label if multiple were loaded. Might be useful if the loading function
+        will return a dictionary of labels associated to the file, 
+        for example when you have a set of patient info but you want to use only a 
+        specific one
+        
+        Default = None
             
     """ 
     def __init__(self, 
@@ -980,7 +1257,8 @@ class EEGDataset(Dataset):
         
         # Set Current EEG loaded attributes (speed up getItem method)
         # Keep in mind that multiple workers use copy of the dataset
-        # saving a copy of the current loaded EEG file can use lots of memory if EEGs are pretty large
+        # saving a copy of the current loaded EEG file can use lots of memory 
+        # if EEGs are pretty large
         self.currEEG = None
         self.dimEEG = 0
         self.dimEEGprod = None
@@ -992,12 +1270,21 @@ class EEGDataset(Dataset):
         
     
     def __len__(self):
+        """
+        :meta private:
+        
+        """
         return self.DatasetSize
     
     def __getitem__(self,index):
+        """
+        :meta private:
+        
+        """
 
         # Check if a new EEG file must be loaded. If so, a new EEG file is loaded,
-        # transformed (if necessary) and all loading attributes are updated according to the new file
+        # transformed (if necessary) and all loading attributes are
+        # updated according to the new file
         if ((index<self.minIdx) or (index>self.maxIdx)):
             # Get full path to new file to load 
             nameIdx=np.searchsorted(self.EEGcumlen, index, side='right')
@@ -1104,20 +1391,37 @@ class EEGDataset(Dataset):
 
 class EEGsampler(Sampler):
     """
+    ``EEGsamplet`` is a custom pytorch Sampler designed to efficiently reduce the file 
+    loading operations when combined with the ``EEGDataset`` class. It exploits the 
+    parallelization properties of the pytorch Dataloader.
+    To further check how the custom iterator is created see the introductory notebook 
+    provided in the documentation
+
+    Parameters
+    ----------
     data_source: EEGDataset
-        The instance of the EEGdataset provided in this module
+        The instance of the ``EEGdataset`` provided in this module
     BatchSize: int, optional
-        The size of the batch size used during training. It will be used to create the custom iterator (not linear)
-        Default: 1
+        The batch size used during training. It will be used to create the 
+        custom iterator (not linear)
+        
+        Default = 1
     Workers: Int, optional
-        The number of workers used by the dataloader. It will be used to create the custom iterator (not linear)
+        The number of workers used by the Dataloader. Must be the same as the argument
+        workers in the Dataloader classs. It will be used to create 
+        the custom iterator (not linear)
+
+        Default = 0
     Mode: int, optional
-        The mode to be used to create the dataloader. it can be 0 or 1, where:
-            1) 0 = the iterator is a simple linear
-            2) 1 = the indeces are first shuffled at the inter-file level, then at the intra-file level; ultimately
-                   all indeces are rearranged based on the batch size and the number of workers in order to reduce
-                   the number of times a new EEG is loaded. The iterator can be seen as a good compromise between 
-                   batch heterogeneity and batch creation speed
+        The mode to be used to create the iterator. it can be 0 or 1, where:
+            
+            - 0 = the iterator is a simple linear iterator (range(0,len(dataset))
+            - 1 = the indeces are first shuffled at the inter-file level, 
+              then at the intra-file level; ultimately all indeces are rearranged based on the 
+              batch size and the number of workers in order to reduce the number of times a new 
+              EEG is loaded. The iterator can be seen as a good compromise between 
+              batch heterogeneity and batch creation speed
+
     """
     
     
@@ -1146,11 +1450,19 @@ class EEGsampler(Sampler):
     
     
     def __len__(self):
+        """
+        :meta private:
+        
+        """
         return len(self.data_source)
     
     def __iter__(self):
         """
-        Return an iterator where subject are passed sequentially for each worker but the samples of each subjects are shuffled
+        Return an iterator where subject are passed sequentially for 
+        each worker but the samples of each subjects are shuffled
+        
+        :meta private:
+        
         """
         iterator=[]
         Nseed=random.randint(0,9999999)

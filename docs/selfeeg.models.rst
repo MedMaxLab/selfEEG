@@ -1,21 +1,12 @@
 selfeeg.models package
 ======================
 
-Submodules
-----------
-
 selfeeg.models.zoo module
 -------------------------
 
-.. automodule:: selfeeg.models.zoo
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. automodapi:: selfeeg.models.zoo
+  :no-inheritance-diagram:
+  :no-main-docstr:
+  :noindex:
+  :no-heading:
 
-Module contents
----------------
-
-.. automodule:: selfeeg.models
-   :members:
-   :undoc-members:
-   :show-inheritance:

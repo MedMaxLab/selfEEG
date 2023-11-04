@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, '..')
 
 
 # -- Project information -----------------------------------------------------
@@ -23,9 +23,9 @@ author = 'MedMax Team'
 
 
 # The short X.Y version
-version = '0.0.1'
+version = '0.1.0'
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -39,18 +39,29 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
+    'sphinx.ext.intersphinx',
     'nbsphinx',
-    #'sphinx_automodapi.automodapi'    
+    'myst_parser',
+    'sphinx_automodapi.automodapi'    
 ]
 #    'jupyter_sphinx',
 #    'sphinx_autodoc_typehints',
 #    'reno.sphinxext',
-#    'sphinx.ext.intersphinx',
-#    'nbsphinx',
 #    'sphinxcontrib.bibtex',
-#    "qiskit_sphinx_theme",
 #]
 numpydoc_show_class_members = False
+autodoc_type_aliases = {
+    'Iterable': 'Iterable',
+    'ArrayLike': 'ArrayLike',
+}
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+    "private-members": False
+}
+napoleon_custom_sections = [('Returns', 'params_style')]
+
+source_suffix = ['.rst', '.md']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -67,6 +78,22 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store','**.ipynb_checkpoints']
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+html_logo = '_static/LibraryLogo.png'
+
+# html rtd theme configuration parameters
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': False,
+    # Toc options
+    'collapse_navigation': False,
+    #'sticky_navigation': True,
+    #'style_nav_header_background': '#E3E3E3',
+    'navigation_depth': -1,
+    'includehidden': False,
+    'titles_only': True
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

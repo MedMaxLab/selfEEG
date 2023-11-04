@@ -3,6 +3,7 @@ import math
 import copy
 import datetime
 import tqdm
+import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -14,23 +15,55 @@ __all__ = ['EarlyStopping', 'SSL_Base', 'SimCLR', 'SimSiam', 'MoCo', 'BYOL', 'Ba
 
 def Default_augmentation(x):
     """
-    simple default augmentation used when non data augmenter is given in SSL fit methods. It's just
-    a programming choice to avoid putting the augmenter as non optional parameter. No justification 
-    for the choice of flip + random noise. Just that it can be written in few lines of code.
+    simple default augmentation used when non data augmenter is given in SSL 
+    fit methods. It's just a programming choice to avoid putting the augmenter 
+    as non optional parameter. No justification 
+    for the choice of random flip + random noise. 
+    Just that it can be written in few lines of code.
+    
+    :meta private:
+    
     """
     if not(isinstance(x, torch.Tensor)):
         x=torch.Tensor(x)
-    x = x*(-1)
+    x = x*(random.getrandbits(1))
     std = torch.std(x)
     noise = std * torch.randn(*x.shape, device=x.device)
     x_noise = x + noise 
     return x_noise
 
-def evaluateLoss( loss_fun: 'loss function', 
+def evaluateLoss( loss_fun: 'function', 
                   arguments, 
-                  loss_arg: Union[list, dict]=None):
+                  loss_arg: Union[list, dict]=None
+                ) -> 'loss_fun output':
     """
-    evaluate current batch loss
+    ``evaluateLoss`` evaluate a custom loss function using `arguments` 
+    as required arguments and loss_arg as optional ones. It is simply
+    the ``SSL_Base's evaluate_loss`` method exported as a function.
+
+    Parameters
+    ----------
+    loss_fun: function
+        the custom loss function. It can be any loss function which 
+        accepts as input the model's prediction (or predictions) and
+        true labels as required argument and loss_args as optional arguments.
+        Note that for the ``fine_tune`` method the number of required
+        arguments must be 2, i.e. the model's prediction and true labels.
+    arguments: torch.Tensor or list[torch.Tensors]
+        the required arguments. Based on the way this function is used 
+        in a training pipeline it can be a single or multiple tensors.
+    loss_arg: Union[list, dict], optional
+        The optional arguments to pass to the function. it can be a list
+        or a dict
+
+        Default = None
+
+    Returns
+    -------
+    loss: 'loss_fun output'
+        the output of the given loss function. It is expected to be 
+        a torch.Tensor
+    
     """
     if isinstance(arguments, list):
         if loss_arg==None or loss_arg==[]:
@@ -48,8 +81,8 @@ def evaluateLoss( loss_fun: 'loss function',
             loss=loss_fun(arguments,*loss_arg)
     return loss
 
-def fine_tune(model,
-              train_dataloader,
+def fine_tune(model: nn.Module,
+              train_dataloader: torch.utils.data.DataLoader,
               epochs=1,
               optimizer=None,
               augmenter=None,
@@ -58,11 +91,102 @@ def fine_tune(model,
               label_encoder: 'function' = None,
               lr_scheduler=None,
               EarlyStopper=None,
-              validation_dataloader=None,
+              validation_dataloader: torch.utils.data.DataLoader=None,
               verbose=True,
               device: str or torch.device=None,
               return_loss_info: bool=False
-             ):
+             ) -> Optional[dict]:
+    """
+    ``fine_tune`` is a custom fit function designed to perform 
+    fine tuning on a given model with the given dataloader.
+
+    Parameters
+    ----------
+    model: nn.Module
+        the pytorch model to fine tune. Must be a nn.Module.
+    train_dataloader: Dataloader
+        the pytorch Dataloader used to get the training batches. It
+        must return a batch as a tuple (X, Y), with X the feature tensor
+        and Y the label tensor
+    epochs: int, optional
+        The number of training epochs. Must be an integer bigger than 0.
+
+        Default = 1
+    optimizer: torch Optimizer, optional
+        The optimizer used for weight's update. It can be any optimizer
+        provided in the torch.optim module. If not given Adam with default
+        parameters will be instantiated.
+
+        Default = torch.optim.Adam
+    augmenter: function, optional
+        Any function (or callable object) used to perform data augmentation
+        on the batch. It is highly suggested to resort to the augmentation
+        module, which implements different data augmentation function and 
+        classes to combine them. Note that data augmentation is not performed
+        on the validation set, since its goal is to increase the size of the 
+        training set and to get more different samples.
+
+        Default = None
+    loss_func: function
+        the custom loss function. It can be any loss function which 
+        accepts as input the model's prediction and the true labels 
+        as required arguments and loss_args as optional arguments.
+    loss_args: Union[list, dict], optional
+        The optional arguments to pass to the function. it can be a list
+        or a dict.
+
+        Default = None
+    label_encoder: function, optional
+        A custom function used to encode the returned Dataloaders true labels.
+        If None, the Dataloader's true label is used directly.
+
+        Default = None
+    lr_scheduler: torch Scheduler
+        A pytorch learning rate scheduler used to update the learning rate 
+        during the fine-tuning.
+
+        Default = None
+    EarlyStopper: EarlyStopping, optional
+        An instance of the provided EarlyStopping class.
+
+        Default = None
+    validation_dataloader: Dataloader, optional
+        the pytorch Dataloader used to get the validation batches. It
+        must return a batch as a tuple (X, Y), with X the feature tensor
+        and Y the label tensor. If not given, no validation loss will be 
+        calculated
+
+        Default = None
+    verbose: bool, optional
+        Whether to print a progression bar or not.
+
+        Default = None
+    device: torch.device or str, optional
+        The devide to use for fine-tuning. If given as a string it will
+        be converted in a torch.device instance. If not given, 'cpu' device
+        will be used.
+        
+        Device = None
+    return_loss_info: bool, optional
+        Whether to return the calculated training validation losses at 
+        each epoch. 
+
+        Default = False
+
+    Returns
+    -------
+    loss_info: dict, optional
+        A dictionary with keys the epoch number (as integer) and values
+        a two element list with the average epoch's training and validation
+        loss.
+        
+    Note
+    ----
+    If an EarlyStopping instance is given with monitoring loss set to 
+    validation loss, but no validation dataloader is given, monitoring
+    loss will be automatically set to training loss.
+    
+    """
     
     if device is None:
         device=torch.device('cpu')
@@ -165,7 +289,7 @@ def fine_tune(model,
                                     
                         Yhat = model(X)
                         val_loss = evaluateLoss( loss_func, [Yhat, Ytrue], loss_args )
-                        val_loss_tot += val_loss
+                        val_loss_tot += val_loss.item()
                         if verbose:
                             pbar.set_description(f"   val {batch_idx+1:8<}/{len(validation_dataloader):8>}")
                             pbar.set_postfix_str(f"train_loss={train_loss_tot:.5f}, val_loss={val_loss_tot/(batch_idx+1):.5f}")
@@ -201,10 +325,53 @@ def fine_tune(model,
 
 class EarlyStopping:
     """
-    Simple implementation of an early stopping class for pytorch. 
-    Some arguments are similar to Keras EarlyStopping ones ( https://keras.io/api/callbacks/early_stopping/ ).
+    Simple implementation of an early stopping class for pytorch.
+    It can monitor the validation or the training loss (no other metrics
+    are currently supported).
+    
+    Some arguments are similar to Keras EarlyStopping class [early]_ .
     If you want to use other implemented functionalities take a look at 
-    PyTorch Ignite (https://pytorch.org/ignite/)
+    PyTorch Ignite [ign]_ .
+
+    Parameters
+    ----------
+    patience: int, optional
+        The number of epochs to wait before stopping the training. Can
+        be any positive integer.
+
+        Default = 5
+    min_delta: float, optional
+        The minimum difference between the current best loss and the 
+        calculated one to consider as an improvement.
+
+        Default = 1e-9
+    improvement: str, optional
+        Whether to consider an increase or decrease in the best loss
+        as an improvement. Accepted strings are:
+
+            - ['d','dec','decrease'] for decrease
+            - ['i','inc','increase'] for increase
+
+        Default = "decrease"
+    monitored: str, optional
+        Whether to monitor the training or validation loss. This 
+        attribute is used in the ``fine_tuning`` function or 
+        others class ``fit`` methods to check which calculated loss 
+        must be given. Accepted values are "increase" or "decrease"
+
+        Default = "decrease"
+    record_best_weights: bool, optional
+        Whether to record the best weights after every new best loss
+        is reached or not. It will be used to restore such weights
+        if the training is stopped.
+
+        Default = True
+
+    References
+    ----------
+    .. [early] https://keras.io/api/callbacks/early_stopping/ 
+    .. [ign] https://pytorch.org/ignite/
+    
     """
     def __init__(self, 
                  patience: int=5, 
@@ -212,7 +379,6 @@ class EarlyStopping:
                  improvement: str='decrease',
                  monitored: str='validation',
                  record_best_weights: bool=True,
-                 start_from_epoch: int=0,
                 ):
         
         if patience < 0:
@@ -243,7 +409,6 @@ class EarlyStopping:
                 self.improvement= 'increase'
             
         self.record_best_weights = record_best_weights
-        self.start_from_epoch = start_from_epoch
         self.best_loss = 1e12 if improvement.lower()=='decrease' else -1*1e12
         
         self.best_model=None
@@ -251,9 +416,24 @@ class EarlyStopping:
         self.earlystop = False
 
     def __call__(self):
+        """
+        :meta private:
+        """
         return self.earlystop
     
     def early_stop(self, loss, count_add=1):
+        """
+        Method used to updated the counter and the best loss
+
+        Parameters
+        ----------
+        loss: float
+            The calculated loss
+        count_add: int, optional
+            The number to add to the counter. It can be useful if early stopping
+            checks will not be performed after each epoch
+        
+        """
         
         # The function can be compressed with a big if. 
         #This expansion is faster and better understandable
@@ -278,13 +458,44 @@ class EarlyStopping:
             
                     
     def rec_best_weights(self, model):
+        """
+        record model's best weights. The copy of the model is stored
+        in the cpu device
+
+        Parameters
+        ----------
+        model: nn.Module
+            The model to record
+        
+        """
         self.best_model = copy.deepcopy(model).to(device='cpu').state_dict()
     
     def restore_best_weights(self, model):
+        """
+        restore model's best weights.
+
+        Parameters
+        ----------
+        model: nn.Module
+            The model to restore
+
+        Warnings
+        --------
+        The model is moved to the cpu device before restoring weights.
+        Remember to move again to the desired device if cpu is not 
+        the selected one
+        
+        """
         model.to(device='cpu')
         model.load_state_dict(self.best_model)
 
     def reset_counter(self):
+        """
+        method to reset the counter and early stopping flag. 
+        It might be useful if you want to further train 
+        your model after the first training is stopped.
+        
+        """
         self.counter=0
         self.earlystop= False
         
@@ -293,7 +504,15 @@ class EarlyStopping:
 
 class SSL_Base(nn.Module):
     """
-    Contrastive SSL is the basic class for every implemented contrastive learning alghoritm
+    Baseline Self-Supervised Learning nn.Module. It is used as parent class 
+    by the other implemented SSL methods.
+
+    Parameters
+    ----------
+    encoder: nn.Module
+        The encoder part of the module. It is the one you wish to pretrain and
+        transfer to the new model
+    
     """
     
     def __init__(self, encoder: nn.Module):
@@ -301,15 +520,45 @@ class SSL_Base(nn.Module):
         self.encoder = encoder
         
     def forward(self,x):
+        """
+        :meta private:
+        
+        """
         pass
     
         
     def evaluate_loss(self, 
-                      loss_fun: 'loss function', 
+                      loss_fun: 'function', 
                       arguments, 
-                      loss_arg: Union[list, dict]=None):
+                      loss_arg: Union[list, dict]=None
+                     ) -> 'loss_fun output':
         """
-        evaluate current batch loss
+        ``evaluate_loss`` evaluate a custom loss function using `arguments` 
+        as required arguments and loss_arg as optional ones.
+    
+        Parameters
+        ----------
+        loss_fun: function
+            the custom loss function. It can be any loss function which 
+            accepts as input the model's prediction (or predictions) 
+            as required argument and loss_args as optional arguments.
+            Note that the number of required arguments can change based on the
+            specific pretraining method used
+        arguments: torch.Tensor or list[torch.Tensors]
+            the required arguments. Based on the way this function is used 
+            in a training pipeline it can be a single or multiple tensors.
+        loss_arg: Union[list, dict], optional
+            The optional arguments to pass to the function. it can be a list
+            or a dict
+    
+            Default = None
+    
+        Returns
+        -------
+        loss: 'loss_fun output'
+            the output of the given loss function. It is expected to be 
+            a torch.Tensor
+        
         """
         if isinstance(arguments, list):
             if loss_arg==None or loss_arg==[]:
@@ -330,11 +579,33 @@ class SSL_Base(nn.Module):
     def get_encoder(self, device='cpu'):
         """
         return a copy of the encoder on the selected device.
+
+        Parameters
+        ----------
+        device: torch.device or str, optional
+            the pytorch device
+
+            Default = 'cpu'
+        
         """
         enc= copy.deepcopy(self.encoder).to(device=device)
         return enc
     
     def save_encoder(self, path: str=None):
+        """
+        a method for saving the pretrained encoder.
+
+        Parameters
+        ----------
+        path: str, optional
+            the saving path. it will be given to the ``torch.save()`` 
+            method. If None is given, the encoder will be saved in a created
+            SSL_encoders subdirectory. The name will contain the pretraining
+            method used (e.g. SimCLR, MoCo etc) and the current time.
+
+            Default = None
+            
+        """
         if path is None:
             path=os.getcwd()
             if os.path.isdir(path + '/SSL_encoders'):
@@ -364,6 +635,43 @@ class SSL_Base(nn.Module):
 
 
 class SimCLR(SSL_Base):
+    """
+    Implementation of the SimCLR SSL method. To check
+    how SimCLR works, read the following paper [NTXent1]_ .
+    Official repository at [simgit1]_ .
+
+    Parameters
+    ----------
+    encoder: nn.Module
+        The encoder part of the module. It is the one you wish to pretrain and
+        transfer to the new model
+    projection_head: Union[list[int], nn.Module]
+        The projection head to use. It can be an nn.Module or a list of ints.
+        In case a list is given, a nn.Sequential module with Dense, BatchNorm
+        and Relu will be automtically created. The list will be used to set 
+        input and output dimension of each Dense Layer. For instance, if 
+        [64, 128, 64] is given, two hidden layers will be created. The first
+        with input 64 and output 128, the second with input 128 and output 64.
+
+    Note
+    ----
+    BatchNorm is not applied to the last output layer due to findings in the
+    most recent SSL works (see BYOL and SimSiam)
+
+    Warnings
+    --------
+    This class will not check the compatibility of the encoder's output and
+    the projection head's input. Make sure that they have the same size. 
+
+    References
+    ----------
+    .. [NTXent1] Chen et al. A Simple Framework for Contrastive Learning of Visual
+      Representations. (2020). https://doi.org/10.48550/arXiv.2002.05709
+    .. [simgit1] To check the original tensorflow implementation visit the following repository:
+      https://github.com/google-research/simclr (look at the function add_contrastive_loss 
+      in objective.py)
+      
+    """
     
     def __init__(self, 
                  encoder: nn.Module, 
@@ -394,6 +702,10 @@ class SimCLR(SSL_Base):
         
         
     def forward(self,x):
+        """
+        :meta private:
+        
+        """
         x   = self.encoder(x)
         emb = self.projection_head(x)
         return emb
@@ -414,7 +726,105 @@ class SimCLR(SSL_Base):
             cat_augmentations: bool=False,
             return_loss_info: bool=False
            ):
+        """
+        ``fit`` is a custom fit function designed to perform 
+        pretraining on a given model with the given dataloader.
+    
+        Parameters
+        ----------
+        train_dataloader: Dataloader
+            the pytorch Dataloader used to get the training batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor
+        epochs: int, optional
+            The number of training epochs. Must be an integer bigger than 0.
+    
+            Default = 1
+        optimizer: torch Optimizer, optional
+            The optimizer used for weight's update. It can be any optimizer
+            provided in the torch.optim module. If not given Adam with default
+            parameters will be instantiated.
+    
+            Default = torch.optim.Adam
+        augmenter: function, optional
+            Any function (or callable object) used to perform data augmentation
+            on the batch. It is highly suggested to resort to the augmentation
+            module, which implements different data augmentation functions and 
+            classes to combine them. If none is given a default augmentation with 
+            random vertical flip + random noise is applied.
+            Note that in this case data augmentation 
+            is also performed on the validation set, since it's part of the 
+            SSL algorithm.
+    
+            Default = None
+        loss_func: function, optional
+            the custom loss function. It can be any loss function which 
+            accepts as input the model's prediction and the true labels 
+            as required arguments and loss_args as optional arguments.
+            If not given SimCLR loss will be automatically used.
+
+            Default = None
+        loss_args: Union[list, dict], optional
+            The optional arguments to pass to the function. it can be a list
+            or a dict.
+    
+            Default = None
+        label_encoder: function, optional
+            A custom function used to encode the returned Dataloaders true labels.
+            If None, the Dataloader's true label is used directly.
+    
+            Default = None
+        lr_scheduler: torch Scheduler
+            A pytorch learning rate scheduler used to update the learning rate 
+            during the fine-tuning.
+    
+            Default = None
+        EarlyStopper: EarlyStopping, optional
+            An instance of the provided EarlyStopping class.
+    
+            Default = None
+        validation_dataloader: Dataloader, optional
+            the pytorch Dataloader used to get the validation batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor. If not given, no validation loss will be 
+            calculated
+    
+            Default = None
+        verbose: bool, optional
+            Whether to print a progression bar or not.
+    
+            Default = None
+        device: torch.device or str, optional
+            The devide to use for fine-tuning. If given as a string it will
+            be converted in a torch.device instance. If not given, 'cpu' device
+            will be used.
+            
+            Device = None
+        cat_augmentations: bool, optional
+            Whether to calculate the loss on the cat version of the two
+            projection's or not. It might affect some statistical layers.
+
+            Default = False
+        return_loss_info: bool, optional
+            Whether to return the calculated training validation losses at 
+            each epoch. 
+    
+            Default = False
+    
+        Returns
+        -------
+        loss_info: dict, optional
+            A dictionary with keys the epoch number (as integer) and values
+            a two element list with the average epoch's training and validation
+            loss.
+            
+        Note
+        ----
+        If an EarlyStopping instance is given with monitoring loss set to 
+        validation loss, but no validation dataloader is given, monitoring
+        loss will be automatically set to training loss.
         
+        """
         # Various check on input parameters. If some arguments weren't given
         if device is None:
             # If device is None cannot assume if the model is on gpu and so if to send the batch
@@ -582,6 +992,17 @@ class SimCLR(SSL_Base):
              verbose: bool=True,
              device: str=None
             ):
+        """
+        a method to evaluate the loss on a test dataloader.
+        Parameters are the same as described in the fit method, aside for 
+        those related to model training which are removed.
+        
+        It is rare to evaluate the pretraing loss function on a test set.
+        Nevertheless this function provides a way to do that. 
+        An example of usage could be to assess the quality of the learned 
+        features on the fine-tuning dataset.
+        
+        """
         if device==None:
             # If device is None cannot assume if the model is on gpu and so if to send the batch
             # on other device, so cpu will be used. If model is sent to another device set the 
@@ -647,6 +1068,40 @@ class SimCLR(SSL_Base):
     
 
 class SimSiam(SSL_Base):
+    """
+    Implementation of the SimSiam SSL method. To check
+    how SimSIam works, read the following paper [simsiam1]_ .
+    Official repo at [siamgit1]_ .
+
+    Parameters
+    ----------
+    encoder: nn.Module
+        The encoder part of the module. It is the one you wish to pretrain and
+        transfer to the new model
+    projection_head: Union[list[int], nn.Module]
+        The projection head to use. It can be an nn.Module or a list of ints.
+        In case a list is given, a nn.Sequential module with Dense, BatchNorm
+        and Relu will be automtically created. The list will be used to set 
+        input and output dimension of each Dense Layer. For instance, if 
+        [64, 128, 64] is given, two hidden layers will be created. The first
+        with input 64 and output 128, the second with input 128 and output 64.
+    predictor: Union[list[int], nn.Module]
+        The predictor to put after the projection head. Accepted arguments
+        are the same as for the projection_head.
+
+    Warnings
+    --------
+    This class will not check the compatibility of the encoder's output and
+    the projection head's input (as well as between the projection head and the 
+    predictor). Make sure that they have the same size. 
+        
+    References
+    ----------
+    .. [siamgit1] Original github repo: https://github.com/facebookresearch/simsiam
+    .. [simsiam1] Original paper: Chen & He. Exploring Simple Siamese Representation Learning.
+      https://arxiv.org/abs/2011.10566
+      
+    """
     
     def __init__(self, 
                  encoder: nn.Module, 
@@ -692,6 +1147,10 @@ class SimSiam(SSL_Base):
         
         
     def forward(self,x):
+        """
+        :meta private:
+        
+        """
         x   = self.encoder(x)
         x   = self.projection_head(x)
         emb = self.predictor(x)
@@ -712,6 +1171,100 @@ class SimSiam(SSL_Base):
             device: str=None,
             return_loss_info: bool=False
            ):
+        """
+        ``fit`` is a custom fit function designed to perform 
+        pretraining on a given model with the given dataloader.
+    
+        Parameters
+        ----------
+        train_dataloader: Dataloader
+            the pytorch Dataloader used to get the training batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor
+        epochs: int, optional
+            The number of training epochs. Must be an integer bigger than 0.
+    
+            Default = 1
+        optimizer: torch Optimizer, optional
+            The optimizer used for weight's update. It can be any optimizer
+            provided in the torch.optim module. If not given Adam with default
+            parameters will be instantiated.
+    
+            Default = torch.optim.Adam
+        augmenter: function, optional
+            Any function (or callable object) used to perform data augmentation
+            on the batch. It is highly suggested to resort to the augmentation
+            module, which implements different data augmentation functions and 
+            classes to combine them. If none is given a default augmentation with 
+            random vertical flip + random noise is applied.
+            Note that in this case data augmentation 
+            is also performed on the validation set, since it's part of the 
+            SSL algorithm.
+    
+            Default = None
+        loss_func: function, optional
+            the custom loss function. It can be any loss function which 
+            accepts as input the model's prediction and the true labels 
+            as required arguments and loss_args as optional arguments.
+            If not given SimSiam loss will be automatically used.
+
+            Default = None
+        loss_args: Union[list, dict], optional
+            The optional arguments to pass to the function. it can be a list
+            or a dict.
+    
+            Default = None
+        label_encoder: function, optional
+            A custom function used to encode the returned Dataloaders true labels.
+            If None, the Dataloader's true label is used directly.
+    
+            Default = None
+        lr_scheduler: torch Scheduler
+            A pytorch learning rate scheduler used to update the learning rate 
+            during the fine-tuning.
+    
+            Default = None
+        EarlyStopper: EarlyStopping, optional
+            An instance of the provided EarlyStopping class.
+    
+            Default = None
+        validation_dataloader: Dataloader, optional
+            the pytorch Dataloader used to get the validation batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor. If not given, no validation loss will be 
+            calculated
+    
+            Default = None
+        verbose: bool, optional
+            Whether to print a progression bar or not.
+    
+            Default = None
+        device: torch.device or str, optional
+            The devide to use for fine-tuning. If given as a string it will
+            be converted in a torch.device instance. If not given, 'cpu' device
+            will be used.
+            
+            Device = None
+        return_loss_info: bool, optional
+            Whether to return the calculated training validation losses at 
+            each epoch. 
+    
+            Default = False
+    
+        Returns
+        -------
+        loss_info: dict, optional
+            A dictionary with keys the epoch number (as integer) and values
+            a two element list with the average epoch's training and validation
+            loss.
+            
+        Note
+        ----
+        If an EarlyStopping instance is given with monitoring loss set to 
+        validation loss, but no validation dataloader is given, monitoring
+        loss will be automatically set to training loss.
+        
+        """
         
         # Various check on input parameters. If some arguments weren't given
         if device==None:
@@ -884,6 +1437,17 @@ class SimSiam(SSL_Base):
              verbose: bool=True,
              device: str=None
             ):
+        """
+        a method to evaluate the loss on a test dataloader.
+        Parameters are the same as described in the fit method, aside for 
+        those related to model training which are removed.
+        
+        It is rare to evaluate the pretraing loss function on a test set.
+        Nevertheless this function provides a way to do that. 
+        An example of usage could be to assess the quality of the learned 
+        features on the fine-tuning dataset.
+        
+        """
         if device==None:
             # If device is None cannot assume if the model is on gpu and so if to send the batch
             # on other device, so cpu will be used. If model is sent to another device set the 
@@ -954,8 +1518,59 @@ class SimSiam(SSL_Base):
     
 class MoCo(SSL_Base):
     """
-    Implementation of the third version of MoCo. This class also make the possibility to use 
-    the memory bank as in previous MoCo versions.
+    Implementation of the MoCo SSL method. To check
+    how MoCo works, read the following paper [moco21]_ [moco31]_ .
+
+    Parameters
+    ----------
+    encoder: nn.Module
+        The encoder part of the module. It is the one you wish to pretrain and
+        transfer to the new model
+    projection_head: Union[list[int], nn.Module]
+        The projection head to use. It can be an nn.Module or a list of ints.
+        In case a list is given, a nn.Sequential module with Dense, BatchNorm
+        and Relu will be automtically created. The list will be used to set 
+        input and output dimension of each Dense Layer. For instance, if 
+        [64, 128, 64] is given, two hidden layers will be created. The first
+        with input 64 and output 128, the second with input 128 and output 64.
+    predictor: Union[list[int], nn.Module], optional
+        The predictor to put after the projection head. Accepted arguments
+        are the same as for the projection_head. It can be left to None since
+        MoCo v2 doesn't use it (MoCo v3 use it although).
+
+        Default = None
+    feat_size: int, optional
+        The size of the feature vector (encoder's output last dim shape).
+        It will be used to initialize the queue (for MoCo v2). If not given
+        the last element of the projection_head list is used. Of course, it 
+        must be given if a custom projection head is used.
+
+        Default = -1
+    bank_size: int, optional
+        The size of the queue, i.e. the number of projection to keep memory.
+        If not given, fit will trigger the calculation of the MoCo v3 loss.
+
+        Default = 0
+    m: float, optional
+        The value of the momentum coefficient. Suggested values are in the 
+        range [0.995, 0.999].
+
+        Default = 0.995
+
+    Warnings
+    --------
+    This class will not check the compatibility of the encoder's output and
+    the projection head's input (as well as between the projection head and the 
+    predictor). Make sure that they have the same size. 
+        
+    References
+    ----------
+    .. [moco21] K. He, H. Fan, Y. Wu, S. Xie, and R. Girshick, 
+      “Momentum contrast for unsupervised visual representation learning,” in Proceedings of 
+      the IEEE/CVF conference on computer vision and pattern recognition, pp. 9729–9738, 2020.
+    .. [moco31] X. Chen, H. Fan, R. Girshick, and K. He, “Improved base- lines with momentum 
+      contrastive learning,” arXiv preprint arXiv:2003.04297, 2020.
+      
     """
     
     def __init__(self, 
@@ -964,7 +1579,7 @@ class MoCo(SSL_Base):
                  predictor: Union[list[int], nn.Module]=None,
                  feat_size: int=-1,
                  bank_size: int=0,
-                 m: float=0.99
+                 m: float=0.995
                 ):
         
         super(MoCo,self).__init__(encoder)
@@ -1042,6 +1657,10 @@ class MoCo(SSL_Base):
     
     @torch.no_grad()
     def _update_momentum_encoder(self):
+        """
+        :meta private:
+        
+        """
         for param_b, param_m in zip(self.encoder.parameters(), self.momentum_encoder.parameters()):
             param_m.data = param_m.data * self.m + param_b.data * (1. - self.m)
         for param_b, param_m in zip(self.projection_head.parameters(), self.momentum_projection_head.parameters()):
@@ -1049,6 +1668,10 @@ class MoCo(SSL_Base):
 
     @torch.no_grad()
     def _update_queue(self, keys):
+        """
+        :meta private:
+        
+        """
         batch_size = keys.shape[0]
         ptr = int(self.queue_ptr)
         if batch_size > self.bank_size:
@@ -1066,6 +1689,10 @@ class MoCo(SSL_Base):
 
     
     def forward(self, x):
+        """
+        :meta private:
+        
+        """
         x   = self.encoder(x)
         emb   = self.projection_head(x)
         if self.predictor!=None:
@@ -1087,6 +1714,100 @@ class MoCo(SSL_Base):
             device: str=None,
             return_loss_info: bool=False
            ):
+        """
+        ``fit`` is a custom fit function designed to perform 
+        pretraining on a given model with the given dataloader.
+    
+        Parameters
+        ----------
+        train_dataloader: Dataloader
+            the pytorch Dataloader used to get the training batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor
+        epochs: int, optional
+            The number of training epochs. Must be an integer bigger than 0.
+    
+            Default = 1
+        optimizer: torch Optimizer, optional
+            The optimizer used for weight's update. It can be any optimizer
+            provided in the torch.optim module. If not given Adam with default
+            parameters will be instantiated.
+    
+            Default = torch.optim.Adam
+        augmenter: function, optional
+            Any function (or callable object) used to perform data augmentation
+            on the batch. It is highly suggested to resort to the augmentation
+            module, which implements different data augmentation functions and 
+            classes to combine them. If none is given a default augmentation with 
+            random vertical flip + random noise is applied.
+            Note that in this case data augmentation 
+            is also performed on the validation set, since it's part of the 
+            SSL algorithm.
+    
+            Default = None
+        loss_func: function, optional
+            the custom loss function. It can be any loss function which 
+            accepts as input the model's prediction and the true labels 
+            as required arguments and loss_args as optional arguments.
+            If not given MoCo loss will be automatically chosen.
+
+            Default = None
+        loss_args: Union[list, dict], optional
+            The optional arguments to pass to the function. it can be a list
+            or a dict.
+    
+            Default = None
+        label_encoder: function, optional
+            A custom function used to encode the returned Dataloaders true labels.
+            If None, the Dataloader's true label is used directly.
+    
+            Default = None
+        lr_scheduler: torch Scheduler
+            A pytorch learning rate scheduler used to update the learning rate 
+            during the fine-tuning.
+    
+            Default = None
+        EarlyStopper: EarlyStopping, optional
+            An instance of the provided EarlyStopping class.
+    
+            Default = None
+        validation_dataloader: Dataloader, optional
+            the pytorch Dataloader used to get the validation batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor. If not given, no validation loss will be 
+            calculated
+    
+            Default = None
+        verbose: bool, optional
+            Whether to print a progression bar or not.
+    
+            Default = None
+        device: torch.device or str, optional
+            The devide to use for fine-tuning. If given as a string it will
+            be converted in a torch.device instance. If not given, 'cpu' device
+            will be used.
+            
+            Device = None
+        return_loss_info: bool, optional
+            Whether to return the calculated training validation losses at 
+            each epoch. 
+    
+            Default = False
+    
+        Returns
+        -------
+        loss_info: dict, optional
+            A dictionary with keys the epoch number (as integer) and values
+            a two element list with the average epoch's training and validation
+            loss.
+            
+        Note
+        ----
+        If an EarlyStopping instance is given with monitoring loss set to 
+        validation loss, but no validation dataloader is given, monitoring
+        loss will be automatically set to training loss.
+        
+        """
         
         # Various check on input parameters. If some arguments weren't given
         if device==None:
@@ -1290,6 +2011,17 @@ class MoCo(SSL_Base):
              verbose: bool=True,
              device: str=None
             ):
+        """
+        a method to evaluate the loss on a test dataloader.
+        Parameters are the same as described in the fit method, aside for 
+        those related to model training which are removed.
+        
+        It is rare to evaluate the pretraing loss function on a test set.
+        Nevertheless this function provides a way to do that. 
+        An example of usage could be to assess the quality of the learned 
+        features on the fine-tuning dataset.
+        
+        """
         
         if device==None:
             # If device is None cannot assume if the model is on gpu and so if to send the batch
@@ -1373,9 +2105,44 @@ class MoCo(SSL_Base):
 
 class BYOL(SSL_Base):
     """
-    Implementation of BYOL.
+    Implementation of the BYOL SSL method. To check
+    how BYOL works, read the following paper [BYOL1]_ .
+
+    Parameters
+    ----------
+    encoder: nn.Module
+        The encoder part of the module. It is the one you wish to pretrain and
+        transfer to the new model
+    projection_head: Union[list[int], nn.Module]
+        The projection head to use. It can be an nn.Module or a list of ints.
+        In case a list is given, a nn.Sequential module with Dense, BatchNorm
+        and Relu will be automtically created. The list will be used to set 
+        input and output dimension of each Dense Layer. For instance, if 
+        [64, 128, 64] is given, two hidden layers will be created. The first
+        with input 64 and output 128, the second with input 128 and output 64.
+    predictor: Union[list[int], nn.Module]
+        The predictor to put after the projection head. Accepted arguments
+        are the same as for the projection_head.
+    m: float, optional
+        The value of the momentum coefficient. Suggested values are in the 
+        range [0.995, 0.999].
+
+        Default = 0.995
+
+    Warnings
+    --------
+    This class will not check the compatibility of the encoder's output and
+    the projection head's input (as well as between the projection head and the 
+    predictor). Make sure that they have the same size. 
+        
+    References
+    ----------
+    .. [BYOL1] J.-B. Grill, F. Strub, F. Altché, C. Tallec, P. Richemond, E. Buchatskaya, 
+      C. Doersch, B. Avila Pires, Z. Guo, M. Gheshlaghi Azar, et al., “Bootstrap your own 
+      latent- a new approach to self-supervised learning,” Advances in neural information
+      processing systems, vol. 33, pp. 21271– 21284, 2020.
+      
     """
-    
     def __init__(self, 
                  encoder: nn.Module, 
                  projection_head: Union[list[int], nn.Module],
@@ -1434,12 +2201,20 @@ class BYOL(SSL_Base):
     
     @torch.no_grad()
     def _update_momentum_encoder(self):
+        """
+        :meta private:
+        
+        """
         for param_b, param_m in zip(self.encoder.parameters(), self.momentum_encoder.parameters()):
             param_m.data = param_m.data * self.m + param_b.data * (1. - self.m)
         for param_b, param_m in zip(self.projection_head.parameters(), self.momentum_projection_head.parameters()):
             param_m.data = param_m.data * self.m + param_b.data * (1. - self.m)
     
     def forward(self, x):
+        """
+        :meta private:
+        
+        """
         x   = self.encoder(x)
         x   = self.projection_head(x)
         emb = self.predictor(x)
@@ -1460,6 +2235,100 @@ class BYOL(SSL_Base):
             device: str=None,
             return_loss_info: bool=False
            ):
+        """
+        ``fit`` is a custom fit function designed to perform 
+        pretraining on a given model with the given dataloader.
+    
+        Parameters
+        ----------
+        train_dataloader: Dataloader
+            the pytorch Dataloader used to get the training batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor
+        epochs: int, optional
+            The number of training epochs. Must be an integer bigger than 0.
+    
+            Default = 1
+        optimizer: torch Optimizer, optional
+            The optimizer used for weight's update. It can be any optimizer
+            provided in the torch.optim module. If not given Adam with default
+            parameters will be instantiated.
+    
+            Default = torch.optim.Adam
+        augmenter: function, optional
+            Any function (or callable object) used to perform data augmentation
+            on the batch. It is highly suggested to resort to the augmentation
+            module, which implements different data augmentation functions and 
+            classes to combine them. If none is given a default augmentation with 
+            random vertical flip + random noise is applied.
+            Note that in this case data augmentation 
+            is also performed on the validation set, since it's part of the 
+            SSL algorithm.
+    
+            Default = None
+        loss_func: function, optional
+            the custom loss function. It can be any loss function which 
+            accepts as input the model's prediction and the true labels 
+            as required arguments and loss_args as optional arguments.
+            If not given BYOL loss will be automatically chosen.
+
+            Default = None
+        loss_args: Union[list, dict], optional
+            The optional arguments to pass to the function. it can be a list
+            or a dict.
+    
+            Default = None
+        label_encoder: function, optional
+            A custom function used to encode the returned Dataloaders true labels.
+            If None, the Dataloader's true label is used directly.
+    
+            Default = None
+        lr_scheduler: torch Scheduler
+            A pytorch learning rate scheduler used to update the learning rate 
+            during the fine-tuning.
+    
+            Default = None
+        EarlyStopper: EarlyStopping, optional
+            An instance of the provided EarlyStopping class.
+    
+            Default = None
+        validation_dataloader: Dataloader, optional
+            the pytorch Dataloader used to get the validation batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor. If not given, no validation loss will be 
+            calculated
+    
+            Default = None
+        verbose: bool, optional
+            Whether to print a progression bar or not.
+    
+            Default = None
+        device: torch.device or str, optional
+            The devide to use for fine-tuning. If given as a string it will
+            be converted in a torch.device instance. If not given, 'cpu' device
+            will be used.
+            
+            Device = None
+        return_loss_info: bool, optional
+            Whether to return the calculated training validation losses at 
+            each epoch. 
+    
+            Default = False
+    
+        Returns
+        -------
+        loss_info: dict, optional
+            A dictionary with keys the epoch number (as integer) and values
+            a two element list with the average epoch's training and validation
+            loss.
+            
+        Note
+        ----
+        If an EarlyStopping instance is given with monitoring loss set to 
+        validation loss, but no validation dataloader is given, monitoring
+        loss will be automatically set to training loss.
+        
+        """
         
         # Various check on input parameters. If some arguments weren't given
         if device==None:
@@ -1635,6 +2504,17 @@ class BYOL(SSL_Base):
              verbose: bool=True,
              device: str=None
             ):
+        """
+        a method to evaluate the loss on a test dataloader.
+        Parameters are the same as in the fit method, apart for the 
+        ones specific for the training which are removed.
+        
+        It is rare to evaluate the pretraing loss function on a test set.
+        Nevertheless this function provides a way to do that. 
+        An example of usage could be to assess the quality of the learned 
+        features on the fine-tuning dataset.
+        
+        """
         
         if device==None:
             # If device is None cannot assume if the model is on gpu and so if to send the batch
@@ -1703,6 +2583,36 @@ class BYOL(SSL_Base):
 
 
 class Barlow_Twins(SimCLR):
+    """
+    Implementation of the Barlow twins SSL method. To check
+    how Barlow Twins works, read the following paper [barlow1]_ .
+
+    Parameters
+    ----------
+    encoder: nn.Module
+        The encoder part of the module. It is the one you wish to pretrain and
+        transfer to the new model
+    projection_head: Union[list[int], nn.Module]
+        The projection head to use. It can be an nn.Module or a list of ints.
+        In case a list is given, a nn.Sequential module with Dense, BatchNorm
+        and Relu will be automtically created. The list will be used to set 
+        input and output dimension of each Dense Layer. For instance, if 
+        [64, 128, 64] is given, two hidden layers will be created. The first
+        with input 64 and output 128, the second with input 128 and output 64.
+
+    Warnings
+    --------
+    This class will not check the compatibility of the encoder's output and
+    the projection head's input (as well as between the projection head and the 
+    predictor). Make sure that they have the same size. 
+        
+    References
+    ----------
+    .. [barlow1] J. Zbontar, L. Jing, I. Misra, Y. LeCun, and S. Deny, 
+      “Barlow twins: Self-supervised learning via redundancy re- duction,” in International 
+      Conference on Machine Learning, pp. 12310–12320, PMLR, 2021.
+      
+    """
     def __init__(self, 
                  encoder: nn.Module, 
                  projection_head: Union[list[int], nn.Module],
@@ -1724,6 +2634,105 @@ class Barlow_Twins(SimCLR):
             cat_augmentations: bool=False,
             return_loss_info: bool=False
            ):
+        """
+        ``fit`` is a custom fit function designed to perform 
+        pretraining on a given model with the given dataloader.
+    
+        Parameters
+        ----------
+        train_dataloader: Dataloader
+            the pytorch Dataloader used to get the training batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor
+        epochs: int, optional
+            The number of training epochs. Must be an integer bigger than 0.
+    
+            Default = 1
+        optimizer: torch Optimizer, optional
+            The optimizer used for weight's update. It can be any optimizer
+            provided in the torch.optim module. If not given Adam with default
+            parameters will be instantiated.
+    
+            Default = torch.optim.Adam
+        augmenter: function, optional
+            Any function (or callable object) used to perform data augmentation
+            on the batch. It is highly suggested to resort to the augmentation
+            module, which implements different data augmentation functions and 
+            classes to combine them. If none is given a default augmentation with 
+            random vertical flip + random noise is applied.
+            Note that in this case data augmentation 
+            is also performed on the validation set, since it's part of the 
+            SSL algorithm.
+    
+            Default = None
+        loss_func: function, optional
+            the custom loss function. It can be any loss function which 
+            accepts as input the model's prediction and the true labels 
+            as required arguments and loss_args as optional arguments.
+            If not given Barlow loss will be automatically used.
+
+            Default = None
+        loss_args: Union[list, dict], optional
+            The optional arguments to pass to the function. it can be a list
+            or a dict.
+    
+            Default = None
+        label_encoder: function, optional
+            A custom function used to encode the returned Dataloaders true labels.
+            If None, the Dataloader's true label is used directly.
+    
+            Default = None
+        lr_scheduler: torch Scheduler
+            A pytorch learning rate scheduler used to update the learning rate 
+            during the fine-tuning.
+    
+            Default = None
+        EarlyStopper: EarlyStopping, optional
+            An instance of the provided EarlyStopping class.
+    
+            Default = None
+        validation_dataloader: Dataloader, optional
+            the pytorch Dataloader used to get the validation batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor. If not given, no validation loss will be 
+            calculated
+    
+            Default = None
+        verbose: bool, optional
+            Whether to print a progression bar or not.
+    
+            Default = None
+        device: torch.device or str, optional
+            The devide to use for fine-tuning. If given as a string it will
+            be converted in a torch.device instance. If not given, 'cpu' device
+            will be used.
+            
+            Device = None
+        cat_augmentations: bool, optional
+            Whether to calculate the loss on the cat version of the two
+            projection's or not. It might affect some statistical layers.
+
+            Default = False
+        return_loss_info: bool, optional
+            Whether to return the calculated training validation losses at 
+            each epoch. 
+    
+            Default = False
+    
+        Returns
+        -------
+        loss_info: dict, optional
+            A dictionary with keys the epoch number (as integer) and values
+            a two element list with the average epoch's training and validation
+            loss.
+            
+        Note
+        ----
+        If an EarlyStopping instance is given with monitoring loss set to 
+        validation loss, but no validation dataloader is given, monitoring
+        loss will be automatically set to training loss.
+        
+        """
         
         if loss_func==None:
             loss_func=Loss.Barlow_loss
@@ -1750,6 +2759,38 @@ class Barlow_Twins(SimCLR):
 
 
 class VICReg(SimCLR):
+    """
+    Implementation of the VICReg SSL method. To check
+    how VICReg works, read the following paper [VIC1]_ .
+
+    Parameters
+    ----------
+    encoder: nn.Module
+        The encoder part of the module. It is the one you wish to pretrain and
+        transfer to the new model
+    projection_head: Union[list[int], nn.Module]
+        The projection head to use. It can be an nn.Module or a list of ints.
+        In case a list is given, a nn.Sequential module with Dense, BatchNorm
+        and Relu will be automtically created. The list will be used to set 
+        input and output dimension of each Dense Layer. For instance, if 
+        [64, 128, 64] is given, two hidden layers will be created. The first
+        with input 64 and output 128, the second with input 128 and output 64.
+    predictor: Union[list[int], nn.Module]
+        The predictor to put after the projection head. Accepted arguments
+        are the same as for the projection_head.
+
+    Warnings
+    --------
+    This class will not check the compatibility of the encoder's output and
+    the projection head's input (as well as between the projection head and the 
+    predictor). Make sure that they have the same size. 
+        
+    References
+    ----------
+    .. [VIC1] A. Bardes, J. Ponce, and Y. LeCun, “Vicreg: Variance- invariance-covariance
+      regularization for self-supervised learning,” arXiv preprint arXiv:2105.04906, 2021.
+      
+    """
     def __init__(self, 
                  encoder: nn.Module, 
                  projection_head: Union[list[int], nn.Module],
@@ -1771,6 +2812,105 @@ class VICReg(SimCLR):
             cat_augmentations: bool=False,
             return_loss_info: bool=False
            ):
+        """
+        ``fit`` is a custom fit function designed to perform 
+        pretraining on a given model with the given dataloader.
+    
+        Parameters
+        ----------
+        train_dataloader: Dataloader
+            the pytorch Dataloader used to get the training batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor
+        epochs: int, optional
+            The number of training epochs. Must be an integer bigger than 0.
+    
+            Default = 1
+        optimizer: torch Optimizer, optional
+            The optimizer used for weight's update. It can be any optimizer
+            provided in the torch.optim module. If not given Adam with default
+            parameters will be instantiated.
+    
+            Default = torch.optim.Adam
+        augmenter: function, optional
+            Any function (or callable object) used to perform data augmentation
+            on the batch. It is highly suggested to resort to the augmentation
+            module, which implements different data augmentation functions and 
+            classes to combine them. If none is given a default augmentation with 
+            random vertical flip + random noise is applied.
+            Note that in this case data augmentation 
+            is also performed on the validation set, since it's part of the 
+            SSL algorithm.
+    
+            Default = None
+        loss_func: function, optional
+            the custom loss function. It can be any loss function which 
+            accepts as input the model's prediction and the true labels 
+            as required arguments and loss_args as optional arguments.
+            If not given VICReg loss will be automatically used.
+
+            Default = None
+        loss_args: Union[list, dict], optional
+            The optional arguments to pass to the function. it can be a list
+            or a dict.
+    
+            Default = None
+        label_encoder: function, optional
+            A custom function used to encode the returned Dataloaders true labels.
+            If None, the Dataloader's true label is used directly.
+    
+            Default = None
+        lr_scheduler: torch Scheduler
+            A pytorch learning rate scheduler used to update the learning rate 
+            during the fine-tuning.
+    
+            Default = None
+        EarlyStopper: EarlyStopping, optional
+            An instance of the provided EarlyStopping class.
+    
+            Default = None
+        validation_dataloader: Dataloader, optional
+            the pytorch Dataloader used to get the validation batches. It
+            must return a batch as a tuple (X, Y), with X the feature tensor
+            and Y the label tensor. If not given, no validation loss will be 
+            calculated
+    
+            Default = None
+        verbose: bool, optional
+            Whether to print a progression bar or not.
+    
+            Default = None
+        device: torch.device or str, optional
+            The devide to use for fine-tuning. If given as a string it will
+            be converted in a torch.device instance. If not given, 'cpu' device
+            will be used.
+            
+            Device = None
+        cat_augmentations: bool, optional
+            Whether to calculate the loss on the cat version of the two
+            projection's or not. It might affect some statistical layers.
+
+            Default = False
+        return_loss_info: bool, optional
+            Whether to return the calculated training validation losses at 
+            each epoch. 
+    
+            Default = False
+    
+        Returns
+        -------
+        loss_info: dict, optional
+            A dictionary with keys the epoch number (as integer) and values
+            a two element list with the average epoch's training and validation
+            loss.
+            
+        Note
+        ----
+        If an EarlyStopping instance is given with monitoring loss set to 
+        validation loss, but no validation dataloader is given, monitoring
+        loss will be automatically set to training loss.
+        
+        """
         
         if loss_func==None:
             loss_func=Loss.VICReg_loss

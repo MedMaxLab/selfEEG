@@ -3,15 +3,24 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to SelfEEG's documentation!
-===================================
+Getting Started
+===============
+
+Brief intro, Installation, dependencies, etc.
+
+.. toctree::
+   :maxdepth: 1
+
+   Dataload_guide
+
+
+API
+===
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   modules
-
+   selfeeg
 
 Indices and tables
 ==================
@@ -21,9 +30,3 @@ Here is a link to all functions documentation
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-
-test
-====
-
-bella fra

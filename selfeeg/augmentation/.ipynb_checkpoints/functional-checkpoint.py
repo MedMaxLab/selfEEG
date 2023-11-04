@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 import random
 import inspect
@@ -15,6 +16,7 @@ import torch.nn.functional as F
 from torchaudio.functional import lfilter, filtfilt
 
 from typing import Any, Callable, Iterable, TypeVar, Generic, Sequence, List, Dict, Optional, Union
+from numpy.typing import ArrayLike
 
 from ..utils.utils import torch_pchip
 
@@ -23,7 +25,8 @@ __all__ = ['identity',
            'flip_vertical', 'flip_horizontal',
            'scaling','random_slope_scale', 'random_FT_phase',
            'add_gaussian_noise', 'add_noise_SNR','add_band_noise', 'add_eeg_artifact',
-           'moving_avg', 'filter_lowpass', 'filter_highpass', 'filter_bandpass', 'filter_bandstop',
+           'get_filter_coeff','moving_avg', 'filter_lowpass', 
+           'filter_highpass', 'filter_bandpass', 'filter_bandstop',
            'get_eeg_channel_network_names', 'get_channel_map_and_networks', 
            'permute_channels', 'permutation_signal', 
            'warp_signal', 'crop_and_resize', 
@@ -33,63 +36,86 @@ __all__ = ['identity',
 
 
 # ----- SHIFTS AND FLIPS -------
-def identity(x):
-    """
-    identity return the same array or tensor as it was given.
+def identity(x: ArrayLike) -> ArrayLike:
+    """``identity`` return the same array or tensor as it was given.
     It can be used during augmentation composition to randomly avoid some augmentations
+
+    Parameters
+    ----------
+    x: ArrayLike
+        the input Tensor or Array.
+
+    Returns
+    -------
+    x: ArrayLike
+        the input Tensor or Array.
+    
     """
     return x
 
-def shift_vertical(x: "N-D Tensor of numpy Array", 
-                   value: float):
-    """
-    
-    shift_vertical add a scalar value to the input array x.
+def shift_vertical(x: ArrayLike, 
+                   value: float) -> ArrayLike:
+    """``shift_vertical`` add a scalar value to the `ArrayLike` object x.
     
     Parameters
     ----------
-    x: N-D Tensor or numpy array
-    value: scalar
+    x: ArrayLike
+        the input Tensor or Array.
+    value: float
         The value to add
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+
     """
     # To do: batch equal and random shift from +- 10 uV random number
     x_shift = x + value
     return x_shift
 
-def shift_horizontal(x: "N-D Tensor of numpy Array",
+def shift_horizontal(x: ArrayLike,
                      shift_time: float,
                      Fs: float,
                      forward: bool=None,
                      random_shift: bool=False,
                      batch_equal: bool=True
-                    ):
-    """
-    shift_horizontal shift temporally the elements of the last dimension of x by a constant.
-    
+                    ) -> ArrayLike:
+    """``shift_horizontal`` shift temporally the elements of the `ArrayLike` object x 
+    along the the last dimension.
     The empty elements at beginning or the ending part after shift are set to zero.
     
-    Paramters
-    ---------
-    x: N-D Tensor or numpy array
-        Array to shift. Last dimension must have the EEG recordings
+    Parameters
+    ----------
+    x: ArrayLike
+        the input Tensor or Array. Last dimension must have the EEG recordings.
     shift_time: float
         Shift in seconds, of the desired time shift.
     Fs: float
-        the EEG sampling rate in Hz
-    forward: bool
+        the EEG sampling rate in Hz.
+    forward: bool, optional
         Whether to shift the EEG forward (True) or backward (False) in time. If left to None, a
-        random selection of the shift direction will be performed.
-        Default= None
+        random selection of the shift direction will be performed. \n
+        Default = None
     random_shift: bool, optional
         Wheter to choose a random shift length lower than or equal to shift_time, 
         i.e. consider shift_time as the exact value to shift or as an upper bound for 
-        a random selection.
-        Default= False
+        a random selection. \n
+        Default = False
     batch_equal: bool, optional
-        whether to apply the same shift to all EEG record or not.
-        Note: if random shift is set to False and forward is None, then batch_equal will be equal
-        to True since no differences in the shift can be applied.
-        Default= True
+        whether to apply the same shift to all EEG record or not. \n
+        Default = True
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+
+    Note
+    ----
+    If random shift is set to False and forward is None, then batch_equal will be equal to 
+    `True` since no differences in the shift can be applied.
+    
     """
 
     if shift_time<0:
@@ -125,13 +151,15 @@ def shift_horizontal(x: "N-D Tensor of numpy Array",
 
 def _UnitStep(x):
     """
-    _UnitStep create a numpy array or pytorch tensor with shape equal to x 
+    ``_UnitStep`` create a numpy array or pytorch tensor with shape equal to x 
     and with the last dimension filled with the step function values used in the Hilbert Transform.
     This is used to speed up the computation of shift_frequency when batch_equal is set to False.
     In short, it avoids initializing the same h multiple times. 
 
     For more info see SciPy's hilbert help and source code:
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.hilbert.html
+
+    :meta private:
     
     """
     N = x.shape[-1]
@@ -147,7 +175,7 @@ def _UnitStep(x):
 
 def torch_hilbert(x, h: torch.Tensor=None):
     """
-    torch_hilbert is a minimal version of SciPy's hilbert function adapted for pytorch tensors.
+    ``torch_hilbert`` is a minimal version of SciPy's hilbert function [hil1]_ adapted for pytorch tensors.
 
     Parameters
     ----------
@@ -159,13 +187,14 @@ def torch_hilbert(x, h: torch.Tensor=None):
 
     Returns
     -------
-    Xa : torch.Tensor
+    torch.Tensor
         The analytic signal of x calculated along the last dimension of x
 
-    Notes
-    -----
-    For more info see SciPy's hilbert help and source code:
-    https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.hilbert.html
+    References
+    ----------
+    .. [hil1] https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.hilbert.html
+
+    :meta private:
     """
     if torch.is_complex(x):
         raise ValueError("x must be real tensor.")
@@ -186,7 +215,7 @@ def torch_hilbert(x, h: torch.Tensor=None):
     return Xa
     
 
-def _shift_frequency(x: "N-D Tensor of numpy Array",
+def _shift_frequency(x: ArrayLike,
                      shift_freq: float,
                      Fs: float,
                      forward: bool=None,
@@ -194,7 +223,10 @@ def _shift_frequency(x: "N-D Tensor of numpy Array",
                      batch_equal: bool=True,
                      t= None,
                      h= None
-                    ):
+                    ) -> ArrayLike:
+    """See ``shift_frequency`` help
+    
+    """
     if shift_freq<0:
         raise ValueError('shift freq must be a positive value.'
                          ' To shift backward set forward to False')
@@ -236,13 +268,64 @@ def _shift_frequency(x: "N-D Tensor of numpy Array",
     return x_shift
 
 
-def shift_frequency(x: "N-D Tensor of numpy Array",
+def shift_frequency(x: ArrayLike,
                     shift_freq: float,
                     Fs: float,
                     forward: bool=None,
                     random_shift: bool=False,
                     batch_equal: bool=True,
-                   ):
+                   ) -> ArrayLike:
+    """
+    ``shift_frequency`` shifts the frequency components of the signals included 
+    in the `ArrayLike` object **x**.
+    Shift will be performed as reported in [shiftFT1]_ (see section 4 of the reference paper).
+    
+    Parameters
+    ----------
+    x: ArrayLike
+        the input Tensor or Array. The last two dimensions must refer 
+        to the EEG (Channels x Samples).
+    shift_freq: float
+        The desired shift, ginven in Hz. It must be a positive value. 
+        If `random_shift` is set to True, shift_freq is used to extract a random value from a 
+        uniform distribution between `[-shift_freq, shift_freq]`, i.e. it becomes
+        the maximum value of the distribution.
+    Fs: float`
+        the EEG sampling rate in Hz.
+    forward: bool, optional
+        Whether to shift the EEG frequencies forward (True) or backward (False). 
+        If left to None, a
+        random selection of the shift direction will be performed.
+        
+        Default = None
+    random_shift: bool, optional
+        Wheter to choose a random shift from a 
+        uniform distribution between `[-shift_freq, shift_freq]` or not.
+        
+        Default = False
+    batch_equal: bool, optional
+        whether to apply the same shift to all EEG record or not.
+        
+        Default = True
+
+    
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+
+    Note
+    ----
+    If `random shift` is set to False and `forward` is None, then `batch_equal` will be set to 
+    True since no differences in the shift can be applied.
+    
+
+    References
+    ----------
+    .. [shiftFT1] Rommel, Cédric, et al. "Data augmentation for learning predictive models 
+      on EEG: a systematic comparison." Journal of Neural Engineering 19.6 (2022): 066020.
+    
+    """
     T= x.shape[-1]/Fs
     if isinstance(x, torch.Tensor):
         t = torch.linspace(0, T-(1/Fs), int(Fs*T), device=x.device)
@@ -252,28 +335,41 @@ def shift_frequency(x: "N-D Tensor of numpy Array",
     return _shift_frequency(x, shift_freq, Fs, forward, random_shift, batch_equal, t, h)
 
 
-def flip_vertical(x: "Array like"):
+def flip_vertical(x: ArrayLike) -> ArrayLike:
     """
-    flip_vertical change the sign of all the elements of the input array x.
+    ``flip_vertical`` change the sign of all the elements of the input 
+    `ArrayLike` object **x**.
     
-    Paramters
+    Parameters
     ---------
-    x: array like
-        Array to flip. Last dimension must have the EEG recordings
+    x: ArrayLike
+        the input Tensor or Array. 
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    
     """
     # TO DO: add batch_equal to apply flip only on certain EEGs
     x_flip= x*(-1)
     return x_flip
 
 
-def flip_horizontal(x: "array like"):
-    """
-    flip_horizontal flip the elements of the last dimension of x.
+def flip_horizontal(x: ArrayLike) -> ArrayLike:
+    """flip_horizontal flip the elements of the input `ArrayLike` object **x** along 
+    its last dimension.
     
-    Paramters
+    Parameters
     ---------
-    x: array like
-        Array to flip. Last dimension must have the EEG recordings
+    x: ArrayLike
+        the input Tensor or Array. 
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    
     """
     # TO DO: add batch_equal to apply flip only on certain EEGs
     if isinstance(x, np.ndarray):
@@ -285,28 +381,36 @@ def flip_horizontal(x: "array like"):
 
 
 # ---- NOISE ADDER -----
-def add_gaussian_noise(x: "N-D Tensor of numpy Array", 
+def add_gaussian_noise(x: ArrayLike, 
                        mean: float=0., 
                        std: float=1.,
                        get_noise: bool=False
-                      ):
-    """
-    
-    add_gaussian_noise add gaussian noise with the desired mean and standard deviation.
+                      ) -> tuple[ArrayLike, Optional[ArrayLike]]:
+    """``add_gaussian_noise`` add gaussian noise with the desired mean and standard deviation.
     
     Parameters
     ----------
-    x: 'array like'
-        array to add noise
-    mean: scalar, optional
-        the mean of the gaussian distribution
-        Default: 0
-    std: scalar, optional
-        the std of the gaussian distribution
-        Default: 1
+    x: ArrayLike
+        the input Tensor or Array. 
+    mean: float, optional
+        the mean of the gaussian distribution.
+        
+        Default = 0
+    std: float, optional
+        the std of the gaussian distribution.
+        
+        Default =  1
     get_noise: bool, optional
-        whether to return the generated noise or not
-        Default: False
+        whether to return the generated noise or not.
+        
+        Default = False
+    
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    noise: ArrayLike, optional
+        the generated noise. Returned only if `get_noise` is set to True
     
     """
     
@@ -321,31 +425,40 @@ def add_gaussian_noise(x: "N-D Tensor of numpy Array",
         return x_noise
 
     
-def add_noise_SNR(x: "N-D Tensor of numpy Array", 
-                  target_snr: float=5, 
+def add_noise_SNR(x: ArrayLike, 
+                  target_snr: float=5.0, 
                   get_noise: bool=False
-                 ):
+                 ) -> tuple[ArrayLike, Optional[ArrayLike]]:
     """
-    add_noise_SNR add noise such that the SNR (Signal to Noise Ratio) will be the one desired.
-    
-    Since the signal is supposed to be already noisy, it makes more sense to say that this 
-    function reduce the SNR by a factor equal to 1/P_noise_new, where P_noise_new is the power 
-    of the new added noise.
+    ``add_noise_SNR`` add noise to the input `ArrayLike` object **x** such that its 
+    SNR (Signal to Noise Ratio) will be the one desired. Since the signal is supposed 
+    to be already noisy, it makes more sense to say that this 
+    function scale the SNR by a factor equal to 1/P_noise_new, where P_noise_new is the power 
+    of the new added noise. Check [snr1]_ for more info.
     
     Parameters
     ----------
-    x: N-D Tensor or numpy array
-        array to add noise
-    target_SNR: scalar, optional
-        the target SNR
-        Default: 5
+    x: ArrayLike
+        the input Tensor or Array. 
+    target_SNR: float, optional
+        the target SNR. \n
+        Default = 5.
     get_noise: bool, optional
-        whether to return the generated noise or not
-        Default: False
-        
+        whether to return the generated noise or not. \n
+        Default = False
     
-    created using the following reference: 
-        https://stackoverflow.com/questions/14058340/adding-noise-to-a-signal-in-python
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    noise: ArrayLike, optional
+        the generated noise. Returned only if `get_noise` is set to True
+    
+    References
+    ----------
+    .. [snr1] created using the following reference: 
+           https://stackoverflow.com/questions/14058340/adding-noise-to-a-signal-in-python
+    
     """
     
     # get signal power. Not exactly true since we have an already noised signal
@@ -375,62 +488,68 @@ def add_noise_SNR(x: "N-D Tensor of numpy Array",
         return x_noise
 
 
-def add_band_noise(x: "array like",
+def add_band_noise(x: ArrayLike,
                    bandwidth: list[tuple[float,float], str, float], 
                    samplerate: float=256,
                    noise_range: float or list[float,float]= None,
                    std: float=None,
                    get_noise: bool=False
-                  ):
+                  ) -> tuple[ArrayLike, Optional[ArrayLike]]:
     
-    """add_band noise add random noise filtered at specific bandwidths.
+    """``add_band noise`` add random noise filtered at specific bandwidths.
     
-    Given a set of bandwidths or a set of specific frequency, add_band_noise create a noise whose 
-    spectrum is bigger than zero only on those bands. It can be used to alter only specific 
-    frequency components of the original signal. The noise generated will have the same standard 
-    deviation as x, but it can be rescaled so to be within a specific range or to have a specific 
+    Given a set of bandwidths or a set of specific frequency, `add_band_noise` 
+    create a noise whose spectrum is bigger than zero only on the specified bands. 
+    It can be used to alter only specific frequency components of the original signal. 
+    By default, the noise generated will have the same standard deviation as x, but 
+    it can be rescaled so to be within a specific range or to have a specific 
     standard deviation.
     
     Parameters
     ----------
-    x: array like
-        array to add noise
+    x: ArrayLike
+        the input Tensor or Array. 
     bandwidth: list
         The frequency components which the noise must have. Must be a LIST with the following 
-        values:
+        values:    
         
-        - strings: add noise to specific EEG components. Can be any of "delta", "theta", "alpha", "beta", "gamma", "gamma_low", "gamma_high".
-        
-        - scalar: add noise to a specifi component 
-        
-        - tuple with 2 scalar: add noise to a specific band set with the tuple (start_component,end_component)
+            - strings: add noise to specific EEG components. Can be any of "delta", "theta", "alpha", "beta", "gamma", "gamma_low", "gamma_high".
+            - scalar: add noise to a specifi component 
+            - tuple with 2 scalar: add noise to a specific band set with the tuple (start_component,end_component).
     
     samplerate: float, optional
         The sampling rate, given in Hz. Remember to change this value according to the signal 
-        sampling rate
-        Default = **256**
+        sampling rate.   
+        
+        Default = 256
     noise_range: float, optional
         The range within the noise is scaled. Must be a single sclar or a two element list. If given 
         as a single scalar, then the range is considered the interval [-noise_range, noise_range]. If 
         this parameter is given, then std value is ignored, since the two conditions cannot be 
         satisfied at the same time. To rescale, the following formula is applied:
 
-        .. math:: 
-            noise_new = ( (noise - \max_{noise})/(\max_{noise}-\min_{noise}) )*(target_range_max - target_range_min) + target_range_min
+            ``noise_new = ((noise - max(noise))/(max(noise)-min(noise)))*(target_range_max - target_range_min) + target_range_min``
         
-        Default = **None**
+        Default = None
     std: float, optional
         The desired standard deviation of the noise. If noise_range is given, this argument is 
         ignored. It simply scale the noise by applying:
         
-        .. math:: 
-            noise_new = noise * (target_std / std(noise))
+            ``noise_new = noise * (target_std / std(noise))``
         
-        Default = **None**
+        Default = None
     get_noise: bool, optional
-        whether to return the generated noise or not
-        Default = **False**
+        whether to return the generated noise or not.
         
+        Default = False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    noise: ArrayLike, optional
+        the generated noise. Returned only if `get_noise` is set to True
+    
     """
     
     # converting to list if single string or integer is given
@@ -531,24 +650,33 @@ def add_band_noise(x: "array like",
     else:
         return x_noise
 
-def scaling(x: 'array like',
+def scaling(x: ArrayLike,
             value: float=None,
             batch_equal: bool=True
-           ):
-    """
-    scaling rescale the array by a given amplitude.
+           ) -> ArrayLike:
+    """``scaling`` rescale the to the input `ArrayLike` object **x** by a given amplitude.
     
     Parameters
     ----------
-    x: array like
-        Input array or tensor. Can be of any shape, but the last two dimensions must referres to EEG's Channel x Sample
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     value: float, optional
-        The rescaling factor. If not given, a random value is extracted from a uniform distribution in range [0.5, 2]
+        The rescaling factor. If not given, a random value is extracted from a 
+        uniform distribution in range [0.5, 2].
+        
         Default: None
-    batch_equal:
-        Whether to apply the same rescaling on all signals or not. If False, value must be left to None, otherwise
-        batch_equal will be reset to True.
+    batch_equal: bool, optional
+        Whether to apply the same rescaling on all signals or not. 
+        If False, value must be left to None, otherwise batch_equal will be reset to True.
+        
         Default: True
+    
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    
     """
     Ndim = len(x.shape)
     x_scale = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
@@ -564,47 +692,62 @@ def scaling(x: 'array like',
     return x_scale
 
     
-def random_slope_scale(x: "N-D Tensor of numpy Array",
+def random_slope_scale(x: ArrayLike,
                        min_scale: float=0.9,
                        max_scale: float=1.2,
                        batch_equal: bool=False,
                        keep_memory: bool=False
-                      ):
+                      ) -> ArrayLike:
     """
+    ``random_slope_scale`` randomly scale the first derivative of x
     
-    random_slope_scale randomly scale the first derivative of x
-    
-    Given a tensor N-D tensor or numpy array where the last two dimensions represents (EEG_channels x EEG_samples) 
-    (1D tensor are also accepted), random_slope_scale calculates the first derivatives of each EEG records, here 
-    simplified as the difference between two consecutive values of the last dimension, and rescale each of them with
-    a random factor selected from an uniform distribution between min_scale and max_scale. This transformation 
-    is similar to adding a random noise, but with the constraint that first derivatise must keep the sign of the 
-    original EEG (e.g. if a value is bigger than the previous one, then this is also true in the transformed data, 
-    although with the difference is not same).
+    Given the input `ArrayLike` object **x** where the last two dimensions refers to the 
+    EEG channels and samples (1D tensor are also accepted), random_slope_scale calculates 
+    the first derivatives of each EEG records, here simplified as the difference between 
+    two consecutive values of the last dimension, and rescale each of them with
+    a random factor selected from an uniform distribution between min_scale and max_scale. 
+    This transformation is similar to adding a random noise, but with the constraint that the 
+    first derivatise must keep the same sign of the original EEG (e.g. if a value is bigger 
+    than the previous one, then this is also true in the transformed data).
     
     Parameters
     ----------
-    x: N-D Tensor or numpy array
-        The element to rescale. x can be one dimensional. If x has more than one dimension, the last two must 
-        represent (EEG_channels x EEG_samples) 
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     min_scale: float, optional
-        The minimum rescaling factor to be applied. Must be a value bigger than 0
-        Default: 0.9
+        The minimum rescaling factor to be applied. Must be a value bigger than 0.
+        
+        Default = 0.9
     max_scale: float, optional
-        The maximum rescaling factor to be applied. Must be a value bigger than min_scale
-        Default: 1.2
+        The maximum rescaling factor to be applied. Must be a value bigger than min_scale.
+        
+        Default = 1.2
     batch_equal: bool, optional
-        whether to apply the same rescale to all EEGs in the batch or not. This apply if x has more than 2 dimensions.
+        whether to apply the same rescale to all EEGs in the batch or not. 
+        This apply only if x has more than 2 dimensions, i.e. more than 1 EEG.
+        
         Default: False
     keep_memory: bool, optional
-        whether to keep memory of the previous changes in slope and accumulate them during transformation or not. 
-        Basically, instead of using: 
-                x_hat(n)= x(n-1) + scaling*( x(n)-x(n-1) ) ; n>1, x_hat transformed signal, x original signal
-        keep_memory apply the following:
-                x_hat(n)= x_hat(n-1) + scaling*( x(n)-x(n-1) ) ; n>1, x_hat transformed signal, x original signal
-        Keep in mind that this may completely change the range of values, as consecutive increase in the slopes
-        may cause a strong vertical shift of the signal. If set to True, set scaling factor in the range [0.8, 1.2]
+        whether to keep memory of the previous changes in slope and accumulate them during
+        the transformation or not. Basically, instead of using: 
+            
+            ``x_hat(n)= x(n-1) + scaling*( x(n)-x(n-1) )`` 
+        
+        with n>1, x_hat transformed signal, x original signal, keep_memory apply the following:
+            
+            ``x_hat(n)= x_hat(n-1) + scaling*( x(n)-x(n-1) )``
+        
+        Keep in mind that this may completely change the range of values, 
+        as consecutive increase in the slopes may cause a strong vertical shift of the signal. 
+        If set to True, we suggest to set the scaling factor in the range [0.8, 1.2]
+        
         Default: False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
     
     """
     
@@ -638,6 +781,12 @@ def random_slope_scale(x: "N-D Tensor of numpy Array",
 
 
 def new_random_fft_phase_odd(n, to_torch_tensor: bool=False, device='cpu'):
+    """
+    method for random_fft_phase with even length vector. See ``random_FT_phase`` help.
+
+    :meta private:
+    
+    """
     if to_torch_tensor:
         random_phase = 2j*np.pi*torch.rand((n-1)//2)
         new_random_phase = torch.cat((torch.tensor([0.0]), random_phase, -torch.flipud(random_phase))).to(device=device)
@@ -647,6 +796,12 @@ def new_random_fft_phase_odd(n, to_torch_tensor: bool=False, device='cpu'):
     return new_random_phase
 
 def new_random_fft_phase_even(n, to_torch_tensor: bool=False, device='cpu'):
+    """
+    method for random_fft_phase with even length vector. See ``random_FT_phase`` help.
+
+    :meta private:
+    
+    """
     if to_torch_tensor:
         random_phase = 2j*np.pi*torch.rand(n//2-1)
         new_random_phase = torch.cat((torch.tensor([0.0]), random_phase,
@@ -657,24 +812,41 @@ def new_random_fft_phase_even(n, to_torch_tensor: bool=False, device='cpu'):
     return new_random_phase
 
 
-def random_FT_phase(x: "array like", 
+def random_FT_phase(x: ArrayLike, 
                     value: float=1,
                     batch_equal: bool=True
-                   ):
+                   ) -> ArrayLike:
     """
-    random_FT_phase randomize the phase of all signals in tensor/array x.
+    ``random_FT_phase`` randomize the phase of all signals in 
+    the input `ArrayLike` object **x** as proposed in [ftphase1]_.
 
     Parameters
     ----------
-    x: array like
-        Input array or tensor. Can be of any shape, but the last two dimensions must referres to EEG's Channel x Sample
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     value: float, optional
-        The magnitude of the phase perturbation. It must be a value between (0,1], which will be used to rescale the interval
-        [0, 2* 'pi'] in [0, value * 2 * 'pi']
-        Default: None
-    batch_equal:
-        Whether to apply the same perturbation on all signals or not. Note that all channels of the same records will be 
-        perturbed in the same way to preserve cross-channel correlations.
+        The magnitude of the phase perturbation. It must be a value between 
+        (0,1], which will be used to rescale the interval [0, 2* 'pi'] in [0, value * 2 * 'pi']
+        
+        Default = None
+    batch_equal: bool, optional
+        Whether to apply the same perturbation on all signals or not. 
+        Note that all channels of the same records will be perturbed in the same way 
+        to preserve cross-channel correlations.
+
+        Default = True
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    
+    References
+    ----------
+    .. [ftphase1] Rommel, Cédric, et al. "Data augmentation for learning predictive 
+      models on EEG: a systematic comparison." Journal of Neural Engineering 19.6 (2022): 066020.
+    
     """
     if value<=0 or value>1:
         raise ValueError('value must be a float in range (0,1]')
@@ -698,21 +870,27 @@ def random_FT_phase(x: "array like",
     
     
 # ---- FILTERING -----
-def moving_avg(x, order: int=5):
+def moving_avg(x: ArrayLike, 
+               order: int=5
+              ) -> ArrayLike:
     """
-    
-    moving_avg apply a moving average filter to the signal x.
-    
-    moving_avg apply a moving average filter to the last dimension of the array or Tensor x. The filter order
-    and can be given as function argument.
+    ``moving_avg`` apply a moving average filter to the input `ArrayLike` object **x** 
+    along its last dimension. The filter order and can be given as function argument.
     
     Parameters
     ----------
-    x: N-D Tensor or numpy array
-        The element to filter. Signals must be on the last dimension.
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     order: int, optional
         The order of the filter.
-        Default: 5
+        Default = 5
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    
     """
     
     if isinstance(x, np.ndarray):
@@ -720,7 +898,8 @@ def moving_avg(x, order: int=5):
         filt = np.ones(order)/order
         Ndim= len(x.shape)
         
-        # call recursively to handle different dimensions (made to handle problem with torch conv2d)
+        # call recursively to handle different dimensions 
+        # (made to handle problem with torch conv2d)
         if Ndim>1:
             for i in range(x.shape[0]):
                 x_avg[i] = moving_avg(x[i], order=order)
@@ -746,8 +925,7 @@ def moving_avg(x, order: int=5):
         else:
             x_avg = F.conv2d(x, filt, padding= 'same')
             x_avg = torch.reshape(x_avg, x.shape)
-
-    
+ 
     return x_avg
 
 
@@ -761,52 +939,78 @@ def get_filter_coeff(Fs: float,
                      order: int=None, 
                      Wn: Union[float,List[float]]=None, 
                      eeg_band: str=None, 
-                    ):
+                    ) -> tuple[ArrayLike, ArrayLike]:
     """
+    ``get_filter_coeff`` returns the filter coefficients a and b [coeff1]_ needed to call 
+    the scipy's [coeff2]_ or torchaudio's [coeff3]_ filtfilt function.
+    This function is internally called by other filtering function when a and b 
+    coefficients are not given as input argument. 
+    It works following this priority pipeline:
     
-    get_filter_coeff returns the filter coefficients a and b needed to call the scipy's or torchaudio's 
-    filtfilt function.
+        - if specific EEG bands are given, set Wp, Ws, rp, rs for filter design according to the given band
+        - if order and Wn are not given, use previous parameter to design the filter
+        - Use Wn and order to get a and b coefficient to return
     
-    get_filter_coeff is internally called by other filtering function when a and b coefficients are not given
-    as input argument. It works following this priority pipeline:
-    1) if specific EEG bands are given, set Wp, Ws, rp, rs for filter design according to the given band
-    2) if order and Wn are not given, use previous parameter to design the filter
-    3) Use Wn and order to get a and b coefficient to return
+    In other words the function will check if the following arguments 
+    were given using this order: 
     
-    In other words (Wp,Ws,rp,rs) ----> (Wn, order) -----> (a,b) 
+        `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
+
     
     Parameters
-    ----------
-    
+    ---------- 
     Wp: float
-        bandpass normalized from 0 to 1
+        bandpass normalized from 0 to 1.
     Ws: float
-        stopband normalized from 0 to 1
+        stopband normalized from 0 to 1.
     rp: float, optional
-        ripple at bandpass in decibel. 
-        Default: -20*log10(0.95)
+        ripple at bandpass in decibel.
+        
+        Default = -20*log10(0.95)
     rs: float, optional
         ripple at stopband in decibel. 
-        Default: -20*log10(0.15)
+        
+        Default = -20*log10(0.15)
     btype: str, optional
-        filter type. Can be any of the scipy's btype argument (e.g. 'lowpass', 'highpass', 'bandpass')
-        Default: 'low'
+        filter type. Can be any of the scipy's btype argument 
+        (e.g. 'lowpass', 'highpass', 'bandpass')
+        
+        Default = 'low'
     filter_type: str, optional
-        which filter design. Accepted values are 'butter', 'ellip', 'cheby1', 'cheby2'
-        Default: 'butter'
+        which filter to design. Accepted values are 'butter', 'ellip', 'cheby1', 'cheby2'
+        
+        Default = "butter"
     order: int, optional
-        the order of the filter
-        Default: None
+        the order of the filter.
+        
+        Default = None
     Wn: array_like, optional
         the critical frequency or frequencies.
-        Default: None
+        Default = None
     eeg_band: str, optional
-        any of the possible EEG bands. Accepted values are "delta", "theta", "alpha", "beta", 
+        any of the possible EEG bands. 
+        Accepted values are "delta", "theta", "alpha", "beta", 
         "gamma", "gamma_low", "gamma_high".
-        Default: None
+        
+        Default = None
     Fs: float, optional
-        the sampling frequency. Must be given if eeg_band is also given
-        Default: None
+        the sampling frequency. Must be given if eeg_band is also given.
+        
+        Default = None
+
+    Returns
+    -------
+    b: ArrayLike
+        Array with the numerator coefficients of rational transfer function.
+    a: ArrayLike
+        Array with the denominator coefficients of rational transfer function.
+
+    References
+    ----------
+    .. [coeff1] Scipy's filter section https://docs.scipy.org/doc/scipy/reference/signal.html
+    .. [coeff2] Scipy's filtfilt function https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.filtfilt.html#scipy.signal.filtfilt
+    .. [coeff3] Torchaudio's filtfilt function https://pytorch.org/audio/main/generated/torchaudio.functional.filtfilt.html
+    
     """
     
     if btype.lower() in ['bandpass', 'bandstop']:
@@ -871,7 +1075,7 @@ def get_filter_coeff(Fs: float,
 
 
 # SISTEMA WP E WS (METTI FS PER CAPIRE SE NORMALIZZARE O MENO)
-def filter_lowpass(x: "array or tensor",
+def filter_lowpass(x: ArrayLike,
                    Fs: float,
                    Wp: float=50,
                    Ws: float=70,
@@ -883,59 +1087,88 @@ def filter_lowpass(x: "array or tensor",
                    a: Union[np.ndarray,float]=None,
                    b: Union[np.ndarray,float]=None,
                    return_filter_coeff: bool=False
-                  ):
+                  ) -> tuple[ArrayLike, Optional[tuple[ArrayLike,ArrayLike]]]:
     """
+    ``filter_lowpass`` apply a lowpass filter on the last dimension of the given 
+    input `ArrayLike` object **x**. If a and b coefficient are not 
+    given, internally calls ``get_filter_coeff`` with the other arguments to get them. 
+    The filter dedign follow this hierarchy order:
     
-    filter_lowpass apply a lowpass filter on the last dimension of the given input x.
+        `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
     
-    filter_lowpass apply a designed lowpass filter on the last dimension of x. If a and b coefficient are not 
-    given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:
-                            (Wp,Ws,rp,rs) ----> (Wn, order) -----> (a,b). 
-    Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.
+    Therefore the arguments closer to a and b in the scheme are used to get 
+    the filter coefficient.
 
-    NOTE 1: lots of parameters are the ones used to call scipy's matlab style filters, ASIDE TO 'Wp' and 'Ws' which
-    you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample 
-    (i.e. Nyquist frequency) is done directly inside the get_filter_coeff function
-
-    NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid 
-    restrictive condition which can increase the order of the filter.
-    
     Parameters
     ----------
-    x: N-D array or Tensor
-        The element to filter
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     Fs: float
         the sampling frequency in Hz
     Wp: float, optional
-        bandpass in Hz
-        Default: 50
+        bandpass in Hz.
+        
+        Default = 50
     Ws: float, optional
-        stopband in Hz
-        Default: 70
+        stopband in Hz.
+        
+        Default = 70
     rp: float, optional
-        ripple at bandpass in decibel. 
-        Default: -20*log10(0.95)
+        ripple at bandpass in decibel.
+        
+        Default = -20*log10(0.95)
     rs: float, optional
-        ripple at stopband in decibel. 
-        Default: -20*log10(0.15)
+        ripple at stopband in decibel.
+        
+        Default = -20*log10(0.15)
     filter_type: str, optional
-        which filter design. Accepted values are 'butter', 'ellip', 'cheby1', 'cheby2'
-        Default: 'butter'
+        which filter design. Accepted values are 'butter', 'ellip', 'cheby1', 'cheby2'.
+        
+        Default = 'butter'
     order: int, optional
-        the order of the filter
-        Default: None
-    Wn: array_like, optional
+        the order of the filter.
+        
+        Default = None
+    Wn: ArrayLike, optional
         the critical frequency or frequencies.
-        Default: None
-    a: array_like, optional
-        the denominator coefficient of the filter
-        Default: None
-    b: array_like, optional
-        the numerator coefficient of the filer
-        Default: None
+        
+        Default = None
+    a: ArrayLike, optional
+        the denominator coefficient of the filter.
+        
+        Default = None
+    b: ArrayLike, optional
+        the numerator coefficient of the filer.
+        
+        Default = None
     return_filter_coeff: bool, optional
-        whether to return the filter coefficient or not
-        Default: False
+        whether to return the filter coefficient or not.
+        
+        Default = False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    b: ArrayLike, optional
+        Array with the numerator coefficients of rational transfer function.
+    a: ArrayLike, optional
+        Array with the denominator coefficients of rational transfer function.
+        
+    Note
+    ----
+    Lots of parameters are the ones used to call scipy's matlab style filters, 
+    aside to **Wp** and **Ws** which you must give directly in Hz. 
+    The normalization to [0,1] with respect to the half-cycles / sample 
+    (i.e. Nyquist frequency) is done directly inside the ``get_filter_coeff`` function
+
+    Note
+    ----
+    Pytorch filtfilt works differently on edges and is pretty unstable 
+    with high order filters, so avoid restrictive condition which can increase the order 
+    of the filter.
+    
     """
     
     
@@ -960,7 +1193,7 @@ def filter_lowpass(x: "array or tensor",
         return x_filt
 
     
-def filter_highpass(x: "array or tensor", 
+def filter_highpass(x: ArrayLike, 
                     Fs: float,
                     Wp: float=30,
                     Ws: float=13,
@@ -972,58 +1205,87 @@ def filter_highpass(x: "array or tensor",
                     a: Union[np.ndarray,float]=None,
                     b: Union[np.ndarray,float]=None,
                     return_filter_coeff: bool=False
-                   ):
+                   ) -> tuple[ArrayLike, Optional[tuple[ArrayLike,ArrayLike]]]:
     
     """
+    ``filter_highpass`` apply an highpass filter on the last dimension of the given 
+    input `ArrayLike` object **x**. If a and b coefficient are not 
+    given, internally calls ``get_filter_coeff`` with the other arguments to get them. 
+    The filter dedign follow this hierarchy order:
     
-    filter_highpass apply a highpass filter on the last dimension of the given input x.
+        `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
     
-    filter_highpass apply a designed highpass filter on the last dimension of x. If a and b coefficient are not 
-    given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:
-                            (Wp,Ws,rp,rs) ----> (Wn, order) -----> (a,b). 
-    Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.
-
-    NOTE 1: lots of parameters are the ones used to call scipy's matlab style filters, ASIDE TO 'Wp' and 'Ws' which
-    you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample 
-    (i.e. Nyquist frequency) is done directly inside the get_filter_coeff function
-
-    NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid 
-    restrictive condition which can increase the order of the filter.
+    Therefore the arguments closer to a and b in the scheme are used to get 
+    the filter coefficient.
     
     Parameters
     ----------
-    x: N-D array or Tensor
-        The element to filter
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     Wp: float, optional
-        bandpass in Hz
-        Default: 30
+        bandpass in Hz.
+        
+        Default = 30
     Ws: float, optional
-        stopband in Hz
-        Default: 13
+        stopband in Hz.
+        
+        Default = 13
     rp: float, optional
         ripple at bandpass in decibel. 
-        Default: -20*log10(0.95)
+        
+        Default = -20*log10(0.95)
     rs: float, optional
         ripple at stopband in decibel. 
-        Default: -20*log10(0.15)
+        
+        Default = -20*log10(0.15)
     filter_type: str, optional
         which filter design. Accepted values are 'butter', 'ellip', 'cheby1', 'cheby2'
-        Default: 'butter'
+        
+        Default = 'butter'
     order: int, optional
-        the order of the filter
-        Default: None
-    Wn: array_like, optional
+        the order of the filter.
+        
+        Default = None
+    Wn: ArrayLike, optional
         the critical frequency or frequencies.
-        Default: None
-    a: array_like, optional
-        the denominator coefficient of the filter
-        Default: None
-    b: array_like, optional
-        the numerator coefficient of the filer
-        Default: None
+        
+        Default = None
+    a: ArrayLike, optional
+        the denominator coefficient of the filter.
+        
+        Default = None
+    b: ArrayLike, optional
+        the numerator coefficient of the filer.
+        
+        Default = None
     return_filter_coeff: bool, optional
         whether to return the filter coefficient or not
-        Default: False
+        
+        Default = False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    b: ArrayLike, optional
+        Array with the numerator coefficients of rational transfer function.
+    a: ArrayLike, optional
+        Array with the denominator coefficients of rational transfer function.
+        
+    Note
+    ----
+    Lots of parameters are the ones used to call scipy's matlab style filters, 
+    aside to **Wp** and **Ws** which you must give directly in Hz. 
+    The normalization to [0,1] with respect to the half-cycles / sample 
+    (i.e. Nyquist frequency) is done directly inside the ``get_filter_coeff`` function
+
+    Note
+    ----
+    Pytorch filtfilt works differently on edges and is pretty unstable 
+    with high order filters, so avoid restrictive condition which can increase the order 
+    of the filter.
+    
     """
     
     if filter_type not in ['butter', 'ellip', 'cheby1', 'cheby2']:
@@ -1047,7 +1309,7 @@ def filter_highpass(x: "array or tensor",
         return x_filt
 
 
-def filter_bandpass(x: "array or tensor",
+def filter_bandpass(x: ArrayLike,
                     Fs: float,
                     Wp: list[float]=None,
                     Ws: list[float]=None,
@@ -1060,70 +1322,97 @@ def filter_bandpass(x: "array or tensor",
                     b: Union[np.ndarray,float]=None,
                     eeg_band: str=None,
                     return_filter_coeff: bool=False
-                   ):
+                   ) -> tuple[ArrayLike, Optional[tuple[ArrayLike,ArrayLike]]]:
     """
+    ``filter_bandpass`` apply a bandpass filter on the last dimension of the given 
+    input `ArrayLike` object **x**. If a and b coefficient are not 
+    given, internally calls ``get_filter_coeff`` with the other arguments to get them. 
+    The filter dedign follow this hierarchy order:
     
-    filter_bandpass apply a bandpass filter on the last dimension of the given input x.
+        `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
     
-    filter_bandpass apply a designed bandpass filter on the last dimension of x. If a and b coefficient are not 
-    given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:
-                            (Wp,Ws,rp,rs) ----> (Wn, order) -----> (a,b). 
-    Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.
+    Therefore the arguments closer to a and b in the scheme are used to get 
+    the filter coefficient.
     
-    If eeg_band are given, (Wp,Ws,rp,rs) are bypassed and instantiated according to the eeg band specified. The
-    priority order remain, so if (Wn,order) or (a,b) are given, filter is created according to the described priority
-    order
-
-    NOTE 1: lots of parameters are the ones used to call scipy's matlab style filters, ASIDE TO 'Wp' and 'Ws' which
-    you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample 
-    (i.e. Nyquist frequency) is done directly inside the get_filter_coeff function
-
-    NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid 
-    restrictive condition which can increase the order of the filter.
+    If ``eeg_band`` is given, (Wp,Ws,rp,rs) are bypassed and instantiated according 
+    to the eeg band specified. The priority order remain, so if (Wn,order) or (a,b) are given, 
+    the filter will be created according to such argument.
     
     Parameters
     ----------
-    x: N-D array or Tensor
-        The element to filter
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     Fs: float
-        the sampling frequency in Hz
+        the sampling frequency in Hz.
     Wp: float, optional
         bandpass in Hz.
-        Default: 30
+        
+        Default = 30
     Ws: float, optional
-        stopband in Hz
+        stopband in Hz.
+        
         Default: 13
     rp: float, optional
         ripple at bandpass in decibel. 
-        Default: -20*log10(0.95)
+        
+        Default = -20*log10(0.95)
     rs: float, optional
         ripple at stopband in decibel. 
-        Default: -20*log10(0.15)
+        
+        Default = -20*log10(0.15)
     filter_type: str, optional
         which filter design. Accepted values are 'butter', 'ellip', 'cheby1', 'cheby2'
-        Default: 'butter'
+        
+        Default = "butter"
     order: int, optional
-        the order of the filter
-        Default: None
+        the order of the filter.
+        
+        Default = None
     Wn: array_like, optional
         the critical frequency or frequencies.
-        Default: None
+        
+        Default = None
     a: array_like, optional
         the denominator coefficient of the filter
-        Default: None
+        
+        Default = None
     b: array_like, optional
         the numerator coefficient of the filer
-        Default: None
+        
+        Default = None
     eeg_band: str, optional
         any of the possible EEG bands. Accepted values are "delta", "theta", "alpha", "beta", 
-        "gamma", "gamma_low", "gamma_high". Note: eeg_band bypass any Wp and Ws, if given
-        Default: None
+        "gamma", "gamma_low", "gamma_high". Note that eeg_band bypass any (Wp, Ws, rp, rs) 
+        if given.
+        
+        Default = None
     return_filter_coeff: bool, optional
         whether to return the filter coefficient or not
         Default: False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    b: ArrayLike, optional
+        Array with the numerator coefficients of rational transfer function.
+    a: ArrayLike, optional
+        Array with the denominator coefficients of rational transfer function.
         
-    NOTE: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid 
-    restrictive condition which can increase the order of the filter.
+    Note
+    ----
+    Lots of parameters are the ones used to call scipy's matlab style filters, 
+    aside to **Wp** and **Ws** which you must give directly in Hz. 
+    The normalization to [0,1] with respect to the half-cycles / sample 
+    (i.e. Nyquist frequency) is done directly inside the ``get_filter_coeff`` function
+
+    Note
+    ----
+    Pytorch filtfilt works differently on edges and is pretty unstable 
+    with high order filters, so avoid restrictive condition which can increase the order 
+    of the filter.
+    
     """
     
     if filter_type not in ['butter', 'ellip', 'cheby1', 'cheby2']:
@@ -1162,67 +1451,96 @@ def filter_bandstop(x: "array or tensor",
                     return_filter_coeff: bool=False
                    ):
     """
+    ``filter_bandstop`` apply a bandstop filter on the last dimension of the given 
+    input `ArrayLike` object **x**. If a and b coefficient are not 
+    given, internally calls ``get_filter_coeff`` with the other arguments to get them. 
+    The filter dedign follow this hierarchy order:
     
-    filter_bandstop apply a bandstop filter on the last dimension of the given input x.
+        `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
     
-    filter_bandstop apply a designed bandstop filter on the last dimension of x. If a and b coefficient are not 
-    given, calls get_filter_coeff with the other arguments to get them. The filter dedign follow this order:
-                            (Wp,Ws,rp,rs) ----> (Wn, order) -----> (a,b). 
-    Therefore the arguments closer to a and b in the scheme are used to get the filter coefficient.
+    Therefore the arguments closer to a and b in the scheme are used to get 
+    the filter coefficient.
     
-    If eeg_band are given, (Wp,Ws,rp,rs) are bypassed and instantiated according to the eeg band specified. The
-    priority order remain, so if (Wn,order) or (a,b) are given, filter is created according to such parameters.
-
-    NOTE 1: lots of parameters are the ones used to call scipy's matlab style filters, ASIDE TO 'Wp' and 'Ws' which
-    you must give directly in Hz. The normalization to [0,1] with respect to the half-cycles / sample 
-    (i.e. Nyquist frequency) is done directly inside the get_filter_coeff function.
-
-    NOTE 2: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid 
-    restrictive condition which can increase the order of the filter.
+    If ``eeg_band`` is given, (Wp,Ws,rp,rs) are bypassed and instantiated according 
+    to the eeg band specified. The priority order remain, so if (Wn,order) or (a,b) are given, 
+    the filter will be created according to such arguments.
     
     Parameters
     ----------
-    x: N-D array or Tensor
-        The element to filter
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     Fs: float
-        the sampling frequency in Hz
+        the sampling frequency in Hz.
     Wp: float, optional
         bandpass in Hz.
-        Default: 30
+        
+        Default = 30
     Ws: float, optional
-        stopband in Hz
-        Default: 13
+        stopband in Hz.
+        
+        Default = 13
     rp: float, optional
         ripple at bandpass in decibel. 
-        Default: -20*log10(0.95)
+        
+        Default = -20*log10(0.95)
     rs: float, optional
         ripple at stopband in decibel. 
-        Default: -20*log10(0.15)
+        
+        Default = -20*log10(0.15)
     filter_type: str, optional
         which filter design. Accepted values are 'butter', 'ellip', 'cheby1', 'cheby2'
-        Default: 'butter'
+        
+        Default = "butter"
     order: int, optional
-        the order of the filter
-        Default: None
+        the order of the filter.
+        
+        Default = None
     Wn: array_like, optional
         the critical frequency or frequencies.
-        Default: None
+        
+        Default = None
     a: array_like, optional
         the denominator coefficient of the filter
-        Default: None
+        
+        Default = None
     b: array_like, optional
         the numerator coefficient of the filer
-        Default: None
+        
+        Default = None
     eeg_band: str, optional
         any of the possible EEG bands. Accepted values are "delta", "theta", "alpha", "beta", 
-        "gamma", "gamma_low", "gamma_high". Note: eeg_band bypass any Wp and Ws, if given
-        Default: None
+        "gamma", "gamma_low", "gamma_high". Note that eeg_band bypass any (Wp, Ws, rp, rs), 
+        if given.
+        
+        Default = None
     return_filter_coeff: bool, optional
         whether to return the filter coefficient or not
-        Default: False
         
-    NOTE: pytorch filtfilt works differently on edges and is pretty unstable with high order filters, so avoid 
-    restrictive condition which can increase the order of the filter.
+        Default= False
+        
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    b: ArrayLike, optional
+        Array with the numerator coefficients of rational transfer function.
+    a: ArrayLike, optional
+        Array with the denominator coefficients of rational transfer function.
+        
+    Note
+    ----
+    Lots of parameters are the ones used to call scipy's matlab style filters, 
+    aside to **Wp** and **Ws** which you must give directly in Hz. 
+    The normalization to [0,1] with respect to the half-cycles / sample 
+    (i.e. Nyquist frequency) is done directly inside the ``get_filter_coeff`` function
+
+    Note
+    ----
+    Pytorch filtfilt works differently on edges and is pretty unstable 
+    with high order filters, so avoid restrictive condition which can increase the order 
+    of the filter.
+    
     """
     
     if filter_type not in ['butter', 'ellip', 'cheby1', 'cheby2']:
@@ -1247,6 +1565,11 @@ def filter_bandstop(x: "array or tensor",
 
 # --- PERMUTATIONS ---
 def get_eeg_channel_network_names():
+    """
+    ``get_eeg_channel_network_names`` simply prints the name of each channel included in 
+    the default networks used in the ``permute_channels`` function.
+    
+    """
     
     DMN= np.array(['AF4', 'AF7', 'AF8', 'AFZ', 'CP3', 'CP4', 'CP5', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6',
                    'F7', 'F8', 'FC1', 'FC3', 'FC4', 'FC5', 'FP1', 'FP2', 'FPZ', 'FT10', 'FT8', 'FT9',
@@ -1288,11 +1611,43 @@ def get_eeg_channel_network_names():
     
 def get_channel_map_and_networks(channel_map: list=None,
                                  chan_net: list[str]='all',
-                                ):
+                                ) -> tuple[ArrayLike, list[ArrayLike]]:
     """
+    ``get_channel_map_and_networks`` returns the **channel_map** and 
+    the **chan_net** arguments for the ``permute_channels`` function.
+    See the ``permute_channels`` help for more info.
+
+    Parameters
+    ----------
+    channel_map: list, optional
+        a list with all the EEG channel names, given as strings with upper case letters
+        (e.g. "FP1", "CZ", "C1"). Channel names must refer to the 10-20 international system.
+        If left to None, the following 61 channel map will be initialized:
+
+            - ['FP1', 'AF7', 'AF3', 'F1', 'F3', 'F5', 'F7', 'FT7', 'FC5', 'FC3', 'FC1', 
+              'C1', 'C3', 'C5', 'T7', 'TP7', 'CP5', 'CP3', 'CP1', 'P1', 'P3', 'P5', 'P7', 
+              'PO7', 'PO3', 'O1', 'OZ', 'POZ', 'PZ', 'CPZ', 'FPZ', 'FP2', 'AF8', 'AF4', 'AFZ',
+              'FZ', 'F2', 'F4', 'F6', 'F8', 'FT8', 'FC6', 'FC4', 'FC2', 'FCZ', 'CZ', 'C2', 
+              'C4', 'C6', 'T8', 'TP8', 'CP6', 'CP4', 
+              'CP2', 'P2', 'P4', 'P6', 'P8', 'PO8', 'PO4', 'O2']
+
+        Default = None
+    chan_net: list[str]
+        a list of strings with the brain network acronyms. It will be used to select the 
+        subset of channels to permute between each other if ``permute_channels``
+        called in **network** mode
+
+    Returns
+    -------
+    channel_map: ArrayLike
+        The EEG Channel Map as a dtype "U4" numpy array
+    chan_net: list[ArrayLike]
+        A list with all the channels network to be used during the channel permutation
+
+    Note
+    ----
+    This function is internally called by ``permute_channels``.
     
-    get_channel_map_and_networks simply return the channel_map and chan_net argument for permute_channels.
-    Run help(permute_channels) to get more informations.
     """
     
     
@@ -1308,14 +1663,17 @@ def get_channel_map_and_networks(channel_map: list=None,
         channel_map = np.array(channel_map, dtype='<U4')
     
     # define networks (according to rojas et al. 2018)
-    DMN= np.array(['AF4', 'AF7', 'AF8', 'AFZ', 'CP3', 'CP4', 'CP5', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6',
-                   'F7', 'F8', 'FC1', 'FC3', 'FC4', 'FC5', 'FP1', 'FP2', 'FPZ', 'FT10', 'FT8', 'FT9',
+    DMN= np.array(['AF4', 'AF7', 'AF8', 'AFZ', 'CP3', 'CP4', 'CP5', 'F1', 'F2', 
+                   'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'FC1', 'FC3', 'FC4', 'FC5', 
+                   'FP1', 'FP2', 'FPZ', 'FT10', 'FT8', 'FT9',
                    'FZ', 'P3', 'P4', 'P5', 'T7', 'T8', 'TP7', 'TP8'], dtype='<U4')
     DAN= np.array(['C5', 'C6', 'CP1', 'CP2', 'CPZ', 'FC1', 'FC2', 'FC5', 'P1', 'P2',
-                   'P7', 'P8', 'PO3', 'PO4', 'PO7', 'PO8', 'POZ', 'PZ', 'T7', 'TP8'], dtype='<U4')
+                   'P7', 'P8', 'PO3', 'PO4', 'PO7', 'PO8', 'POZ', 'PZ', 'T7', 'TP8'],
+                  dtype='<U4')
     VAN= np.array(['AF3', 'AF4', 'AF8', 'C5', 'C6', 'CP1', 'CP2', 'CP4', 'CP5', 'CP6',
                    'CPZ', 'F7', 'F8', 'FC1', 'FC2', 'FC5', 'FC6', 'FT7', 'P1', 'P2',
-                   'P7', 'P8', 'PO3', 'PO4', 'PO7', 'PO8', 'POZ', 'PZ', 'T7', 'TP8'], dtype='<U4')
+                   'P7', 'P8', 'PO3', 'PO4', 'PO7', 'PO8', 'POZ', 'PZ', 'T7', 'TP8'],
+                  dtype='<U4')
     SMN= np.array(['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'CP1', 'CP2', 'CP5', 'CPZ',
                    'CZ', 'FC5', 'FC6', 'FCZ', 'FT8', 'FTZ', 'P3', 'P5','P6', 'P7', 'P8',
                    'PO4', 'PO7', 'PO8', 'T7', 'T8', 'TP7'], dtype='<U4')
@@ -1358,59 +1716,80 @@ def get_channel_map_and_networks(channel_map: list=None,
     return channel_map, networks
     
 
-def permute_channels(x, 
+def permute_channels(x: ArrayLike, 
                      chan2shuf: int=-1,
                      mode: str="random",
                      channel_map: list=None,
                      chan_net: list[str]='all',
                      batch_equal: bool=False
-                    ):
+                    ) -> ArrayLike:
     """
+    ``permutation_channels`` permute the input `ArrayLike` object **x** along the 
+    channel dimension (second to last).
     
-    permutation_channels permute the input tensor EEG signals x along the channel dimension (second to last).
-    
-    Given an input x where the last two dimension must be (EEG_channels x EEG_samples), permutation_channels 
-    shuffles all or a subset of the eeg along its channels. Shuffles can be done randomly or using specific
+    Given an input x where the last two dimension must be 
+    (EEG_channels x EEG_samples), permutation_channels shuffles all or a subset of the EEG's 
+    channels. Shuffles can be done randomly or using specific
     networks (based on resting state functional connectivity networks).
-    If batch_equal is set to False, call the function recursively along each of the (N_{1}*N_{2}...*N{-3}) 
-    dimensions of the tensor.
     
-    Parameter
-    ---------
-    
-    x: N-D Tensor or numpy array
-        The element to shuffle. The last two dimensions must be (EEG_channel x EEG_samples), which means that the 
-        permutation is applied on the second to last dimension. 
+    Parameters
+    ----------
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples). 
+        Thus, permutation is applied on the second to last dimension. 
     chan2shuf: int, optional
-        The number of channels to shuffle. Must be greater than 1. -1 is the only accepted negative number and 
-        means permute all the segments.
-        Default: -1
+        The number of channels to shuffle. Must be greater than 1. 
+        Only exception is -1, which can be given to permute all the channels.
+        
+        Default = -1
     mode: str, optional
         How to permute the channels. Can be any of:
-            'random': shuffle channels at random
-            'network': shuffle channels which belongs to the same network. A network is a subset of channels whose
-                       activity is (with a minumum degree) between each other. This mode support only a subset of
-                       61 channels of the 10-10 system
-        Default: 'random'
-    channel_map: list of str, optional
-        The channel map of EEG acquisitions. Must be a list of string or a numpy array of dtype='<U4' with channel 
-        names as elements. Channel name must be defined with capital letters (e.g. 'P04', 'FC5').
-        Default: np.array(['FP1', 'AF7', 'AF3', 'F1', 'F3', 'F5', 'F7', 'FT7', 'FC5', 'FC3', 'FC1', 'C1', 'C3', 
-                            'C5', 'T7', 'TP7', 'CP5', 'CP3','CP1', 'P1', 'P3', 'P5', 'P7', 'PO7', 'PO3', 'O1', 
-                            'OZ', 'POZ', 'PZ', 'CPZ', 'FPZ', 'FP2', 'AF8', 'AF4', 'AFZ', 'FZ', 'F2', 'F4', 'F6', 
-                            'F8', 'FT8', 'FC6', 'FC4', 'FC2', 'FCZ', 'CZ', 'C2', 'C4', 'C6', 'T8', 'TP8', 'CP6', 
-                            'CP4', 'CP2', 'P2', 'P4', 'P6', 'P8', 'PO8', 'PO4'],dtype='<U4')
-    chan_net: str or list of str, optional
-        The list of networks to use if network mode is selected. Must be a list of string or a single string.
-        Supported networks are DMN, DAN, VAN, SMN, VFN, FPN. Use 'all' to select all networks. To get a list of
-        the channel names per network use get_eeg_network_channel_names()
-        Default: 'all'
+        
+            - 'random': shuffle channels at random
+            - 'network': shuffle channels which belongs to the same network. 
+              A network is a subset of channels whose activity is (with a minumum degree)
+              between each other. This mode support only a subset of 61 channels of the 
+              10-10 system
+        
+        Default = "random"
+    channel_map: list[str], optional
+        The EEG channel map. Must be a list of string 
+        or a numpy array of dtype='<U4' with channel names as elements. 
+        Channel name must be defined with capital letters (e.g. 'P04', 'FC5').
+        If None is left the following 61 channel map is initialized:
+        
+            - ['FP1', 'AF7', 'AF3', 'F1', 'F3', 'F5', 'F7', 'FT7', 'FC5', 'FC3', 'FC1', 
+              'C1', 'C3', 'C5', 'T7', 'TP7', 'CP5', 'CP3', 'CP1', 'P1', 'P3', 'P5', 'P7', 
+              'PO7', 'PO3', 'O1', 'OZ', 'POZ', 'PZ', 'CPZ', 'FPZ', 'FP2', 'AF8', 'AF4', 'AFZ',
+              'FZ', 'F2', 'F4', 'F6', 'F8', 'FT8', 'FC6', 'FC4', 'FC2', 'FCZ', 'CZ', 'C2', 
+              'C4', 'C6', 'T8', 'TP8', 'CP6', 'CP4', 
+              'CP2', 'P2', 'P4', 'P6', 'P8', 'PO8', 'PO4', 'O2']
+        
+        Default = None
+    chan_net: str or list[str], optional
+        The list of networks to use if network mode is selected. 
+        Must be a list of string or a single string.
+        Supported networks are "DMN", "DAN", "VAN", "SMN", "VFN", "FPN". 
+        Use 'all' to select all networks. To get a list of
+        the channel names per network call the ``get_eeg_network_channel_names`` function
+        
+        Default = 'all'
     batch_equal: bool, optional
-        whether to apply the same permutation to all EEG record or not. If True, permute_signal is called 
-        recursively for each dimension of the batch until the last two are reached (e.g. given a tensor x
-        of dimension (16,8,64,512) the function permute each of the 16*8 EEG signals (64 channels of 512 samples)
-        individually).
-        Default: False
+        whether to apply the same permutation to all EEG record or not. 
+        If True, permute_signal is called recursively in order to permute each EEG differently.
+        
+        Default = False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+
+    See Also
+    --------
+    get_channel_map_and_networks : function which creates the channel map and networks arrays.
+    get_eeg_channel_network_names : function which prints the channel network arrays.
     
     """
     Nchan=x.shape[-2]
@@ -1498,40 +1877,47 @@ def permute_channels(x,
     return x2
 
 
-def permutation_signal(x, 
+def permutation_signal(x: ArrayLike, 
                        segments: int=10, 
                        seg_to_per: int=-1,
                        batch_equal: bool=False
-                      ):
+                      ) -> ArrayLike:
     """
+    ``permutation_signal`` permute some portion of the input `ArrayLike` object **x**
+    along its last dimension.
     
-    permutation_signal permute some portion of the last dimension of the input N-D array_like x
-    
-    Given an input x where the last two dimension must be (EEG_channels x EEG_samples), permutation_signal 
-    divides the elements of the last dimension of x into N segments, then chooses M<=N segments and shuffle it. 
+    Given an input x where the last two dimension refers to the EEG's
+    channels and samples, ``permutation_signal`` divides the elements of the last 
+    dimension of x into N segments, then chooses M<=N segments and shuffle it. 
     Permutations are equally performed along each Channel of the same EEG. 
-    If batch_equal is set to False, call the function recursively along each of the (N_{1}*N_{2}...*N{-3}) 
-    dimensions of the tensor.
     
-    Parameter
-    ---------
-    
-    x: N-D Tensor or numpy array
-        The element to shuffle. The last two dimensions must be (EEG_channel x EEG_samples), which means that the 
-        same permutation is applied to all the channels of the EEG signal.
+    Parameters
+    ----------
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     segments: int, optional
-        The number of segments in which the last dimension of x must be divided. Must be greater than 1
-        Default: 1
+        The number of segments in which the last dimension of the input `ArrayLike` object **x**
+        must be divided. Must be an integer greater than 1
+        
+        Default = 1
     seg_to_per: int, optional
-        The number of segments to permute. Must be greater than 1 and lower than segments. -1 is the only
-        accepted negative number and means permute all the segments.
-        Default: -1
+        The number of segments to permute. Must be an integer greater than 1 and 
+        lower than segments. -1 can be used to permute all the segments.
+        
+        Default = -1
     batch_equal: bool, optional
-        whether to apply the same permutation to all EEG record or not. If True, permute_signal is called 
-        recursively for each dimension of the batch until the last two are reached (e.g. given a tensor x
-        of dimension (16,8,64,512) the function permute each of the 16*8 EEG signals (64 channels of 512 samples)
-        individually).
-        Default: False
+        whether to apply the same permutation to all EEG record or not. 
+        If True, the function is called recursively in order to apply a different 
+        permutation to all EEGs.
+        
+        Default = False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    
     """
     
     if segments<1:
@@ -1583,48 +1969,51 @@ def permutation_signal(x,
     
 
 # --- CROP AND RESIZE ---
-def warp_signal(x,
+def warp_signal(x: ArrayLike,
                 segments: int=10,
                 stretch_strength: float=2.,
                 squeeze_strength: float=0.5,
                 batch_equal: bool=False,
-               ):
+               ) -> ArrayLike:
     
     """
+    ``warp_signal`` stretch and squeeze portions of the input `ArrayLike` object **x**
+    along its last dimension. To do that warp_signal:
     
-    warp_signal stretch and squeeze portion of the last dimension of the input x 
-    and resize to the original size.
-    
-    Given x a N-D Tensor where the last two dim are Channel x Signal, warp_signal:
-    1) divide the last dimension of x into N segments
-    2) select at random a subset segments
-    3) stretch those segments according to stretch_strength
-    4) squeeze other segments according to squeeze_strength
-    5) resample x to the original dimension. For this part pchip interpolation 
-       with a uniform virtual grid is used
-    If batch_equal is set to False, call the function recursively and repeat step 1 to 5 for each 
-    (N_{1}*N_{2}...*N{-3}) elements of the tensor, until the recursion gets a 2-dimensional sub-tensor.
+        1. divide the last dimension of x into N segments
+        2. select at random a subset segments
+        3. stretch those segments according to stretch_strength
+        4. squeeze other segments according to squeeze_strength
+        5. resample x to the original dimension. For this part pchip interpolation with a uniform virtual grid is used
     
     Parameters
     ----------
-    x : N-D Tensor or numpy array
-        The array to warp. It accepts any dimensions but the last 2 must be Channel x Signal.
-        For example, if x is 4-D, it must be in the form (N1 x N2 x Channels x Signal), where N1 and N2 are usually
-        the batch size and channels
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     segments : int, optional
         The number of segments to consider when dividing the last dimension of x.
-        Default: 10
+        
+        Default = 10
     stretch_strength : float, optional
-        The stretch power, i.e. a multiplication factor which determines the number of samples the stretched 
-        segment must have. 
-        Default: 2.
+        The stretch power, i.e. a multiplication factor which determines the number 
+        of samples the stretched segment must have. 
+        
+        Default = 2.
     squeeze_strength : float, optional
-        The squeeze power. The same as stretch but for the segments to squeeze
-        Default: 0.5
+        The squeeze power. The same as stretch but for the segments to squeeze.
+        
+        Default = 0.5
     batch_equal: bool, optional
-        whether to apply the same warp to all records or not. True means faster computation but more memory
-        consuption and less variability, False the opposite.
-        Default: False
+        whether to apply the same warp to all records or not.
+        
+        Default = False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+    
     """
     
     Ndim=len(x.shape)
@@ -1698,65 +2087,67 @@ def warp_signal(x,
     return x_warped_final
 
 
-def crop_and_resize(x: 'N-D Tensor or array',
+def crop_and_resize(x: ArrayLike,
                     segments: int=10,
                     N_cut: int=1,
                     batch_equal: bool=False,
-                   ):
+                   ) -> ArrayLike:
     """
+    ``crop_and_resize`` crop some segments of the input `ArrayLike` object **x**
+    along its last dimension and resize it to its original dimension. To do that, 
+    crop_and_resize:
     
-    crop_and_resize crop some segments of the last dimension of the input x and resize to the original dimension.
-    
-    Given x a N-D Tensor where the last two dim are EEG_Channel x EEG_Signal, crop_and_resize:
-    1) divide the last dimension of x into N segments
-    2) select at random a subset segments
-    3) remove the selected segments from x
-    4) create a new cropped version of x
-    5) resample the new cropped version to the original dimension. For this part pchip interpolation 
-       with a uniform virtual grid is used
-    If batch_equal is set to False, call the function recursively and repeat step 1 to 5 for each 
-    (N_{1}*N_{2}...*N{-3}) elements of the tensor.
+        1. divide the last dimension of x into N segments
+        2. select at random a subset segments
+        3. remove the selected segments from x
+        4. create a new cropped version of x
+        5. resample the new cropped version to the original dimension. For this part pchip interpolation with a uniform virtual grid is used
     
     Parameters
     ----------
-    x : N-D Tensor or numpy array
-        The array to crop and resize. It accepts any dimensions but the last 2 must be EEG_Channel x EEG_Signal.
-        For example, if x is 4-D, it must be in the form (N1 x N2 x Channels x Signal), where N1 and N2 are usually
-        the batch size and channels
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     segments : int, optional
         The number of segments to consider when dividing the last dimension of x.
-        Default: 10
-    N_cut : int, optional
-        The number of segments to cut. 
-        Default: 1
-    batch_equal: bool, optional
-        whether to apply the same crop to all EEG record or not. True means faster computation but more memory
-        consuption and less variability, False the opposite
-        Default: False
+        This is not the number of segments to cut, but the number of segments in which
+        the signal is partitioned (a subset of these segments will be removed based on 
+        N_cut).
         
+        Default = 10
+    N_cut : int, optional
+        The number of segments to cut, i.e. the number of segments to remove.
+        
+        Default = 1
+    batch_equal: bool, optional
+        whether to apply the same crop to all EEG record or not.
+        Default = False
+        
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
         
     Example
     -------
-    dim = (16,1,64,512)
-    segments=15
-    N_cut=6
+    >>> dim = (16,1,64,512)
+    >>> segments=15
+    >>> N_cut=6
+    >>> x = torch.sin(torch.linspace(0,20*math.pi, dim[-1]))
+    >>> zero_tensor = torch.zeros(dim)
+    >>> x = zero_tensor + x # x = x.numpy() # the result won't change if x is a numpy array
+    >>> x_crop = crop_and_resize(x, segments= segments, N_cut= N_cut, batch_equal=True)
+    >>> print(torch.equal(x_crop[1], x_crop[2])) # True
+    >>> x_crop = crop_and_resize(x, segments= segments, N_cut= N_cut, batch_equal=False)
+    >>> print(torch.equal(x_crop[1], x_crop[2])) # False
+
+    plot the results
     
-    x = torch.sin(torch.linspace(0,20*math.pi, dim[-1]))
-    zero_tensor = torch.zeros(dim)
-    x = zero_tensor + x
-    # x = x.numpy() #the result won't change if x is a numpy array
-    
-    x_crop = crop_and_resize(x, segments= segments, N_cut= N_cut, batch_equal=True)
-    print(torch.equal(x_crop[1], x_crop[2])) # True
-    x_crop = crop_and_resize(x, segments= segments, N_cut= N_cut, batch_equal=False)
-    print(torch.equal(x_crop[1], x_crop[2])) # False
-    
-    # plot the results
-    plt.plot(xnp[0,0,0,:])
-    plt.show()
-    plt.plot(x_crop[0,0,0,:])
-    plt.plot(x_crop[2,0,0,:])
-    plt.show()
+    >>> plt.plot(xnp[0,0,0,:])
+    >>> plt.show()
+    >>> plt.plot(x_crop[0,0,0,:])
+    >>> plt.plot(x_crop[2,0,0,:])
+    >>> plt.show()
     
     """
     x_crop=np.empty_like(x) if isinstance(x, np.ndarray) else torch.empty_like(x, device=x.device)
@@ -1805,47 +2196,52 @@ def crop_and_resize(x: 'N-D Tensor or array',
 
 
 # RE-REFERENCING
-def change_ref(x: "N-D Tensor of numpy Array",
+def change_ref(x: ArrayLike,
                mode: str or int='avg',
                reference: int=None,
                exclude_from_ref: int or list[int]=None,
-              ):
+              ) -> ArrayLike:
     """
+    ``change_ref`` change the reference of all EEG record in the input 
+    `ArrayLike` object **x**. Currently, reference can be changed to:
     
-    change_ref change the reference of all EEG record in x.
+        1. Channel reference (e.g. Cz). Each record of a channel is subtracted to the record of the Cz channel. Cz(t) becomes 0 for all t
+        2. Common Average Reference (CAR). Each record is subtracted with the average of all electrodes. Currently, it doesn't cover all particular cases as this implementation is minimalist.
     
-    Given an input tensor or array x where the last two dimension must be (EEG_channels x EEG_samples),
-    change_ref change the reference of the all the EEG records according to the modality specified.
-    Currently, reference can be changed to:
+    To get a more detailed description about re-referencing, check this brief background page of the EEGlab library [eeglab]_ .
     
-    1) Channel reference (e.g. Cz). Each record of a channel is subtracted to the record of the Cz channel. 
-       Cz(t) becomes 0 for all t
-    2) Common Average Reference (CAR). Each record is subtracted with the average of all electrodes. Currently,
-       it doesn't cover all particular cases as this implementation is minimalist.
-    
-    To get a more detailed description about re-referencing, check this brief background page of the EEGlab library
-    at the following link: https://eeglab.org/tutorials/ConceptsGuide/rereferencing_background.html
-    
-    Parameter
-    ---------
-    
-    x: N-D Tensor or numpy array
-        The element to re-reference. It can be a batch of EEGs, but the last two dimensions 
-        must be (EEG_channel x EEG_samples)
+    Parameters
+    ----------
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     mode: str or int, optional
-        The re-reference modality. Accepted arguments:
-            1) 0, 'chan', 'channel'. Single Channel re-referencing.
-            2) 1, 'avg', 'average', 'car'. Common Avarage re-referencing.
-        Default: 'avg'
-    reference: int, optional
-        The reference electrode, given as an int referring to the position in the EEG_channels dimension of X
-        (remember that this means the first dim if x is a matrix or the second to last if x is N-dim)
-        Default: None
-    exclude_from_ref: int or list[int]
-        Argument designed to exclude some channels during average re-referencing. This apply for example when x
-        has records from nose tip or ear lobe.
-        Default: None
+        The re-reference modality. Accepted arguments are:
+            
+            1. 0, 'chan', 'channel'. Single Channel re-referencing.
+            2. 1, 'avg', 'average', 'car'. Common Avarage re-referencing.
         
+        Default = "avg"
+    reference: int, optional
+        The reference electrode, given as an integer with the index position of 
+        the EEG channel in the input `ArrayLike` object **x**. Remember that the EEG channel 
+        dimension must be the second to last.
+        
+        Default = None
+    exclude_from_ref: int or list[int], optional
+        Argument designed to exclude some channels during average re-referencing. 
+        This apply for example when x has records from nose tip or ear lobe.
+        
+        Default = None
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
+        
+    References
+    ----------
+    .. [eeglab] https://eeglab.org/tutorials/ConceptsGuide/rereferencing_background.html
     """
     
     Ndim=len(x.shape)
@@ -1907,34 +2303,40 @@ def change_ref(x: "N-D Tensor of numpy Array",
 
 
 
-def masking(x: "N-D Tensor of numpy Array",
+def masking(x: ArrayLike,
             mask_number: int=1,
             masked_ratio: float=0.1,
             batch_equal: bool=False
-           ):
+           ) -> ArrayLike:
     """
-    
-    masking put portions of the input argument to 0.
-    
-    Given a N-dim tensor or a numpy array, masking put a portion of the tensor/array to 0 along the last dimension.
-    If the tensor has more than the one dimension, the last two dimensions must be (Channel x Signal) and the function 
-    will mask each channel of the signal equally.
+    ``masking`` put to zero random portions of the input the input `ArrayLike` object **x** 
+    along its last dimension. The function will apply the same masking operation to all
+    Channels of the same EEG.
     
     
     Parameters
     ----------
-    x : N-D Tensor or numpy array
-        The element to mask. It accepts any dimensions but the last 2 must be Channel x Signal, since the function is 
-        performed along the last dimension but equally for each channel of the signal.
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     mask_number: int, optional
         The number of portion to mask. It must be a positive integer
-        Default: 1
+        
+        Default = 1
     masked_ratio: float, optional
         The percentage of the signal to mask. It must be a scalar in range 0<maskef_ratio<1.
-        Default: 0.1
+        
+        Default = 0.1
     batch_equal: bool, optional
-        Whether to apply the same masking to all elements in the batch or not. Does apply only if x has more than 2 dimensions
-        Default: False
+        Whether to apply the same masking to all elements in the batch or not. 
+        Does apply only if x has more than 2 dimensions
+        
+        Default = False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array.
         
     """
     
@@ -1982,32 +2384,34 @@ def masking(x: "N-D Tensor of numpy Array",
     
     return x_masked
 
-def channel_dropout(x: "N-D Tensor of numpy Array",
+def channel_dropout(x: ArrayLike,
                     Nchan: int= None,
                     batch_equal: bool=True
-                   ):
+                   ) -> ArrayLike:
     """
+    ``channel_dropout`` put to 0 a given (or random) amount of channels of the 
+    input `ArrayLike` object **x**.
     
-    channel_dropout put to 0 a given (or random) amount of channels selected at random.
-    
-    Given a N-D tensor or numpy array, where the last two dimensions refers to Channels x Samples,
-    channel_dropout will choose a random a subset of Channels based on Nchan and put them to 0.
-    
-    If batch_equal is set to True, the function will be called recursively producing a different
-    augmentation for each EEG in the tensor.
-    
-    Paramters
+    Parameters
     ---------
-    x: N-D Tensor or numpy array
-        Array or Tensor to augment. Last two dimensions must be Channels x Samples
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     Nchan: int, optional
-        Number of channels to drop. If not given, the number of channels is chosen at random in the 
-        interval [1, (Channel_total // 4) +1 ]
-        Defult: None
+        Number of channels to drop. If not given, the number of channels is chosen 
+        at random in the interval [1, (Channel_total // 4) +1 ]
+        
+        Default = None
     batch_equal: bool, optional
         whether to apply the same channel drop to all EEG records or not.
-        Default: True
         
+        Default = True
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array. 
+    
     """
     
     Ndim= len(x.shape)
@@ -2033,7 +2437,7 @@ def channel_dropout(x: "N-D Tensor of numpy Array",
     return x_drop
 
 
-def add_eeg_artifact(x,
+def add_eeg_artifact(x: ArrayLike,
                      Fs: float,
                      artifact: str= None,
                      amplitude: float=None,
@@ -2041,52 +2445,78 @@ def add_eeg_artifact(x,
                      lost_time: float=None,
                      drift_slope: float= None,
                      batch_equal: bool= False
-                    ):
+                    ) -> ArrayLike:
     """
-    add_eeg_artifact add one common artifacts of EEG signals.
+    ``add_eeg_artifact`` add  common EEG artifacts to the input `ArrayLike` object **x**.
     
-    Given a N-dim tensor or a numpy array, add_eeg_artifact add one of the artifact listed in
-    -- Fickling et al., (2019) Good data? The EEG Quality Index for Automated Assessment of Signal Quality --
-    along the last dimension of the input element. Supported artifacts are:
+    Given a N-dim tensor or a numpy array, add_eeg_artifact add one of the artifact listed 
+    in [art]_ along the last dimension of the input element. Supported artifacts are:
     
-        1) white: simple white noise
-        2) line: noise at 50 Hz or 60 Hz
-        3) eye: noise in range [1, 3] Hz
-        4) muscle: noise in range [20, 60] Hz
-        5) drift: straight line with non-zero slope
-        6) lost: cancellation of one portion of the signal
+        1. white: simple white noise
+        2. line: noise at 50 Hz or 60 Hz
+        3. eye: noise in range [1, 3] Hz
+        4. muscle: noise in range [20, 60] Hz
+        5. drift: straight line with non-zero slope
+        6. lost: cancellation of one portion of the signal
     
-    Line, eye and muscle artifact are generated with the add_band_noise function. 
-    Lost artifact is generated with the masking function.
+    Line, eye and muscle artifact are generated with the ``add_band_noise`` function. 
+    Lost artifact is generated with the ``masking`` function.
     White and drift are generated inside this function.
     
     Parameters
     ----------
-    x : N-D Tensor or numpy array
-        The element to add the artifact. It accepts any dimensions but the last 2 must be Channel x Signal, 
-        since the function is performed along the last dimension but equally for each channel of the signal.
+    x: ArrayLike
+        the input Tensor or Array. 
+        The last two dimensions must refer to the EEG (Channels x Samples).
     Fs: float
-        The sampling rate of the signal in Hz
+        The sampling rate of the signal in Hz.
     amplitude: float, optional
         The amplitude of the noise to add. If not given, amplitude=std(x)
-        Default: None
+        
+        Default = None
     line_at_60Hz: bool, optional
         Whether to apply the line artifact at 60Hz (True) or 50Hz (False).
-        Default: True
+        
+        Default = True
     lost_time: float, optional
-        The amount of time the signal is canceled. Must be given in seconds. Internally masking function is called
+        The amount of time the signal is canceled. Must be given in seconds. 
+        Internally ``masking`` function is called
         by converting the given time to the percentage of masked signal with the function
-        (Fs*lost_time)/x.shape[-1]. Alternatively, to convert the percentage of the signal masked to the amount of 
-        time is masked, just revert the formula, so lost_time= (masking_percentage * x.shape[-1]) / Fs.
-        If None is given, 20% of the signal is masked
-        Default: None
+        `(Fs*lost_time)/x.shape[-1]`. 
+        Alternatively, to convert the percentage of the signal masked to the amount of 
+        time is masked, just revert the formula, so:
+        
+            lost_time= (masking_percentage * x.shape[-1]) / Fs.
+        
+        If None is given, 20% of the signal is randomly masked.
+        
+        Default = None
     drift_slope: float, optional
-        The difference between to consecutive points of the straight line to add. If None is given, slope is
-        calculated with the amplitude parameter as drift_slope = amplitude/x.shape[-1]. If also amplitude is not
-        given drift_slope = std(x)/x.shape[-1]
+        The difference between to consecutive points of the straight line to add. 
+        If None is given, slope is calculated with the amplitude parameter as 
+        
+            drift_slope = amplitude/x.shape[-1]. 
+            
+        If also amplitude is not given 
+        
+            drift_slope = std(x)/x.shape[-1]
+
+        Default = None
     batch_equal: bool, optional
-        Whether to apply the same masking to all elements in the batch or not. Does apply only if x has more than 2 dimensions
-        Default: False
+        Whether to apply the same masking to all elements in the batch or not. 
+        Does apply only if x has more than 2 dimensions
+        
+        Default = False
+
+    Returns
+    -------
+    x: ArrayLike
+        the augmented version of the input Tensor or Array. 
+
+    References
+    ----------
+    .. [art] Fickling et al., (2019) Good data? The EEG Quality Index for Automated 
+      Assessment of Signal Quality
     
     """
     was_random=False #just for recursive calls

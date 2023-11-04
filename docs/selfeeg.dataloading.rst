@@ -1,21 +1,13 @@
 selfeeg.dataloading package
 ===========================
 
-Submodules
-----------
+loading module
 
 selfeeg.dataloading.load module
 -------------------------------
+.. automodapi:: selfeeg.dataloading.load
+  :no-inheritance-diagram:
+  :no-main-docstr:
+  :noindex:
+  :no-heading:
 
-.. automodule:: selfeeg.dataloading.load
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: selfeeg.dataloading
-   :members:
-   :undoc-members:
-   :show-inheritance:

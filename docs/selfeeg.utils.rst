@@ -1,21 +1,8 @@
-selfeeg.utils package
-=====================
+selfeeg.utils
+=============
 
-Submodules
-----------
-
-selfeeg.utils.utils module
---------------------------
-
-.. automodule:: selfeeg.utils.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: selfeeg.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. automodapi:: selfeeg.utils.utils
+  :no-inheritance-diagram:
+  :no-main-docstr:
+  :noindex:
+  :no-heading:

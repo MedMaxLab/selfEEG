@@ -36,7 +36,7 @@ setuptools.setup(
     description="Self-Supervised Learning for EEG",
     long_description=README,
     long_description_content_type='text/markdown',
-    url=" !!!!!AGGIUNGI URL !!!!!",
+    url="https://github.com/MedMaxLab/selfEEG",
     author="MedMax Team",
     author_email="federico.delpup@studenti.unipd.it",
     packages=PACKAGES,
@@ -63,8 +63,8 @@ setuptools.setup(
               "EEG"
              ],
     project_urls={
-        "Bug Tracker": "METTI URL",
-        "Source Code": "METTI URL",
+        "Bug Tracker": "https://github.com/MedMaxLab/selfEEG/issues",
+        "Source Code": "https://github.com/MedMaxLab/selfEEG",
         "Documentation": "METTI URL",
     },
     install_requires=requirements,

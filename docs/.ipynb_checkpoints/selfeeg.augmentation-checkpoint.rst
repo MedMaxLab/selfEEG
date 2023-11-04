@@ -1,29 +1,22 @@
 selfeeg.augmentation package
 ============================
 
-Submodules
-----------
+This is the data augmentation module of 
+the selfEEG library
 
-selfeeg.augmentation.compose module
------------------------------------
+compose module
+--------------
+.. automodapi:: selfeeg.augmentation.compose
+  :no-inheritance-diagram:
+  :no-main-docstr:
+  :noindex:
+  :no-heading:
 
-.. automodule:: selfeeg.augmentation.compose
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
-selfeeg.augmentation.functional module
---------------------------------------
-
-.. automodule:: selfeeg.augmentation.functional
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: selfeeg.augmentation
-   :members:
-   :undoc-members:
-   :show-inheritance:
+functional module
+-----------------
+.. automodapi:: selfeeg.augmentation.functional
+  :no-inheritance-diagram:
+  :no-main-docstr:
+  :noindex:
+  :no-heading:
