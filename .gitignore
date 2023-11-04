@@ -32,5 +32,6 @@ Temporary Items
 
 # Python compiled
 __pycache__/
+.ipynb_checkpoints
 
 # End of https://www.toptal.com/developers/gitignore/api/osx
