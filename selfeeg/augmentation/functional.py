@@ -2474,6 +2474,10 @@ def add_eeg_artifact(x: ArrayLike,
         The amplitude of the noise to add. If not given, amplitude=std(x)
         
         Default = None
+    artifact: str, optional
+        The type of artifact to apply. If None is left a random artifact will be chosen.
+        
+        Default = None
     line_at_60Hz: bool, optional
         Whether to apply the line artifact at 60Hz (True) or 50Hz (False).
         

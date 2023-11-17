@@ -4,6 +4,7 @@ import copy
 import datetime
 import tqdm
 import random
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -244,7 +245,7 @@ def fine_tune(model: nn.Module,
         with tqdm.tqdm(total=N_train+N_val, ncols=100, 
                        bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                        ' [{rate_fmt}{postfix}]',
-                       disable=not(verbose), unit=' Batch') as pbar:
+                       disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
             for batch_idx, (X, Ytrue) in enumerate(train_dataloader):
                 
                 optimizer.zero_grad()
@@ -903,7 +904,7 @@ class SimCLR(SSL_Base):
             with tqdm.tqdm(total=N_train+N_val, ncols=100, 
                        bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                        ' [{rate_fmt}{postfix}]',
-                       disable=not(verbose), unit=' Batch') as pbar:
+                       disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
                 for batch_idx, X in enumerate(train_dataloader):
                     
                     optimizer.zero_grad()
@@ -1042,7 +1043,7 @@ class SimCLR(SSL_Base):
             with tqdm.tqdm(total=N_test, ncols=100, 
                            bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                            ' [{rate_fmt}{postfix}]',
-                           disable=not(verbose), unit=' Batch') as pbar:
+                           disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
                 for batch_idx, X in enumerate(test_dataloader):
                     
                     if X.device.type!=device.type:
@@ -1342,7 +1343,7 @@ class SimSiam(SSL_Base):
             with tqdm.tqdm(total=N_train+N_val, ncols=100, 
                        bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                        ' [{rate_fmt}{postfix}]',
-                       disable=not(verbose), unit=' Batch') as pbar:
+                       disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
                 for batch_idx, X in enumerate(train_dataloader):
     
                     optimizer.zero_grad()
@@ -1487,7 +1488,7 @@ class SimSiam(SSL_Base):
             with tqdm.tqdm(total=N_test, ncols=100, 
                            bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                            ' [{rate_fmt}{postfix}]',
-                           disable=not(verbose), unit=' Batch') as pbar:
+                           disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
                 for batch_idx, X in enumerate(test_dataloader):
                     if X.device.type!=device.type:
                         X = X.to(device=device)
@@ -1886,7 +1887,7 @@ class MoCo(SSL_Base):
             with tqdm.tqdm(total=N_train+N_val, ncols=100, 
                        bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                        ' [{rate_fmt}{postfix}]',
-                       disable=not(verbose), unit=' Batch') as pbar:
+                       disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
                 for batch_idx, X in enumerate(train_dataloader):
     
                     if X.device.type!=device.type:
@@ -2062,7 +2063,7 @@ class MoCo(SSL_Base):
             with tqdm.tqdm(total=N_test, ncols=100, 
                            bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                            ' [{rate_fmt}{postfix}]',
-                           disable=not(verbose), unit=' Batch') as pbar:
+                           disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
                 for batch_idx, X in enumerate(test_dataloader):
                     if X.device.type!=device.type:
                         X = X.to(device=device)
@@ -2405,7 +2406,7 @@ class BYOL(SSL_Base):
             with tqdm.tqdm(total=N_train+N_val, ncols=100, 
                        bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                        ' [{rate_fmt}{postfix}]',
-                       disable=not(verbose), unit=' Batch') as pbar:
+                       disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
                 for batch_idx, X in enumerate(train_dataloader):
     
                     if X.device.type!=device.type:
@@ -2553,7 +2554,7 @@ class BYOL(SSL_Base):
             with tqdm.tqdm(total=N_test, ncols=100, 
                            bar_format='{desc}{percentage:3.0f}%|{bar:15}| {n_fmt}/{total_fmt}'
                            ' [{rate_fmt}{postfix}]',
-                           disable=not(verbose), unit=' Batch') as pbar:
+                           disable=not(verbose), unit=' Batch',file=sys.stdout) as pbar:
                 for batch_idx, X in enumerate(test_dataloader):
                     if X.device.type!=device.type:
                         X = X.to(device=device)
@@ -2585,7 +2586,7 @@ class BYOL(SSL_Base):
 class Barlow_Twins(SimCLR):
     """
     Implementation of the Barlow twins SSL method. To check
-    how Barlow Twins works, read the following paper [barlow]_ .
+    how Barlow Twins works, read the following paper [barlow1]_ .
 
     Parameters
     ----------
@@ -2608,7 +2609,7 @@ class Barlow_Twins(SimCLR):
         
     References
     ----------
-    .. [barlow] J. Zbontar, L. Jing, I. Misra, Y. LeCun, and S. Deny, 
+    .. [barlow1] J. Zbontar, L. Jing, I. Misra, Y. LeCun, and S. Deny, 
       “Barlow twins: Self-supervised learning via redundancy re- duction,” in International 
       Conference on Machine Learning, pp. 12310–12320, PMLR, 2021.
       

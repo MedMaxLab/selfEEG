@@ -1,6 +1,7 @@
 from __future__ import annotations
 import inspect
 import random
+import numpy as np
 from typing import Any, Dict
 from numpy.typing import ArrayLike
 
@@ -327,6 +328,12 @@ class RandomAug():
         It can be any callable object, but the first arguments to pass must 
         be the ArrayLike object to augment.
         We suggest to give a set of ``StaticSingleAug`` or ``DynamicSingleAug`` instantiations.
+    p: 1-D array-like, optional
+        A 1-D array or list with the weights associated to each augmentation 
+        (higher the weight, higher the frequency of an augmentation in a list is chosen).
+        elements of p must be in the same order as the given augmentations.
+        If given, p will be scaled so to have sum 1 (so you can give any value). 
+        If not given, all augmentations will be chosen with equal probability.
         
     Methods
     -------
@@ -334,20 +341,31 @@ class RandomAug():
         Apply the augmentations with the given arguments and specified order
         
     """
-    def __init__(self,*augmentations):
+    def __init__(self,*augmentations, p=None):
         
         self.augs = [item for item in augmentations]
         self.N = len(self.augs)
+        self.p = p
+        if p is not None:
+            if len(p)!=self.N:
+                raise ValueError('length of p does not match the number of augmentations')
+            self.p = np.array(p) + 0.
+            self.p /= np.sum(p)
+        self.nprange_ = np.arange(0,self.N)
+            
      
     def PerformAugmentation(self, X):
         """
         :meta private:
         
         """
-
-        idx=random.randint(0,self.N-1)
+        if self.p is None:
+            idx=random.randint(0,self.N-1)
+        else:
+            idx=np.random.choice(self.nprange_, p=self.p)
         Xaugs = self.augs[idx](X)
         return Xaugs
             
     def __call__(self, X):
         return self.PerformAugmentation(X)
+

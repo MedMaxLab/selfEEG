@@ -8,10 +8,13 @@ flit_core @ file:///home/conda/feedstock_root/build_artifacts/flit-core_16840843
 gmpy2 @ file:///work/ci_py311/gmpy2_1676839849213/work
 importlib-metadata @ file:///home/conda/feedstock_root/build_artifacts/importlib-metadata_1688754491823/work
 importlib-resources @ file:///home/conda/feedstock_root/build_artifacts/importlib_resources_1689017639396/work
+jupyter-sphinx==0.1.4
 jupyterlab @ file:///home/conda/feedstock_root/build_artifacts/jupyterlab_1689253413907/work
 mkl-fft==1.3.6
 mkl-random @ file:///work/mkl/mkl_random_1682950433854/work
 munkres==1.1.4
+myst-parser @ file:///home/conda/feedstock_root/build_artifacts/myst-parser_1664303069489/work
+nbsphinx @ file:///home/conda/feedstock_root/build_artifacts/nbsphinx_1693136550006/work
 numexpr @ file:///croot/numexpr_1683221822650/work
 pip==23.2.1
 pipdeptree @ file:///home/conda/feedstock_root/build_artifacts/pipdeptree_1686940472558/work
@@ -23,6 +26,7 @@ PySocks @ file:///work/ci_py311/pysocks_1676822712504/work
 scikit-learn @ file:///croot/scikit-learn_1684954695550/work
 seaborn @ file:///work/ci_py311/seaborn_1676845747354/work
 sip @ file:///work/ci_py311/sip_1676825117084/work
+sphinx-automodapi @ file:///home/conda/feedstock_root/build_artifacts/sphinx-automodapi_1692304502184/work
 sphinx-rtd-theme==1.3.0
 tomli @ file:///home/conda/feedstock_root/build_artifacts/tomli_1644342247877/work
 torchaudio==2.0.2

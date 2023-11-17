@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import time
 import math
@@ -191,7 +192,7 @@ def GetEEGPartitionNumber(EEGpath: str,
     overlapInt=round(WindSample*overlap)
 
     with tqdm.tqdm(total=len(EEGfiles), disable=not(verbose), 
-                   desc='extracting EEG samples', unit=' batch') as pbar:
+                   desc='extracting EEG samples', unit=' files',file=sys.stdout) as pbar:
         for i, ii in enumerate(EEGfiles):
             
             if verbose:
@@ -1421,6 +1422,8 @@ class EEGsampler(Sampler):
               batch size and the number of workers in order to reduce the number of times a new 
               EEG is loaded. The iterator can be seen as a good compromise between 
               batch heterogeneity and batch creation speed
+
+        Default = 1
 
     """
     

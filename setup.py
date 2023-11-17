@@ -3,6 +3,7 @@
 import os
 import setuptools
 
+
 requirements = ['pandas>=1.5.3',
                 'scipy>=1.10.1',
                 'torchaudio>=2.0.2',
@@ -16,7 +17,7 @@ extra_require = {'interactive':['jupyterlab',
                                ]
                 }
 
-PACKAGES = setuptools.find_packages(exclude=['test*'])
+PACKAGES = setuptools.find_packages(exclude=['test*','Notebooks*','docs*'])
 
 version_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'selfeeg',
@@ -58,14 +59,14 @@ setuptools.setup(
     ],
     keywords=["Deep Learning", 
               "Self-Supervised Learning",
-              "Contrastive Learning
+              "Contrastive Learning",
               "Electroencephalography", 
               "EEG"
              ],
     project_urls={
         "Bug Tracker": "https://github.com/MedMaxLab/selfEEG/issues",
         "Source Code": "https://github.com/MedMaxLab/selfEEG",
-        "Documentation": "METTI URL",
+        "Documentation": "https://github.com/MedMaxLab/selfEEG",
     },
     install_requires=requirements,
     include_package_data=True,
