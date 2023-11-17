@@ -93,7 +93,7 @@ Contributors:
 
 - Eng. Federico Del Pup
 - M.Sc. Andrea Zanola
-- M.Sc. Luise Fabrice Tshimanga 
+- M.Sc. Louis Fabrice Tshimanga 
 - Prof. Manfredo Atzori
 
 License
