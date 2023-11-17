@@ -77,7 +77,7 @@ We have worked really hard to develop this library. If you use selfEEG during yo
 Contributors:
 - Eng. Federico Del Pup
 - M.Sc. Andrea Zanola
-- M.Sc. Luise Fabrice Tshimanga: 
+- M.Sc. Louis Fabrice Tshimanga 
 - Prof. Manfredo Atzori
 
 ## License
