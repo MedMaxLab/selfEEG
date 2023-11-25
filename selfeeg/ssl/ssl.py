@@ -1541,8 +1541,8 @@ class MoCo(SSL_Base):
 
         Default = None
     feat_size: int, optional
-        The size of the feature vector (encoder's output last dim shape).
-        It will be used to initialize the queue (for MoCo v2). If not given
+        The size of the feature vector (projector's output last dim shape).
+        It will be used to initialize the queue for MoCo v2. If not given
         the last element of the projection_head list is used. Of course, it 
         must be given if a custom projection head is used.
 
@@ -1611,6 +1611,7 @@ class MoCo(SSL_Base):
             self.projection_head = projection_head
             self.momentum_projection_head= copy.deepcopy(projection_head)
 
+        self.predictor = None
         if predictor!=None:
             if isinstance(predictor, list):
                 if len(predictor)<2:
@@ -1629,7 +1630,7 @@ class MoCo(SSL_Base):
             else:    
                 self.predictor = predictor
 
-        if self.predictor==None and bank_size<=0:
+        if (self.predictor is None) and (bank_size<=0):
             msgWarning= 'You are trying to initialize MoCo with only the projection head and no memory bank. '
             msgWarning += ' Training will follow MoCo v3 setup for loss calculation during training,'
             msgWarning += ' but it\'s suggested to set up an 2-hidden layer MLP predictor as in the original paper'

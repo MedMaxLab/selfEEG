@@ -122,7 +122,7 @@ def shift_horizontal(x: ArrayLike,
         raise ValueError('shift time must be a positive value. To shift backward set forward to False')
     Ndim= len(x.shape)
     x_shift = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
-    if batch_equal:
+    if not(batch_equal):
         if not(random_shift or (forward is None)):
             print('set batch equal to true')
             batch_equal=True
@@ -351,7 +351,6 @@ def flip_vertical(x: ArrayLike) -> ArrayLike:
         the augmented version of the input Tensor or Array.
     
     """
-    # TO DO: add batch_equal to apply flip only on certain EEGs
     x_flip= x*(-1)
     return x_flip
 
@@ -371,7 +370,6 @@ def flip_horizontal(x: ArrayLike) -> ArrayLike:
         the augmented version of the input Tensor or Array.
     
     """
-    # TO DO: add batch_equal to apply flip only on certain EEGs
     if isinstance(x, np.ndarray):
         x_flip = np.flip(x, len(x.shape)-1)
     else:
@@ -759,9 +757,11 @@ def random_slope_scale(x: ArrayLike,
     
     if batch_equal:
         if isinstance(x, np.ndarray):
-            scale_factor= np.random.uniform(min_scale, max_scale, size=tuple(x.shape[-2:]+np.array([0,-1])) )
+            scale_factor= np.random.uniform(min_scale, max_scale, 
+                                            size=tuple(x.shape[-2:]+np.array([0,-1])) )
         else:
-            scale_factor= torch.empty(x.shape[-2], x.shape[-1]-1, device=x.device).uniform_(min_scale, max_scale)
+            scale_factor= torch.empty(x.shape[-2], x.shape[-1]-1, 
+                                      device=x.device).uniform_(min_scale, max_scale)
     else:
         if isinstance(x, np.ndarray):
             scale_factor= np.random.uniform(min_scale, max_scale, x.shape)[...,1:]
@@ -923,7 +923,13 @@ def moving_avg(x: ArrayLike,
             for i in range(x.shape[0]):
                 x_avg[i] = moving_avg(x[i], order=order)
         else:
-            x_avg = F.conv2d(x, filt, padding= 'same')
+            if x.shape[1]>1:
+                # to solve problem of conv channel dimension bigger than 1
+                for i in range(x.shape[1]):
+                    x_avg[...,i,:,:] = F.conv2d(x[...,i,:,:].unsqueeze(1), 
+                                              filt, padding= 'same').squeeze(1)
+            else:
+                x_avg = F.conv2d(x, filt, padding= 'same')
             x_avg = torch.reshape(x_avg, x.shape)
  
     return x_avg
@@ -1311,8 +1317,8 @@ def filter_highpass(x: ArrayLike,
 
 def filter_bandpass(x: ArrayLike,
                     Fs: float,
-                    Wp: list[float]=None,
-                    Ws: list[float]=None,
+                    Wp: list[float]=[8, 35],
+                    Ws: list[float]=[1, 50],
                     rp: float=-20*np.log10(.95), 
                     rs: float=-20*np.log10(.05),
                     filter_type: str='butter',
@@ -1348,11 +1354,11 @@ def filter_bandpass(x: ArrayLike,
     Wp: float, optional
         bandpass in Hz.
         
-        Default = 30
+        Default = None
     Ws: float, optional
         stopband in Hz.
         
-        Default: 13
+        Default = None
     rp: float, optional
         ripple at bandpass in decibel. 
         
@@ -1420,7 +1426,8 @@ def filter_bandpass(x: ArrayLike,
     
     if (a is None) or (b is None):
         b, a = get_filter_coeff(Fs=Fs, Wp = Wp, Ws = Ws, rp = rp, rs = rs, btype = 'bandpass', 
-                                filter_type = filter_type, order = order, Wn = Wn,eeg_band = eeg_band, 
+                                filter_type = filter_type, order = order, Wn = Wn,
+                                eeg_band = eeg_band, 
                                )
          
     if isinstance(x, np.ndarray):
@@ -1438,10 +1445,10 @@ def filter_bandpass(x: ArrayLike,
 
 def filter_bandstop(x: "array or tensor",
                     Fs: float,
-                    Wp: list[float]=None,
-                    Ws: list[float]=None,
+                    Wp: list[float]=[0, 15],
+                    Ws: list[float]=[4, 8],
                     rp: float=-20*np.log10(.95), 
-                    rs: float=-20*np.log10(.05),
+                    rs: float=-20*np.log10(.1),
                     filter_type: str='butter',
                     order: int=None, 
                     Wn: float=None,
@@ -1549,8 +1556,7 @@ def filter_bandstop(x: "array or tensor",
     if (a is None) or (b is None):
         b, a = get_filter_coeff(Fs=Fs, Wp = Wp, Ws = Ws, rp = rp, rs = rs, btype = 'bandstop', 
                                 filter_type = filter_type, order = order, Wn = Wn, eeg_band = eeg_band 
-                               )
-    print(b, a)    
+                               )    
     if isinstance(x, np.ndarray):
         x_filt = signal.filtfilt(b, a, x, padtype='constant' )  
     else:
@@ -1863,7 +1869,11 @@ def permute_channels(x: ArrayLike,
                 if x.device.type!='cpu':
                     idx = idx.to(device=x.device)
                     idxor= idxor.to(device=x.device)
-
+        
+        # solve problems related to network not having enough channel to permute
+        # compared to the desired
+        if idxor.shape != idx.shape:
+            idx = idx[:idxor.shape[-1]]
         # apply defined shuffle
         xtemp = x[..., idx, :]
         x2[...,idxor,:] = xtemp
@@ -1873,7 +1883,7 @@ def permute_channels(x: ArrayLike,
         for i in range(x.shape[0]):
             x2[i] = permute_channels(x[i], chan2shuf= chan2shuf, mode=mode, 
                                      channel_map=channel_map, chan_net=chan_net)
-               
+
     return x2
 
 

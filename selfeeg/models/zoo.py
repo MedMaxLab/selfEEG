@@ -88,7 +88,7 @@ class DepthwiseConv2d(nn.Conv2d):
             norm = self.weight.norm(dim=2, keepdim=True)
 
         # rescale only those filters which have a norm bigger than the maximum allowed
-        if (norm>self.max_norm).sum()>self.max_norm:
+        if (norm>self.max_norm).sum()>0:
             desired = torch.clamp(norm, 0, self.max_norm)
             self.weight = torch.nn.Parameter(self.weight*desired/ (eps + norm))
     
@@ -215,7 +215,7 @@ class ConstrainedDense(nn.Linear):
         norm = self.weight.norm(dim=1, keepdim=True)
 
         # rescale only those filters which have a norm bigger than the maximum allowed
-        if (norm>self.max_norm).sum()>self.max_norm:
+        if (norm>self.max_norm).sum()>0:
             desired = torch.clamp(norm, 0, self.max_norm)
             self.weight = torch.nn.Parameter(self.weight*desired/ (eps + norm))
     
@@ -306,7 +306,7 @@ class ConstrainedConv2d(nn.Conv2d):
             norm = self.weight.norm(dim=2, keepdim=True)
 
         # rescale only those filters which have a norm bigger than the maximum allowed
-        if (norm>self.max_norm).sum()>self.max_norm:
+        if (norm>self.max_norm).sum()>0:
             desired = torch.clamp(norm, 0, self.max_norm)
             self.weight = torch.nn.Parameter(self.weight*desired/ (eps + norm))
     
@@ -744,9 +744,12 @@ class  DeepConvNet(nn.Module):
         self.return_logits = return_logits
         self.encoder    = DeepConvNetEncoder(Chans, kernLength, F, Pool, stride, max_norm, 
                                              batch_momentum, ELUalpha, dropRate)
-        k = kernLength-1
-        Dense_input     = F*8*((((( (Samples-k)//stride ) -k)//stride) -k )//stride -k)//stride
-        self.Dense = ConstrainedDense( Dense_input, 
+        k = kernLength
+        Dense_input=[Samples]*8
+        for i in range(4):
+            Dense_input[i*2] = Dense_input[i*2-1]-k+1
+            Dense_input[i*2+1] = (Dense_input[i*2]-Pool)//stride +1
+        self.Dense = ConstrainedDense( F*8*Dense_input[-1], 
                                       1 if nb_classes<=2 else nb_classes, 
                                       max_norm=max_dense_norm)
 
@@ -992,9 +995,9 @@ class EEGInception(nn.Module):
         super(EEGInception, self).__init__()
         self.nb_classes    = nb_classes
         self.return_logits = return_logits
-        self.encoder       = EEGInceptionEncoder(Chans, F1=8, D=2, kernel_size=64, pool=4, 
-                                                 dropRate=0.5, ELUalpha=1.0, bias=True, 
-                                                 batch_momentum=0.1, max_depth_norm=1.)
+        self.encoder       = EEGInceptionEncoder(Chans, F1, D, kernel_size, pool, 
+                                                 dropRate, ELUalpha, bias, 
+                                                 batch_momentum, max_depth_norm)
         self.Dense  = nn.Linear( int((F1*3)/4)*int((Samples//(pool*(int(pool//2)**3))) ), 
                                 1 if nb_classes<=2 else nb_classes)
     
@@ -1048,10 +1051,15 @@ class  TinySleepNetEncoder(nn.Module):
         The dropout percentage. 
 
         Default = 0.5
+    hidden_lstm: int, optional
+        Hidden size of the lstm block.
+
+        Default = 128
     
     """
 
-    def __init__(self, Chans, Fs, F1 = 128, kernlength=8, pool=8, dropRate=0.5, batch_momentum=0.1):
+    def __init__(self, Chans, Fs, F = 128, kernlength=8, pool=8, 
+                 dropRate=0.5, batch_momentum=0.1, hidden_lstm = 128):
         
         super(TinySleepNetEncoder, self).__init__()
         self.conv1 = nn.Conv1d( Chans, F, int(Fs//2), stride=int(Fs//16), padding='valid')
@@ -1061,10 +1069,10 @@ class  TinySleepNetEncoder(nn.Module):
         self.drop1 = nn.Dropout1d(dropRate)
         
         self.conv2 = nn.Conv1d( F, F, 8, stride=1, padding='valid')
-        self.BN2   = nn.BatchNorm1d(F1, momentum=batch_momentum )
+        self.BN2   = nn.BatchNorm1d(F, momentum=batch_momentum )
         #ReLU()
         self.conv3 = nn.Conv1d( F, F, 8, stride=1, padding='valid')
-        self.BN3   = nn.BatchNorm1d(F1, momentum=batch_momentum )
+        self.BN3   = nn.BatchNorm1d(F, momentum=batch_momentum )
         #ReLU()
         self.conv4 = nn.Conv1d( F, F, 8, stride=1, padding='valid')
         self.BN4   = nn.BatchNorm1d(F, momentum=batch_momentum )
@@ -1073,7 +1081,7 @@ class  TinySleepNetEncoder(nn.Module):
         self.pool2 = nn.MaxPool1d( pool//2, stride=pool//2)
         self.drop2 = nn.Dropout1d(dropRate)
 
-        self.lstm1 = nn.LSTM( input_size=F , hidden_size=128, num_layers=1)
+        self.lstm1 = nn.LSTM( input_size=F , hidden_size=hidden_lstm, num_layers=1)
         self.flatten = nn.Flatten()
 
 
@@ -1152,6 +1160,10 @@ class  TinySleepNet(nn.Module):
         If None no constraint will be included
 
         Default = 1.
+    hidden_lstm: int, optional
+        Hidden size of the lstm block.
+
+        Default = 128
     return_logits: bool, optional
         Whether to return the output as logit or probability.  It is suggested 
         to not use False as the pytorch crossentropy apply the softmax internally.
@@ -1168,18 +1180,19 @@ class  TinySleepNet(nn.Module):
 
     """
 
-    def __init__(self,nb_classes, Chans, Fs, F = 128, kernlength=8, pool=8, 
-                 dropRate=0.5, batch_momentum=0.1, max_dense_norm=2., return_logits=True
+    def __init__(self,nb_classes, Chans, Fs, F = 128, kernlength=8, pool=8,  
+                 dropRate=0.5, batch_momentum=0.1, max_dense_norm=2., hidden_lstm=128, 
+                 return_logits=True
                 ):
         super(TinySleepNet, self).__init__()
 
         self.nb_classes = nb_classes
         self.return_logits = return_logits
         self.encoder    = TinySleepNetEncoder(Chans, Fs, F, kernlength, pool, 
-                                              dropRate, batch_momentum)
+                                              dropRate, batch_momentum, hidden_lstm)
 
         self.drop3 = nn.Dropout1d(dropRate)
-        self.Dense = ConstrainedDense( F, 1 if nb_classes<=2 else nb_classes, 
+        self.Dense = ConstrainedDense( hidden_lstm, 1 if nb_classes<=2 else nb_classes, 
                                       max_norm=max_dense_norm)
 
     def forward(self, x):
@@ -1312,7 +1325,8 @@ class StagerNet(nn.Module):
         self.encoder    = StagerNetEncoder(Chans, kernLength=kernLength, F = F, Pool = Pool)
         
         self.drop       = nn.Dropout(p=dropRate)
-        self.Dense      = nn.Linear(Chans*(Samples//256)*F, 1 if nb_classes<=2 else nb_classes )
+        self.Dense      = nn.Linear(Chans*F*(int((int((Samples-Pool)/Pool+1) - Pool)/Pool +1)), 
+                                    1 if nb_classes<=2 else nb_classes )
     
     def forward(self, x):
         """
@@ -1767,7 +1781,7 @@ class ResNet1D(nn.Module):
                  nb_classes, 
                  Chans, 
                  Samples, 
-                 block: nn.Module, 
+                 block: nn.Module=BasicBlock1, 
                  Layers: "list of 4 int" = [0, 0, 0, 0],
                  inplane: int=16, 
                  kernLength: int=7,
@@ -1789,8 +1803,9 @@ class ResNet1D(nn.Module):
         # Classifier
         if classifier is None:
             if addConnection:
+                out1 = int( (Samples+2*(int(kernLength//2)) - kernLength)//2 ) +1
                 self.Dense = nn.Linear( (Chans*inplane + 
-                                         int((Sample-(kernLength-1)-1)/int(kernLength//2) +1)), 
+                                         int( (out1-kernLength)/int(kernLength//2) +1)*2), 
                                        1 if nb_classes<=2 else nb_classes)
             else:
                 self.Dense = nn.Linear(Chans*inplane, 1 if nb_classes<=2 else nb_classes)
@@ -1983,10 +1998,8 @@ class  STNet(nn.Module):
         self.nb_classes    = nb_classes
         self.return_logits = return_logits
         self.encoder       = STNetEncoder(Samples, F, kernlength, dropRate, bias)
+        self.drop3 = nn.Dropout(dropRate)
 
-        x = self.lin1(x)
-        x = self.drop_selu(x)
-        x = self.lin2(x)
         self.Dense  = nn.Sequential(nn.Linear( int(F/16)*(grid_size**2),dense_size),
                                     nn.Dropout( dropRate),
                                     nn.SELU(),
@@ -2382,8 +2395,9 @@ class EEGSym(nn.Module):
 
         Default = True
     F: int, optional
-        The output filters of each branch of the first inception block. 
-        Other output will be automatically calculated
+        The output filters of each branch of the first inception block.
+        Must be a multiple of 8.
+        Other outputs will be automatically calculated.
 
         Default = 8
     pool: int, optional

@@ -21,8 +21,6 @@ __all__ = ['GetEEGPartitionNumber',
            'GetEEGSplitTable', 'GetEEGSplitTableKfold',
            'EEGDataset', 'EEGsampler']
 
-# TO DO: ADD parallel loop in get EEG Partition Number
-
 def GetEEGPartitionNumber(EEGpath: str, 
                           freq: int or float=250, 
                           window: int or float=2, 
@@ -39,11 +37,11 @@ def GetEEGPartitionNumber(EEGpath: str,
                           verbose: bool=False
                          ) -> pd.DataFrame :
     """
-    ``GetEEGPartitionNumber`` find the number of unique partitions from the EEG signals 
+    ``GetEEGPartitionNumber`` finds the number of unique partitions from the EEG signals 
     stored inside a given directory. Some default parameters are designed to work with 
-    the 'BIDSAlign' library. For more info, see [bids].
+    the 'BIDSAlign' library. For more info, see [bids]_.
     To further check how to use this function see the introductory notebook provided 
-    in the documentation
+    in the documentation.
     
     
     Parameters
@@ -148,6 +146,10 @@ def GetEEGPartitionNumber(EEGpath: str,
     multiplied by the product of the shape of all dimensions from the first to the second to
     last (the last two dimensions are supposed to be the Channel and Sample dimension of a
     single EEG file
+
+    References
+    ----------
+    .. [bids] https://github.com/MedMaxLab/BIDSAlign
     
     """
     # Check Inputs
@@ -222,7 +224,10 @@ def GetEEGPartitionNumber(EEGpath: str,
     
             M=len(EEG.shape)
             if overlap==0:
-                N_Partial=EEG.shape[-1]/(WindSample)
+                if includePartial:
+                    N_Partial=EEG.shape[-1]/(WindSample)
+                else:
+                    N = EEG.shape[-1]//(WindSample)
             else:
                 L=EEG.shape[-1]
                 N=(L-overlapInt)//(WindSample-overlapInt)
