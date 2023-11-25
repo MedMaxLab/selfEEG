@@ -149,19 +149,19 @@ def GetEEGPartitionNumber(EEGpath: str,
 
     Example
     -------
-    >>>import pickle
-    >>>import pandas as pd
-    >>>import selfeeg.dataloading as dl
-    >>>import selfeeg.utils
-    >>>utils.create_dataset()
-    >>>def loadEEG(path):
-    >>>    with open(path, 'rb') as handle:
-    >>>        EEG = pickle.load(handle)
-    >>>    x = EEG['data']
-    >>>    return x
-    >>>EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                  overlap=0.3, load_function=loadEEG )
-    >>>EEGlen.head()
+    >>> import pickle
+    >>> import pandas as pd
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.utils
+    >>> utils.create_dataset()
+    >>> def loadEEG(path):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x = EEG['data']
+    >>>     return x
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                   overlap=0.3, load_function=loadEEG )
+    >>> EEGlen.head()
 
     References
     ----------
@@ -324,7 +324,8 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
                      split_tolerance=0.01,
                      perseverance=1000,
                      save: bool=False,
-                     save_path: str=None
+                     save_path: str=None,
+                     seed: int= None
                     ) -> pd.DataFrame:
 
     """   
@@ -466,6 +467,10 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         It's the string given to the ``pandas.DataFrame.to_csv()`` method.
         
         Default = None
+    seed: int, optional
+        An integer defining the seed to use. Set it to reproduce split results.
+
+        Default = None
                  
     Returns
     -------
@@ -481,20 +486,20 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
 
     Example
     -------
-    >>>import pickle
-    >>>import pandas as pd
-    >>>import selfeeg.dataloading as dl
-    >>>import selfeeg.utils
-    >>>labels = utils.create_dataset()
-    >>>def loadEEG(path):
-    >>>    with open(path, 'rb') as handle:
-    >>>        EEG = pickle.load(handle)
-    >>>    x = EEG['data']
-    >>>    return x
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                   overlap=0.3, load_function=loadEEG )
-    >>> EEGsplit = dl.GetEEGSplitTable(EEGlen) #default 60/20/20 split
-    >>> dl.check_split(EEGlen,EEGsplit) #will return 60/20/20
+    >>> import pickle
+    >>> import pandas as pd
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.utils
+    >>> labels = utils.create_dataset()
+    >>> def loadEEG(path):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x = EEG['data']
+    >>>     return x
+    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                    overlap=0.3, load_function=loadEEG )
+    >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 split
+    >>>  dl.check_split(EEGlen,EEGsplit) #will return 60/20/20
             
     """ 
     
@@ -545,6 +550,9 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         test_split_mode= 2
     else:
         raise ValueError('test split mode not supported')
+
+    if seed is not None:
+        random.seed(seed)
 
     # check if stratification must be applied
     # in case stratification must be performed, the function will be called
@@ -810,7 +818,8 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
                           split_tolerance=0.01,
                           perseverance=1000,
                           save: bool=False,
-                          save_path: str=None
+                          save_path: str=None,
+                          seed: int = None
                          ) -> pd.DataFrame:
     """   
     ``GetEEGSplitTableKfold`` create a table with multiple splits for cross-validation.
@@ -935,6 +944,10 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
         It's the string given to the ``pandas.DataFrame.to_csv()`` method.
         
         Default = None
+    seed: int, optional
+        An integer defining the seed to use. Set it to reproduce split results.
+
+        Default = None
                  
     Returns
     -------
@@ -961,20 +974,20 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
 
     Example
     -------
-    >>>import pickle
-    >>>import pandas as pd
-    >>>import selfeeg.dataloading as dl
-    >>>import selfeeg.utils
-    >>>labels = utils.create_dataset()
-    >>>def loadEEG(path):
-    >>>    with open(path, 'rb') as handle:
-    >>>        EEG = pickle.load(handle)
-    >>>    x = EEG['data']
-    >>>    return x
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                   overlap=0.3, load_function=loadEEG )
-    >>> EEGsplit = dl.GetEEGSplitTableKfold(EEGlen) #default 60/20 train/test split
-    >>> dl.check_split(EEGlen,dl.getsplit(EEGsplit,1)) # will return 0.72/0.08/0.2 ratios
+    >>> import pickle
+    >>> import pandas as pd
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.utils
+    >>> labels = utils.create_dataset()
+    >>> def loadEEG(path):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x = EEG['data']
+    >>>     return x
+    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                    overlap=0.3, load_function=loadEEG )
+    >>>  EEGsplit = dl.GetEEGSplitTableKfold(EEGlen, seed=1234) #default 60/20 train/test split
+    >>>  dl.check_split(EEGlen,dl.getsplit(EEGsplit,1)) # will return 0.72/0.08/0.2 ratios
             
     """ 
     if kfold<2:
@@ -984,6 +997,9 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     kfold=int(kfold)
     if (test_ratio is None) and (test_data_id is None):
         test_ratio = 0.
+
+    if seed is not None:
+        random.seed(seed)
         
     # FIRST STEP: Create test set or exclude data if necessary
     # the result of this function call will be an initialization of the split table
@@ -1055,9 +1071,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     
     return EEGsplit
 
-def getsplit(split_table: pd.DataFrame, 
-             split: int
-            ) -> pd.DataFrame:
+def getsplit(split_table: pd.DataFrame, split: int) -> pd.DataFrame:
     """
     ``getsplit`` extract a split from the output of the ``GetEEGSplitTableKfold`` .
     It also change column names in order to make them equals to the output DataFrame
@@ -1083,21 +1097,21 @@ def getsplit(split_table: pd.DataFrame,
 
     Example
     -------
-    >>>import pickle
-    >>>import pandas as pd
-    >>>import selfeeg.dataloading as dl
-    >>>import selfeeg.utils
-    >>>labels = utils.create_dataset()
-    >>>def loadEEG(path):
-    >>>    with open(path, 'rb') as handle:
-    >>>        EEG = pickle.load(handle)
-    >>>    x = EEG['data']
-    >>>    return x
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                   overlap=0.3, load_function=loadEEG )
-    >>> EEGsplit = dl.GetEEGSplitTableKfold(EEGlen) #default 60/20 train/test split
-    >>> EEGsplit1 = dl.getsplit(EEGsplit,1) #will extract first CV split
-    >>> dl.check_split(EEGlen, EEGsplit1) # will return 0.72/0.08/0.2 ratios
+    >>> import pickle
+    >>> import pandas as pd
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.utils
+    >>> labels = utils.create_dataset()
+    >>> def loadEEG(path):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x = EEG['data']
+    >>>     return x
+    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                    overlap=0.3, load_function=loadEEG )
+    >>>  EEGsplit = dl.GetEEGSplitTableKfold(EEGlen) #default 60/20 train/test split
+    >>>  EEGsplit1 = dl.getsplit(EEGsplit,1) #will extract first CV split
+    >>>  EEGsplit1.head()
 
     """
     split_str = 'split_'+str(int(split))
@@ -1108,9 +1122,12 @@ def getsplit(split_table: pd.DataFrame,
 def check_split(EEGlen: pd.DataFrame, 
                 EEGsplit: pd.DataFrame, 
                 Labels=None, 
-                return_ratio=False) -> Optional[dict]:
+                return_ratio=False,
+                verbose = True,
+               ) -> Optional[dict]:
     """
-    ``check_split`` control if the split has been done correctly.
+    ``check_split`` calculate and print split ratios to check if the split 
+    has been performed correctly.
 
     Parameters
     ----------
@@ -1129,6 +1146,10 @@ def check_split(EEGlen: pd.DataFrame,
         Whether to return the calculated ratio in a dictionary or simply print them.
 
         Default = False
+    verbose: bool, optional
+        Wheter to generate a summary print of the calculated ratios or not.
+
+        Default = True
 
     Returns
     -------
@@ -1137,24 +1158,26 @@ def check_split(EEGlen: pd.DataFrame,
 
     Example
     -------
-    >>>import pickle
-    >>>import pandas as pd
-    >>>import selfeeg.dataloading as dl
-    >>>import selfeeg.utils
-    >>>labels = utils.create_dataset()
-    >>>def loadEEG(path):
-    >>>    with open(path, 'rb') as handle:
-    >>>        EEG = pickle.load(handle)
-    >>>    x = EEG['data']
-    >>>    return x
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                   overlap=0.3, load_function=loadEEG )
-    >>> EEGsplit = dl.GetEEGSplitTable(EEGlen) #default 60/20/20 ratio
-    >>> ratios = dl.check_split(EEGlen, EEGsplit) # will return 0.6/0.2/0.2 ratios
-    >>> print(ratios['train_ratio'], ratios['val_ratio'], ratios['test_ratio'])
+    >>> import pickle
+    >>> import pandas as pd
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.utils
+    >>> labels = utils.create_dataset()
+    >>> def loadEEG(path):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x = EEG['data']
+    >>>     return x
+    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                    overlap=0.3, load_function=loadEEG )
+    >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen) #default 60/20/20 ratio
+    >>>  ratios = dl.check_split(EEGlen, EEGsplit, return_ratio=True) # will return 0.6/0.2/0.2
+    >>>  print(ratios['train_ratio'], ratios['val_ratio'], ratios['test_ratio'])
 
     """
     # Check split ratio
+    # simply the ratio between the sum of all samples with a specific label set 
+    # and the sum of all samples with label different from -1
     total_list=EEGsplit[EEGsplit['split_set']!=-1].index.tolist()
     total = EEGlen.iloc[total_list]['N_samples'].sum()
     train_list = EEGsplit[EEGsplit['split_set']==0].index.tolist()
@@ -1163,14 +1186,17 @@ def check_split(EEGlen: pd.DataFrame,
     val_ratio = EEGlen.iloc[val_list]['N_samples'].sum()/total
     test_list = EEGsplit[EEGsplit['split_set']==2].index.tolist()
     test_ratio = EEGlen.iloc[test_list]['N_samples'].sum()/total
-    
-    print(f"\ntrain ratio:      {train_ratio:.2f}")
-    print(f"validation ratio: {val_ratio:.2f}")
-    print(f"test ratio:       {test_ratio:.2f}")
+
+    if verbose:
+        print(f"\ntrain ratio:      {train_ratio:.2f}")
+        print(f"validation ratio: {val_ratio:.2f}")
+        print(f"test ratio:       {test_ratio:.2f}")
     ratios = {'train_ratio': train_ratio, 'val_ratio': val_ratio,
               'test_ratio': test_ratio, 'class_ratio': None}
     
     # Check class ratio
+    # similar to the previous one but the ratios are calculated with respect to 
+    # the subset sizes (train test validation sets)
     if Labels is not None:
         Labels = np.array(Labels)
         if len(Labels.shape)!=1:
@@ -1183,7 +1209,9 @@ def check_split(EEGlen: pd.DataFrame,
         totval = EEGlen2.iloc[val_list]['N_samples'].sum()
         tottest = EEGlen2.iloc[test_list]['N_samples'].sum()
         class_ratio = np.zeros((3,len(lab_unique)))
+        # iterate through train/validation/test sets
         for i in range(3):
+            # iterate through each label
             for k in range(len(lab_unique)):
                 if i==0:
                     train_k = EEGlen2.loc[ ((EEGlen2['split_set']==0) & 
@@ -1197,15 +1225,18 @@ def check_split(EEGlen: pd.DataFrame,
                     test_k = EEGlen2.loc[ ((EEGlen2['split_set']==2) & 
                                            (EEGlen2['Labels']==lab_unique[k])),'N_samples'].sum()
                     class_ratio[i,k] = test_k/tottest
-        print(f"\ntrain labels ratio:", 
-              *[f"{lab_unique[k]}={class_ratio[0,k]:.3f}, " for k in range(len(lab_unique))])
-        print(f"val   labels ratio:", 
-              *[f"{lab_unique[k]}={class_ratio[1,k]:.3f}, " for k in range(len(lab_unique))])
-        print(f"test  labels ratio:", 
-              *[f"{lab_unique[k]}={class_ratio[2,k]:.3f}, " for k in range(len(lab_unique))])
-        print('')
+        # print results
+        if verbose:
+            print(f"\ntrain labels ratio:", 
+                  *[f"{lab_unique[k]}={class_ratio[0,k]:.3f}, " for k in range(len(lab_unique))])
+            print(f"val   labels ratio:", 
+                  *[f"{lab_unique[k]}={class_ratio[1,k]:.3f}, " for k in range(len(lab_unique))])
+            print(f"test  labels ratio:", 
+                  *[f"{lab_unique[k]}={class_ratio[2,k]:.3f}, " for k in range(len(lab_unique))])
+            print('')
         ratios['class_ratio']=class_ratio
 
+    # return calculated ratios if necessary
     if return_ratio:
         return ratios
     else:
@@ -1216,10 +1247,10 @@ class EEGDataset(Dataset):
     """
     ``EEGDataset`` is a custom pytorch.Dataset class designed to manage different
     loading configuration, both for pretraining and fine tuning.
-    Its main functionalities resides in its ability to accepts different ways to 
+    Its main functionalities resides in the ability to accepts different ways to 
     load, transform and extract optional labels from the data without preallocate
-    the entire dataset, which is especially useful in SSL experiments, where multiple
-    datasets are involved.
+    the entire dataset, which is especially useful in SSL experiments, where multiple 
+    and large datasets are used.
     To further check how to use this class see the introductory notebook provided 
     in the documentation.
     
@@ -1318,6 +1349,30 @@ class EEGDataset(Dataset):
         specific one
         
         Default = None
+    default_dtype: torch.dtype
+        The dtype to use when converting loaded EEG to torch tensors. It is suggested
+        to change the default float32 only if there are specific requirements since 
+        float32 are faster on GPU devices.
+
+    Example
+    -------
+    >>> import pickle
+    >>> import pandas as pd
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.utils
+    >>> labels = utils.create_dataset()
+    >>> def loadEEG(path):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x = EEG['data']
+    >>>     return x
+    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                    overlap=0.3, load_function=loadEEG )
+    >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 ratio
+    >>>  TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,2,0.3],load_function=loadEEG)
+    >>>  print(len(TrainSet))
+    >>>  print(TrainSet.__getitem__(10).shape) # will return torch.Size([8, 256])
+    >>>  print(TrainSet.file_path) # will return 'Simulated_EEG/1_11_3_1.pickle'
             
     """ 
     def __init__(self, 
@@ -1464,7 +1519,7 @@ class EEGDataset(Dataset):
             if self.currEEG.dtype != self.default_dtype:
                 self.currEEG= self.currEEG.to(dtype=self.default_dtype)
 
-            # store dimensionality of EEG files (some datasets stored 3D tensors)
+            # store dimensionality of EEG files (some datasets stored 3D tensors, unfortunately)
             # This might be helpful for partition selection of multiple EEG in a single file
             self.dimEEG = len(self.currEEG.shape)
             if self.dimEEG>2:
@@ -1518,16 +1573,16 @@ class EEGDataset(Dataset):
 
 class EEGsampler(Sampler):
     """
-    ``EEGsamplet`` is a custom pytorch Sampler designed to efficiently reduce the file 
-    loading operations when combined with the ``EEGDataset`` class. It exploits the 
-    parallelization properties of the pytorch Dataloader.
+    ``EEGsampler`` is a custom pytorch Sampler designed to efficiently reduce the file 
+    loading operations when combined with the ``EEGDataset`` class. To do that, it exploits the 
+    parallelization properties of the pytorch Dataloader and the buffer of EEGDataset.
     To further check how the custom iterator is created see the introductory notebook 
     provided in the documentation
 
     Parameters
     ----------
     data_source: EEGDataset
-        The instance of the ``EEGdataset`` provided in this module
+        The instance of the ``EEGdataset`` class provided in this module
     BatchSize: int, optional
         The batch size used during training. It will be used to create the 
         custom iterator (not linear)
@@ -1550,7 +1605,36 @@ class EEGsampler(Sampler):
               batch heterogeneity and batch creation speed
 
         Default = 1
+    Keep_only_ratio: float, optional
+        Whether to preserve only a given ratio of samples for each files in the given EEGdataset.
+        It can be used to reduce the training time of each epoch while being sure to fed at
+        least a portion of each EEG file in your dataset. If not given, all samples of the
+        given dataset will be used. Note that the sample indeces will be chosen after the 
+        intra-file level shuffle so to avoid selecting the same initial portions of the EEG
+        record.
 
+        Default = 1
+
+    Example
+    -------
+    >>> import pickle
+    >>> import random
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.utils
+    >>> labels = utils.create_dataset()
+    >>> def loadEEG(path):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x = EEG['data']
+    >>>     return x
+    >>> random.seed(1234)
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                   overlap=0.3, load_function=loadEEG )
+    >>> EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 ratio
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,2,0.3],load_function=loadEEG)
+    >>> smplr = EEGsampler(TrainSet, 16, 8)
+    >>> print([i for i in a][:8]) # will return [599, 1661, 1354, 1942, 1907, 495, 489, 1013]
+    
     """
     
     
@@ -1567,7 +1651,8 @@ class EEGsampler(Sampler):
         self.BatchSize=BatchSize
         self.Workers=Workers if Workers>0 else 1
         if Mode not in [0,1]:
-            raise ValueError('supported modes are 0 (linear sampler) and 1 (custom randomization)')
+            raise ValueError('supported modes are 0 (linear sampler) '
+                             'and 1 (custom randomization)')
         else:
             self.Mode= Mode
         if Keep_only_ratio>1 or Keep_only_ratio<=0:
@@ -1643,7 +1728,6 @@ class EEGsampler(Sampler):
         block3=(Npad-(Ncol-block2)*batch)
         if block3!=0:
             b[Nrow-block3:,block2-1]=-1
-
 
         # Complete index matrix with the remaining index to insert
         iterator=iterator[((Nrow-batch)*Ncol):]
