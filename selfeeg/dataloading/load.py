@@ -6,7 +6,7 @@ import math
 import random
 import copy
 import warnings
-from typing import Union, Sequence
+from typing import Union, Sequence, Optional
 import numpy as np
 import pandas as pd
 import tqdm
@@ -38,7 +38,7 @@ def GetEEGPartitionNumber(EEGpath: str,
                          ) -> pd.DataFrame :
     """
     ``GetEEGPartitionNumber`` finds the number of unique partitions from the EEG signals 
-    stored inside a given directory. Some default parameters are designed to work with 
+    stored inside a given input directory. Some default parameters are designed to work with 
     the 'BIDSAlign' library. For more info, see [bids]_.
     To further check how to use this function see the introductory notebook provided 
     in the documentation.
@@ -62,15 +62,15 @@ def GetEEGPartitionNumber(EEGpath: str,
         
         Default = 0.1
     includePartial : bool, optional
-        Whether to also count also the final EEG portions which could potentially cover 
-        at least half of the time windows. In this case the the overlap between the last
+        Whether to also count the final EEG portions which could potentially cover 
+        at least half of the time windows. In this case the overlap between the last
         included partition and the previous one will increase in order to fill the incomplete
-        partition with real values. Note that this apply only if at least half of such partition
-        will include new values
+        partition with real recorded values. Note that this apply only if at 
+        least half of such partition will include new values
         
         Default = True
     file_format : str or list[str], optional
-        A string used to detect a set of specific EEG files inside the give EEGpath. 
+        A string used to detect a set of specific EEG files inside the given EEGpath. 
         It is directly put after ``EEGpath`` during call of the glob.glob() method. 
         Therefore, it can contain shell-style wildcards (see glob.glob() help for more info). 
         This parameter might be helpful if you have other files other than the EEGs in your 
@@ -117,15 +117,15 @@ def GetEEGPartitionNumber(EEGpath: str,
     save_path: str, optional
         A custom path to be used instead of the current working directory. 
         It's the string given to the ``pandas.DataFrame.to_csv()`` method.
-        Note that if save is True and no save_path is given, the file will be saved as
-        `EEGPartitionNumber.csv` or `EEGPartitionNumber_k.csv` with k integer used to
-        avoid overwriting a file
+        Note that if save is True and no save_path is given, the file will be saved in the
+        current working directory as `EEGPartitionNumber.csv` or 
+        `EEGPartitionNumber_k.csv` with k integer used to avoid overwriting a file
         
         Default = None
     verbose: bool, optional
         whether to print or not some information during function excecution. 
         Useful to keep track of the calculation process. Might be useful for large
-        datasets
+        datasets.
                 
     Returns
     -------
@@ -146,6 +146,22 @@ def GetEEGPartitionNumber(EEGpath: str,
     multiplied by the product of the shape of all dimensions from the first to the second to
     last (the last two dimensions are supposed to be the Channel and Sample dimension of a
     single EEG file
+
+    Example
+    -------
+    >>>import pickle
+    >>>import pandas as pd
+    >>>import selfeeg.dataloading as dl
+    >>>import selfeeg.utils
+    >>>utils.create_dataset()
+    >>>def loadEEG(path):
+    >>>    with open(path, 'rb') as handle:
+    >>>        EEG = pickle.load(handle)
+    >>>    x = EEG['data']
+    >>>    return x
+    >>>EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                  overlap=0.3, load_function=loadEEG )
+    >>>EEGlen.head()
 
     References
     ----------
@@ -182,9 +198,7 @@ def GetEEGPartitionNumber(EEGpath: str,
     if len(EEGfiles)==0:
         print('didn\'t found any with the given format')
         return None
-        
-                
-               
+                  
     EEGfiles=sorted(EEGfiles)
     NumFiles= len(EEGfiles)
 
@@ -221,7 +235,9 @@ def GetEEGPartitionNumber(EEGpath: str,
                     EEG = transform_function(EEG, **optional_transform_fun_args)
                 else:
                     EEG= transform_function(EEG)
-    
+
+            # calculate number of samples based on the 
+            # overlap and includepartial arguments
             M=len(EEG.shape)
             if overlap==0:
                 if includePartial:
@@ -252,12 +268,14 @@ def GetEEGPartitionNumber(EEGpath: str,
             EEGlen.append([ii, ii.split('/')[-1],N_EEG])
     
     del EEG
-    EEGlen=pd.DataFrame(EEGlen,columns=['full_path','file_name','N_samples'])
     
+    # create dataframe and check if 0 length files must be kept
+    EEGlen=pd.DataFrame(EEGlen,columns=['full_path','file_name','N_samples'])
     if not(keep_zero_sample):
         EEGlen = EEGlen.drop(EEGlen[EEGlen.N_samples == 0].index).reset_index()
         EEGlen = EEGlen.drop(columns= 'index')
 
+    # save block
     try:
         if save:
             if save_path is not None:
@@ -277,6 +295,7 @@ def GetEEGPartitionNumber(EEGpath: str,
     except:
         print('failed to save file. Function output will be returned but not saved.')
 
+    # generate summary to print 
     if verbose:
         w,o,s,d = 'window', 'overlap', 'sampling rate', 'dataset length'
         NN= EEGlen['N_samples'].sum()
@@ -285,14 +304,13 @@ def GetEEGPartitionNumber(EEGpath: str,
         print(f'{o:15} ==> {overlap*100:5.0f} %')
         print(f'{s:15} ==> {freq:5d} Hz')
         print('-----------------------------')
-        print(f'{d:15} ==> {NN:8d}')
-                
+        print(f'{d:15} ==> {NN:8d}')             
     return EEGlen
 
 
 def GetEEGSplitTable(partition_table: pd.DataFrame,
-                     test_ratio: float= None,
-                     val_ratio: float= None,
+                     test_ratio: float= 0.2,
+                     val_ratio: float= 0.2,
                      test_split_mode: str or int =2,
                      val_split_mode: str or int= 2,
                      exclude_data_id: list or dict =None,
@@ -318,10 +336,10 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         1. Dataset is split in Train and Test sets
         2. Train set is split in Train and Validation sets
     
-    If specific ID are given, the split is done using them ignoring any split ratio, 
+    If specific IDs are given, the split is done using them ignoring any split ratio, 
     otherwise split is done randomly using the given ratio. Note that Test or Validation 
     sets can be empty, if for example you want to split the dataset only in two subsets.
-    To further check how to use this function see the introductory notebook provided 
+    To further understand how to use this function see the introductory notebook provided 
     in the documentation
     
     Parameters
@@ -340,7 +358,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         of the dataset to be included in the test set. Must be a number in [0,1]. 
         0 means that the test split is skipped if test_data_id isn't given
         
-        Default = None
+        Default = 0.2
     val_ratio: float, optional
         The percentage of data with respect to the whole number of samples (partitions) 
         of the dataset or the remaining ones after test split 
@@ -348,7 +366,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         Must be a number in [0,1]. 0 means that the validation split is skipped 
         if val_data_id isn't given. 
         
-        Default = None
+        Default = 0.2
     test_split_mode: int or str, optional
         The type of split to perform in the step train test split. It can be one of the
         following:
@@ -370,34 +388,35 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         
             1. a list with all dataset IDs to exclude
             2. a dictionary where keys are the dataset IDs and values its relative subject IDs. 
-               If a key is store with None as a value, then all the files from that dataset 
+               If a key has an empty value, then all the files with that dataset ID
                will be included
         
         Note that to work, the function must be able to identify the dataset or subject IDs 
         from the file name in order to check if they are in the given list or dict. 
         Custom extraction function can be given as arguments; however, if nothing is given, 
         the function will try to extract IDs considering that file names are in the format 
-        a_b_c_d.extension (the output of the BIDSalign library), 
+        a_b_c_d.extension (the typical output of the BIDSalign library), 
         where "a" is an integer with the dataset ID and "b" an integer with the subject ID. 
         If this fail, all files will be considered from the same datasets (id=0), 
         and each file from a different subject (id from 0 to N-1).
         
         Also note that if the input argument is not a list or a dict, it will be 
-        automatically converted to a list. This may generate errors
+        automatically converted to a list. No checks about what is converted to a list will
+        be performad although.
         
         Default = None
     test_data_id: list or dict, optional 
-        Same as exclude_data_id but for the test split
+        Same as exclude_data_id but for the test split.
         
         Defaul = None
     val_data_id: list or dict, optional  
-        Same as exclude_data_id but for validation split
+        Same as exclude_data_id but for validation split.
         
         Default = None
     val_ratio_on_all_data: bool, optional
-        Whether to calculate the validation split ratio only on the training 
-        set size (False) or on the entire considered dataset (True), i.e. the size 
-        of all files except for the ones excluded files not excluded  placed in the test set.
+        Whether to calculate the validation split size only on the training 
+        set size (False) or on the entire "considered" dataset (True), i.e., the size 
+        of all files except ones included in `exclude_data_id` .
         
         Default = True
     stratified: bool, optional
@@ -416,14 +435,14 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         Default = None
     dataset_id_extractor: function, optional
         A custom function to be used to extract the dataset ID from file the file name. 
-        It must accept only one argument, which is the file name (not the path, only the file
-        name).
+        It must accept only one argument, which is the file name (not the file path, 
+        only the file name).
         
         Default = None
     subject_id_extractor: function, optional
-        A custom function to be used to extract the subject ID from file the file name. 
-        It must accept only one argument, which is the file name (not the path, only the file
-        name).
+        A custom function to be used to extract the subject ID from the file name. 
+        It must accept only one argument, which is the file name (not the file path, 
+        only the file name).
         
         Default = None
     split_tolerance: float, optional
@@ -459,6 +478,23 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
            2. 0  : the file is included in the training set
            3. 1  : the file is included in the validation set
            4. 2  : the file is included in the test set
+
+    Example
+    -------
+    >>>import pickle
+    >>>import pandas as pd
+    >>>import selfeeg.dataloading as dl
+    >>>import selfeeg.utils
+    >>>labels = utils.create_dataset()
+    >>>def loadEEG(path):
+    >>>    with open(path, 'rb') as handle:
+    >>>        EEG = pickle.load(handle)
+    >>>    x = EEG['data']
+    >>>    return x
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                   overlap=0.3, load_function=loadEEG )
+    >>> EEGsplit = dl.GetEEGSplitTable(EEGlen) #default 60/20/20 split
+    >>> dl.check_split(EEGlen,EEGsplit) #will return 60/20/20
             
     """ 
     
@@ -472,7 +508,8 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
             raise ValueError('val_ratio must be in [0,1)')
     if (test_ratio != None) and (val_ratio != None):
         if val_ratio_on_all_data and ((val_ratio+test_ratio)>=1):
-            raise ValueError('if val_ratio_on_all_data is set to true, val_ratio+test_ratio must be in [0,1) ')
+            raise ValueError('if val_ratio_on_all_data is set to true,'
+                             ' val_ratio+test_ratio must be in [0,1) ')
      
     # check if given data ids are list or dict
     if exclude_data_id!=None:
@@ -509,7 +546,10 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
     else:
         raise ValueError('test split mode not supported')
 
-    # check if stratification must be applied 
+    # check if stratification must be applied
+    # in case stratification must be performed, the function will be called
+    # multiple times using the same ratio but only files having the same label
+    # single results will be then concatenated and sorted to preserve index positioning
     if stratified:
         if (test_ratio==None) and (val_ratio==None):
             print('STRATIFICATION can be applied only if at least one split ratio is given.')
@@ -518,7 +558,6 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
             classSplit = [None]*len(N_classes)
             # Call the split for each class 
             for i, n in enumerate(N_classes):
-                #classIdx= np.where(labels==n)[0]
                 classIdx = [ index_i for index_i, label_i in enumerate(labels) if label_i==n]
                 subClassTable = partition_table.iloc[classIdx]
                 classSplit[i] = GetEEGSplitTable(partition_table = subClassTable,  
@@ -550,6 +589,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
 
     else:
 
+        # boolean to check that ids are given as list or dict
         ex_id_list=isinstance(exclude_data_id,list)
         test_id_list=isinstance(test_data_id,list)
         val_id_list=isinstance(val_data_id,list)
@@ -629,10 +669,12 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
             # get split subarray
             arr=group1['N_samples'].values.tolist()
             target=test_ratio*alldatasum
-            final_idx, subarray = get_subarray_closest_sum(arr, target, split_tolerance, perseverance)
+            final_idx, subarray = get_subarray_closest_sum(arr, target, 
+                                                           split_tolerance, perseverance)
             final_idx.sort()
 
             # update split list according to returned subarray
+            # and test split mode
             if test_split_mode==2:
                 fileName=group1.iloc[final_idx]['file_name'].values.tolist()
                 cntmax = len(fileName)
@@ -667,6 +709,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
     
                         
         # SECOND SPLIT:  TRAIN  -->  TRAIN/VALIDATION
+        # the flow is basically the same as in the first split aside for some minor modifications
         if val_data_id!=None:
             for ii in range(len(EEGfiles)):
                 if EEGsplit[ii][1] == 0:
@@ -692,7 +735,8 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
             
             arr=group2['N_samples'].values.tolist()
             target=val_ratio*alldatasum if val_ratio_on_all_data else val_ratio*sum(arr)
-            final_idx, subarray = get_subarray_closest_sum(arr, target, split_tolerance, perseverance)
+            final_idx, subarray = get_subarray_closest_sum(arr, target, 
+                                                           split_tolerance, perseverance)
             final_idx.sort()
             
             if val_split_mode==2:
@@ -728,7 +772,8 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
                             EEGsplit[ii][1]=0
             
         EEGsplit=pd.DataFrame(EEGsplit,columns=['file_name','split_set'])
-    
+
+    # save block
     try:
         if save:
             if save_path is not None:
@@ -753,7 +798,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
 
 def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
                           kfold: int = 10,
-                          test_ratio: float= None,
+                          test_ratio: float= 0.2,
                           test_split_mode: str or int =2,
                           val_split_mode: str or int= 2,
                           exclude_data_id: list or dict =None,
@@ -766,7 +811,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
                           perseverance=1000,
                           save: bool=False,
                           save_path: str=None
-                         ):
+                         ) -> pd.DataFrame:
     """   
     ``GetEEGSplitTableKfold`` create a table with multiple splits for cross-validation.
     Test split, if calculated, is kept equal in every CV split.
@@ -800,7 +845,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
         of the dataset to be included in the test set. Must be a number in [0,1]. 
         0 means that the test split is skipped if test_data_id isn't given.
         
-        Default = None
+        Default = 0.2
     test_split_mode: int or str, optional
         The type of split to perform in the step train test split. It can be one of the
         following:
@@ -822,7 +867,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
         
             1. a list with all dataset IDs to exclude
             2. a dictionary where keys are the dataset IDs and values its relative subject IDs. 
-               If a key is store with None as a value, then all the files from that dataset 
+               If a key has an empty value, then all the files with that dataset ID
                will be included
         
         Note that to work, the function must be able to identify the dataset or subject IDs 
@@ -835,7 +880,8 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
         and each file from a different subject (id from 0 to N-1).
         
         Also note that if the input argument is not a list or a dict, it will be 
-        automatically converted to a list. This may generate errors
+        automatically converted to a list. No checks about what is converted to a list will
+        be performad although.
         
         Default = None
     test_data_id: list or dict, optional 
@@ -857,15 +903,15 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
         
         Default = None
     dataset_id_extractor: function, optional
-        A custom function to be used to extract the dataset ID from file the file name. 
-        It must accept only one argument, which is the file name (not the path, only the file
-        name).
+        A custom function to be used to extract the dataset ID from the file name. 
+        It must accept only one argument, which is the file name (not the full path, 
+        only the file name).
         
         Default = None
     subject_id_extractor: function, optional
-        A custom function to be used to extract the subject ID from file the file name. 
-        It must accept only one argument, which is the file name (not the path, only the file
-        name).
+        A custom function to be used to extract the subject ID from the file name. 
+        It must accept only one argument, which is the file name (not the full path, 
+        only the file name).
         
         Default = None
     split_tolerance: float, optional
@@ -912,6 +958,23 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     Some configurations may produce strange results. For example, if you want to do a 10 fold
     CV with a subject based split, but your dataset has only 5 subjects, the function will
     not throw an error, but some splits won't have a validation split.
+
+    Example
+    -------
+    >>>import pickle
+    >>>import pandas as pd
+    >>>import selfeeg.dataloading as dl
+    >>>import selfeeg.utils
+    >>>labels = utils.create_dataset()
+    >>>def loadEEG(path):
+    >>>    with open(path, 'rb') as handle:
+    >>>        EEG = pickle.load(handle)
+    >>>    x = EEG['data']
+    >>>    return x
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                   overlap=0.3, load_function=loadEEG )
+    >>> EEGsplit = dl.GetEEGSplitTableKfold(EEGlen) #default 60/20 train/test split
+    >>> dl.check_split(EEGlen,dl.getsplit(EEGsplit,1)) # will return 0.72/0.08/0.2 ratios
             
     """ 
     if kfold<2:
@@ -946,6 +1009,9 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     idxSplit= EEGsplit.index[(EEGsplit['split_set'] != 0)]
     idxAll= np.arange(EEGsplit.shape[0])
     idx2assign = np.setdiff1d(idxAll, idxSplit)
+    # to perform CV it is necessary to perform multiple train/validation split. Each time the data already 
+    # included in the test or any validation set will be excluded and the val_ratio is scaled according to 
+    # the remaining portions of the data
     for i in range(kfold-1):
         EEGsplit.iloc[idx2assign,i+2]= GetEEGSplitTable(partition_table=partition_table.iloc[idx2assign],
                                                       val_ratio= 1/(kfold-i),
@@ -959,6 +1025,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
                                                       split_tolerance=split_tolerance,
                                                       perseverance=perseverance
                                                     )['split_set']
+        # update list of files not assigned to any validation set
         idxSplit= EEGsplit.index[(EEGsplit['split_'+str(i+1)] ==1)]
         idx2assign = np.setdiff1d(idx2assign, idxSplit)
 
@@ -966,6 +1033,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     EEGsplit.iloc[idx2assign,-1]=1
     EEGsplit.drop(columns='split_set', inplace=True)
 
+    # save block
     try:
         if save:
             if save_path is not None:
@@ -993,7 +1061,7 @@ def getsplit(split_table: pd.DataFrame,
     """
     ``getsplit`` extract a split from the output of the ``GetEEGSplitTableKfold`` .
     It also change column names in order to make them equals to the output DataFrame
-    of the ``GetEEGSplitTable`` function
+    of the ``GetEEGSplitTable`` function. 
 
     Parameters
     ----------
@@ -1013,15 +1081,36 @@ def getsplit(split_table: pd.DataFrame,
         A 2 columns DataFrame with same format as GetEEGSplitTable, i.e. first column with file
         names and second their split ID
 
+    Example
+    -------
+    >>>import pickle
+    >>>import pandas as pd
+    >>>import selfeeg.dataloading as dl
+    >>>import selfeeg.utils
+    >>>labels = utils.create_dataset()
+    >>>def loadEEG(path):
+    >>>    with open(path, 'rb') as handle:
+    >>>        EEG = pickle.load(handle)
+    >>>    x = EEG['data']
+    >>>    return x
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                   overlap=0.3, load_function=loadEEG )
+    >>> EEGsplit = dl.GetEEGSplitTableKfold(EEGlen) #default 60/20 train/test split
+    >>> EEGsplit1 = dl.getsplit(EEGsplit,1) #will extract first CV split
+    >>> dl.check_split(EEGlen, EEGsplit1) # will return 0.72/0.08/0.2 ratios
+
     """
     split_str = 'split_'+str(int(split))
     new_table = split_table.loc[:,('file_name',split_str)]
     new_table.rename(columns={"file_name": "file_name", split_str: "split_set"}, inplace=True)
     return new_table
 
-def check_split(EEGlen, EEGsplit, Labels=None):
+def check_split(EEGlen: pd.DataFrame, 
+                EEGsplit: pd.DataFrame, 
+                Labels=None, 
+                return_ratio=False) -> Optional[dict]:
     """
-    check_split control if the split has been done correctly.
+    ``check_split`` control if the split has been done correctly.
 
     Parameters
     ----------
@@ -1031,13 +1120,38 @@ def check_split(EEGlen, EEGsplit, Labels=None):
         The output of the ``GetEEGSplitTable`` function. If you have used the 
         ``GetEEGSplitTableKfold`` function, make sure to get a specific split by
         calling the ``getsplit`` function.
-    Labels: pd.DataFrame
+    Labels: ArrayLike, optional
         A list or 1d array like objects with the label of each file listed in the 
-        partition table. It is the same object given to the called split function
+        partition table. It is the same object given to the called split function.
+
+        Default = None
+    return_ratio: bool, otional
+        Whether to return the calculated ratio in a dictionary or simply print them.
+
+        Default = False
 
     Returns
     -------
-    None   
+    ratios: dict, optional
+        A dictionary with the calculates ratios. If labels were given, a numpy array
+
+    Example
+    -------
+    >>>import pickle
+    >>>import pandas as pd
+    >>>import selfeeg.dataloading as dl
+    >>>import selfeeg.utils
+    >>>labels = utils.create_dataset()
+    >>>def loadEEG(path):
+    >>>    with open(path, 'rb') as handle:
+    >>>        EEG = pickle.load(handle)
+    >>>    x = EEG['data']
+    >>>    return x
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
+    >>>                                   overlap=0.3, load_function=loadEEG )
+    >>> EEGsplit = dl.GetEEGSplitTable(EEGlen) #default 60/20/20 ratio
+    >>> ratios = dl.check_split(EEGlen, EEGsplit) # will return 0.6/0.2/0.2 ratios
+    >>> print(ratios['train_ratio'], ratios['val_ratio'], ratios['test_ratio'])
 
     """
     # Check split ratio
@@ -1053,6 +1167,8 @@ def check_split(EEGlen, EEGsplit, Labels=None):
     print(f"\ntrain ratio:      {train_ratio:.2f}")
     print(f"validation ratio: {val_ratio:.2f}")
     print(f"test ratio:       {test_ratio:.2f}")
+    ratios = {'train_ratio': train_ratio, 'val_ratio': val_ratio,
+              'test_ratio': test_ratio, 'class_ratio': None}
     
     # Check class ratio
     if Labels is not None:
@@ -1060,13 +1176,13 @@ def check_split(EEGlen, EEGsplit, Labels=None):
         if len(Labels.shape)!=1:
             raise ValueError('Labels must be a 1d array or a list')
         lab_unique = np.unique(Labels)
-        EEGlen2 = EEGlen.copy()
+        EEGlen2 = EEGlen.copy() # copy to avoid strange behaviours in the given dataframes
         EEGlen2['split_set']=EEGsplit['split_set']
         EEGlen2['Labels'] = Labels
         tottrain = EEGlen2.iloc[train_list]['N_samples'].sum()
         totval = EEGlen2.iloc[val_list]['N_samples'].sum()
         tottest = EEGlen2.iloc[test_list]['N_samples'].sum()
-        class_ratio = np.zeros((3,4))
+        class_ratio = np.zeros((3,len(lab_unique)))
         for i in range(3):
             for k in range(len(lab_unique)):
                 if i==0:
@@ -1088,7 +1204,12 @@ def check_split(EEGlen, EEGsplit, Labels=None):
         print(f"test  labels ratio:", 
               *[f"{lab_unique[k]}={class_ratio[2,k]:.3f}, " for k in range(len(lab_unique))])
         print('')
-    return None
+        ratios['class_ratio']=class_ratio
+
+    if return_ratio:
+        return ratios
+    else:
+        return None
 
 
 class EEGDataset(Dataset):
