@@ -6,7 +6,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # What is selfEEG?
------------------
 selfEEG is a pytorch-based library designed to facilitate self-supervised learning (SSL) experiments on electroencephalography (EEG) data. In selfEEG, you can find different functions and classes which will help you build an SSL pipeline, from the creation of the dataloaders, to the model's fine-tuning, passing by the definitions of custom data augmenters, models, and pretraining strategies.
 In particular, selfEEG comprises of the following modules:
 
@@ -27,7 +26,6 @@ If you want to preprocess EEG data in a really good way, we suggest to take a lo
 - **BIDSAlign** (an EEGLab extension provided by our team)
 
 ## installation
----------------
 SelfEEG may be installed both via pip or conda:
 ```
 pip install selfeeg
@@ -41,7 +39,6 @@ pip install selfeeg[interactive]
 ```
 
 ## Dependencies
----------------
 selfEEG requires the following packages to correctly work. If you want to use selfEEG via ``git clone``, be sure to install them:
 
 - pandas >=1.5.3
@@ -59,11 +56,9 @@ Optional packages which we suggest to include in your environment are:
 - seaborn (or simply matplotlib)
 
 ## Usage
---------
 in the Notebooks folder, you can find some notebooks which will explain how to properly use some modules. These notebooks are also included in the **official documentation**.
 
 ## Contribution Guidelines
---------------------------
 If you'd like to **contribute** to selfEEG, or simply want some **support** or **suggestions** on how to exploit this library in your SSL experiments, please consider writing an to our research team
 
 [MedMax Team](mailto:manfredo.atzori@unipd.it&cc=federico.delpup@studenti.unipd.it,andrea.zanola@studenti.unipd.it,louisfabrice.tshimanga@unipd.it)
@@ -71,11 +66,9 @@ If you'd like to **contribute** to selfEEG, or simply want some **support** or *
 Our team is really open to new collaborations!
 
 ## Requests and bug tracker
----------------------------
 If you have some requests or you have noticed some bugs, use the [GitHub issues](https://github.com/MedMaxLab/selfEEG/issues) page to report them. We will try to solve reported bugs as fast as possible.
 
 ## Authors and Citation
------------------------
 We have worked really hard to develop this library. If you use selfEEG during your research, please cite our work. It will help us to continue doing our research.
 
 Contributors:
@@ -85,7 +78,6 @@ Contributors:
 - Prof. Manfredo Atzori
 
 ## License
----------------
 SelfEEG is released under the
 [MIT Licence](LICENSE.txt)
 
