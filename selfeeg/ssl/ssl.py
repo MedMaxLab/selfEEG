@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import math
 import copy
@@ -28,7 +29,7 @@ def Default_augmentation(x):
     """
     if not(isinstance(x, torch.Tensor)):
         x=torch.Tensor(x)
-    x = x*(random.getrandbits(1))
+    x = x*(random.choice([-1,1]))
     std = torch.std(x)
     noise = std * torch.randn(*x.shape, device=x.device)
     x_noise = x + noise 
@@ -397,9 +398,9 @@ class EarlyStopping:
         Whether to monitor the training or validation loss. This 
         attribute is used in the ``fine_tuning`` function or 
         others class ``fit`` methods to check which calculated loss 
-        must be given. Accepted values are "increase" or "decrease"
+        must be given. Accepted values are "train" or "validation"
 
-        Default = "decrease"
+        Default = "validation"
     record_best_weights: bool, optional
         Whether to record the best weights after every new best loss
         is reached or not. It will be used to restore such weights
@@ -407,6 +408,39 @@ class EarlyStopping:
 
         Default = True
 
+    Note
+    ----
+    Like in KERAS the early stopper will not automatically restore the best weights if 
+    the training ends, i.e., you reach the maximum number of epochs. To get the best weights
+    simply call the ``restore_best_weights( model )`` method.
+
+    Example
+    -------
+    >>> import torch, pickle, selfeeg.losses
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.models
+    >>> utils.create_dataset()
+    >>> def loadEEG(path, return_label=False):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x , y= EEG['data'], EEG['label']
+    >>>     return (x, y) if return_label else x
+    >>> def loss_fineTuning(yhat, ytrue):
+    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> ratios = dl.check_split(EEGlen,EEGsplit, return_ratio=True)
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit, [128,2,0.3], 'train', True, loadEEG, 
+    >>>                              optional_load_fun_args=[True], label_on_load=True)
+    >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
+    >>> shanet= models.ShallowNet(2, 8, 256)
+    >>> Stopper = ssl.EarlyStopping( patience=1, monitored= 'train' )
+    >>> Stopper.rec_best_weights(shanet) # little hack to force early stop correctly
+    >>> Stopper.best_loss = 0 # little hack to force early stop correctly
+    >>> loss_info = ssl.fine_tune(shanet, TrainLoader, 2, EarlyStopper=Stopper, 
+    >>>                           loss_func=loss_fineTuning) 
+    >>> # it should stop training and print "no improvement after 1 epochs. Training stopped."
+    
     References
     ----------
     .. [early] https://keras.io/api/callbacks/early_stopping/ 
@@ -432,14 +466,15 @@ class EarlyStopping:
             raise ValueError('supported monitoring modes are train or validation')
                             
         if min_delta<0:
-            msgErr='min_delta must be >= 0. '
-            msgErr += 'Use improvement to set if decrease or increase in the loss must be considered'
-            raise ValueError(msgErr)
+            raise ValueError('min_delta must be >= 0. '
+                             'Use improvement to set if decrease or increase'
+                             ' in the loss must be considered')
         else:
             self.min_delta = min_delta
         
         if improvement.lower() not in ['d','i','dec','inc','decrease','increase']:
-            msgErr= 'got ' + str(improvement) + ' as improvement argument. Accepted arguments are '
+            msgErr  = 'got ' + str(improvement) + ' as improvement argument.'
+            msgErr +=' Accepted arguments are '
             msgErr += 'd, dec or decrease for decrease; i, inc or increase for increase'
             raise ValueError(msgErr)
         else: 
@@ -456,14 +491,11 @@ class EarlyStopping:
         self.earlystop = False
 
     def __call__(self):
-        """
-        :meta private:
-        """
         return self.earlystop
     
     def early_stop(self, loss, count_add=1):
         """
-        Method used to updated the counter and the best loss
+        update the counter and the best loss.
 
         Parameters
         ----------
@@ -499,8 +531,8 @@ class EarlyStopping:
                     
     def rec_best_weights(self, model):
         """
-        record model's best weights. The copy of the model is stored
-        in the cpu device
+        record model's best weights. The copy of the model is sent to
+        the cpu device to avoid increasing the GPU load.
 
         Parameters
         ----------
@@ -521,9 +553,9 @@ class EarlyStopping:
 
         Warnings
         --------
-        The model is moved to the cpu device before restoring weights.
-        Remember to move again to the desired device if cpu is not 
-        the selected one
+        The model is moved to the CPU device before restoring weights.
+        Remember to move it again to the desired device if cpu is not 
+        the selected one.
         
         """
         model.to(device='cpu')
@@ -531,9 +563,10 @@ class EarlyStopping:
 
     def reset_counter(self):
         """
-        method to reset the counter and early stopping flag. 
+        reset the counter and early stopping flag. 
         It might be useful if you want to further train 
-        your model after the first training is stopped.
+        your model after the first training is stopped 
+        (maybe with a lower learning rate).
         
         """
         self.counter=0
@@ -550,8 +583,28 @@ class SSL_Base(nn.Module):
     Parameters
     ----------
     encoder: nn.Module
-        The encoder part of the module. It is the one you wish to pretrain and
-        transfer to the new model
+        The encoder part of the module. It is the part of the model you wish 
+        to pretrain and transfer to the new model.
+
+    Example
+    -------
+    >>> import selfeeg
+    >>> import torch
+    >>> enc = selfeeg.models.ShallowNetEncoder(8)
+    >>> base = selfeeg.ssl.SSL_Base(enc)
+    >>> torch.manual_seed(1234)
+    >>> a = torch.randn(64,32)
+    >>> print(base.evaluate_loss(losses.SimCLR_loss, [a])) # should return 9.4143
+    >>> enc2 = base.get_encoder()
+    >>> def check_models(model1, model2):
+    >>>     for p1, p2 in zip(model1.parameters(), model2.parameters()):
+    >>>         if p1.data.ne(p2.data).sum() > 0:
+    >>>             return False
+    >>>     return True
+    >>> print(check_models(base.encoder,enc2)) # should return True
+    >>> # assert that they are different objects
+    >>> enc2.conv1.weight = torch.nn.Parameter(enc2.conv1.weight*10)
+    >>> print(check_models(base.encoder,enc2)) # should return False
     
     """
     
@@ -569,9 +622,9 @@ class SSL_Base(nn.Module):
         
     def evaluate_loss(self, 
                       loss_fun: 'function', 
-                      arguments, 
+                      arguments: torch.Tensor or list[torch.Tensors], 
                       loss_arg: Union[list, dict]=None
-                     ) -> 'loss_fun output':
+                     ) -> torch.Tensor:
         """
         ``evaluate_loss`` evaluate a custom loss function using `arguments` 
         as required arguments and loss_arg as optional ones.
@@ -580,10 +633,14 @@ class SSL_Base(nn.Module):
         ----------
         loss_fun: function
             the custom loss function. It can be any loss function which 
-            accepts as input the model's prediction (or predictions) 
-            as required argument and loss_args as optional arguments.
+            accepts as input:
+            
+                1. the model's prediction (or predictions)
+                2. any element included in loss_args as optional arguments.
+            
             Note that the number of required arguments can change based on the
-            specific pretraining method used
+            specific pretraining method used. For example, SimCLR accepts 1 or 2 required
+            arguments, while BYOL must take 4.
         arguments: torch.Tensor or list[torch.Tensors]
             the required arguments. Based on the way this function is used 
             in a training pipeline it can be a single or multiple tensors.
@@ -595,7 +652,7 @@ class SSL_Base(nn.Module):
     
         Returns
         -------
-        loss: 'loss_fun output'
+        loss: torch.Tensor
             the output of the given loss function. It is expected to be 
             a torch.Tensor
         
@@ -618,12 +675,12 @@ class SSL_Base(nn.Module):
         
     def get_encoder(self, device='cpu'):
         """
-        return a copy of the encoder on the selected device.
+        returns a copy of the encoder on the selected device.
 
         Parameters
         ----------
         device: torch.device or str, optional
-            the pytorch device
+            the pytorch device where the encoder must be moved
 
             Default = 'cpu'
         
@@ -686,8 +743,12 @@ class SimCLR(SSL_Base):
         The encoder part of the module. It is the one you wish to pretrain and
         transfer to the new model
     projection_head: Union[list[int], nn.Module]
-        The projection head to use. It can be an nn.Module or a list of ints.
-        In case a list is given, a nn.Sequential module with Dense, BatchNorm
+        The projection head to use. It can be:
+        
+            1. an nn.Module
+            2. a list of ints.
+        
+        In case a list of ints is given, a nn.Sequential module with Dense, BatchNorm
         and Relu will be automtically created. The list will be used to set 
         input and output dimension of each Dense Layer. For instance, if 
         [64, 128, 64] is given, two hidden layers will be created. The first
@@ -695,8 +756,8 @@ class SimCLR(SSL_Base):
 
     Note
     ----
-    BatchNorm is not applied to the last output layer due to findings in the
-    most recent SSL works (see BYOL and SimSiam)
+    BatchNorm is not applied to the last output layer due to reasons explained in
+    more recent SSL works (see BYOL and SimSiam)
 
     Warnings
     --------
@@ -710,6 +771,32 @@ class SimCLR(SSL_Base):
     .. [simgit1] To check the original tensorflow implementation visit the following repository:
       https://github.com/google-research/simclr (look at the function add_contrastive_loss 
       in objective.py)
+
+    Example
+    -------
+    >>> import pickle, torch, selfeeg
+    >>> import selfeeg.dataloading as dl
+    >>> utils.create_dataset()
+    >>> def loadEEG(path, return_label=False):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x , y= EEG['data'], EEG['label']
+    >>>     return (x, y) if return_label else x
+    >>> def loss_fineTuning(yhat, ytrue):
+    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    >>> torch.manual_seed(1234)
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
+    >>>                              overlap=0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
+    >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
+    >>> enc = selfeeg.models.ShallowNetEncoder(8)
+    >>> simclr = selfeeg.ssl.SimCLR(enc, [16,32,32])
+    >>> print( simclr(torch.randn(32,8,128)).shape) # should return [32,32])
+    >>> loss_train = simclr.fit(Loader, 1, return_loss_info=True)
+    >>> print(loss_train[0][0]) # should return 4.39300
+    >>> loss_test = simclr.test(Loader) # just to show it works
+    >>> print(loss_test) # should return 3.6255
       
     """
     
@@ -774,8 +861,7 @@ class SimCLR(SSL_Base):
         ----------
         train_dataloader: Dataloader
             the pytorch Dataloader used to get the training batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor
+            must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
     
@@ -792,26 +878,23 @@ class SimCLR(SSL_Base):
             module, which implements different data augmentation functions and 
             classes to combine them. If none is given a default augmentation with 
             random vertical flip + random noise is applied.
-            Note that in this case data augmentation 
-            is also performed on the validation set, since it's part of the 
-            SSL algorithm.
+            Note that in this case, contrary to fully supervised approaches, 
+            data augmentation is also performed on the validation set, 
+            since it's part of the SSL algorithm.
     
             Default = None
         loss_func: function, optional
             the custom loss function. It can be any loss function which 
-            accepts as input the model's prediction and the true labels 
-            as required arguments and loss_args as optional arguments.
-            If not given SimCLR loss will be automatically used.
+            accepts as input only the model's predictions as required arguments 
+            and loss_args as optional arguments.
+            If not given SimCLR loss will be automatically used. Check the input
+            arguments of ``SimCLR_loss`` to check how to design custom loss functions
+            to give to this method
 
             Default = None
         loss_args: Union[list, dict], optional
             The optional arguments to pass to the function. it can be a list
             or a dict.
-    
-            Default = None
-        label_encoder: function, optional
-            A custom function used to encode the returned Dataloaders true labels.
-            If None, the Dataloader's true label is used directly.
     
             Default = None
         lr_scheduler: torch Scheduler
@@ -825,9 +908,8 @@ class SimCLR(SSL_Base):
             Default = None
         validation_dataloader: Dataloader, optional
             the pytorch Dataloader used to get the validation batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor. If not given, no validation loss will be 
-            calculated
+            must return a batch as a single tensor X, thus without label tensor Y. 
+            If not given, no validation loss will be calculated
     
             Default = None
         verbose: bool, optional
@@ -865,10 +947,12 @@ class SimCLR(SSL_Base):
         loss will be automatically set to training loss.
         
         """
-        # Various check on input parameters. If some arguments weren't given
+        # Various check on input parameters. 
+        # If some arguments weren't given they will be automatically set
         if device is None:
             # If device is None cannot assume if the model is on gpu and so if to send the batch
-            # on other device, so cpu will be used. If model is sent to another device set the 
+            # on an other device, so cpu will be used. 
+            # If model is sent to another device set the 
             # device attribute with a proper string or torch device
             device=torch.device('cpu')
         else:
@@ -879,7 +963,7 @@ class SimCLR(SSL_Base):
             else:
                 raise ValueError('device must be a string or a torch.device instance')
         self.to(device=device)
-        
+
         if not( isinstance(train_dataloader, torch.utils.data.DataLoader)):
             raise ValueError('Current implementation accept only training data'
                              ' as a pytorch DataLoader')
@@ -912,7 +996,8 @@ class SimCLR(SSL_Base):
                       ', but not validation data are given. '
                       'Internally changing monitoring to training loss')
                 EarlyStopper.monitored = 'train'
-    
+
+        # calculate some variables for training
         loss_info={i: [None, None] for i in range(epochs)}
         N_train = len(train_dataloader)
         if isinstance(train_dataloader.sampler, EEGsampler):
@@ -923,12 +1008,15 @@ class SimCLR(SSL_Base):
                     N_train = math.ceil(sum(1 for _ in train_dataloader.sampler.__iter__())/(train_dataloader.batch_size))
                 
         N_val = 0 if validation_dataloader is None else len(validation_dataloader)
-        if isinstance(validation_dataloader.sampler, EEGsampler):
+        if perform_validation and isinstance(validation_dataloader.sampler, EEGsampler):
             if validation_dataloader.sampler.Keep_only_ratio != 1:
                 if validation_dataloader.drop_last:
                     N_val = math.floor(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
                 else:
                     N_val = math.ceil(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
+
+        # training for loop (classical pytorch structure)
+        # with some additions
         for epoch in range(epochs):
             print(f'epoch [{epoch+1:6>}/{epochs:6>}]') if verbose else None
         
@@ -961,7 +1049,7 @@ class SimCLR(SSL_Base):
                     else:
                         z1 = self(data_aug1)
                         z2 = self(data_aug2)
-                        train_loss = self.evaluate_loss(loss_func, torch.cat((z1,z2)), loss_args )
+                        train_loss = self.evaluate_loss(loss_func, torch.cat((z1,z2)), loss_args)
     
                     train_loss.backward()
                     optimizer.step()
@@ -976,7 +1064,7 @@ class SimCLR(SSL_Base):
                 if lr_scheduler!=None:
                     lr_scheduler.step()
                 
-                # Perform validation if validation dataloader were given
+                # Perform validation if validation dataloader was given
                 if perform_validation:
                     self.eval()
                     with torch.no_grad():
@@ -1033,7 +1121,7 @@ class SimCLR(SSL_Base):
              device: str=None
             ):
         """
-        a method to evaluate the loss on a test dataloader.
+        evaluate the loss on a test dataloader.
         Parameters are the same as described in the fit method, aside for 
         those related to model training which are removed.
         
@@ -1119,7 +1207,11 @@ class SimSiam(SSL_Base):
         The encoder part of the module. It is the one you wish to pretrain and
         transfer to the new model
     projection_head: Union[list[int], nn.Module]
-        The projection head to use. It can be an nn.Module or a list of ints.
+        The projection head to use. It can be:
+        
+            1. an nn.Module
+            2. a list of ints.
+        
         In case a list is given, a nn.Sequential module with Dense, BatchNorm
         and Relu will be automtically created. The list will be used to set 
         input and output dimension of each Dense Layer. For instance, if 
@@ -1140,6 +1232,32 @@ class SimSiam(SSL_Base):
     .. [siamgit1] Original github repo: https://github.com/facebookresearch/simsiam
     .. [simsiam1] Original paper: Chen & He. Exploring Simple Siamese Representation Learning.
       https://arxiv.org/abs/2011.10566
+
+    Example
+    -------
+    >>> import pickle, torch, selfeeg
+    >>> import selfeeg.dataloading as dl
+    >>> utils.create_dataset()
+    >>> def loadEEG(path, return_label=False):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x , y= EEG['data'], EEG['label']
+    >>>     return (x, y) if return_label else x
+    >>> def loss_fineTuning(yhat, ytrue):
+    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    >>> torch.manual_seed(1234)
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
+    >>>                              overlap=0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
+    >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
+    >>> enc = selfeeg.models.ShallowNetEncoder(8)
+    >>> simsiam = selfeeg.ssl.SimSiam(enc, [16,32,32], nn.Sequential(nn.Linear(32,32)))
+    >>> print( simsiam(torch.randn(32,8,128)).shape) # should return [32,32])
+    >>> loss_train = simsiam.fit(Loader, 1, return_loss_info=True)
+    >>> print(loss_train[0][0]) # should return -0.6044
+    >>> loss_test = simsiam.test(Loader) # just to show it works
+    >>> print(loss_test) # should return -0.9273
       
     """
     
@@ -1219,8 +1337,7 @@ class SimSiam(SSL_Base):
         ----------
         train_dataloader: Dataloader
             the pytorch Dataloader used to get the training batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor
+            must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
     
@@ -1244,19 +1361,15 @@ class SimSiam(SSL_Base):
             Default = None
         loss_func: function, optional
             the custom loss function. It can be any loss function which 
-            accepts as input the model's prediction and the true labels 
-            as required arguments and loss_args as optional arguments.
-            If not given SimSiam loss will be automatically used.
+            accepts as input only the model's predictions (4 torch Tensor) as 
+            required arguments and loss_args as optional arguments. Check the input
+            arguments of ``SimSiam_loss`` to check how to design custom loss functions
+            to give to this method.
 
             Default = None
         loss_args: Union[list, dict], optional
             The optional arguments to pass to the function. it can be a list
             or a dict.
-    
-            Default = None
-        label_encoder: function, optional
-            A custom function used to encode the returned Dataloaders true labels.
-            If None, the Dataloader's true label is used directly.
     
             Default = None
         lr_scheduler: torch Scheduler
@@ -1270,9 +1383,8 @@ class SimSiam(SSL_Base):
             Default = None
         validation_dataloader: Dataloader, optional
             the pytorch Dataloader used to get the validation batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor. If not given, no validation loss will be 
-            calculated
+            must return a batch as a single tensor X, thus without label tensor Y.
+            If not given, no validation loss will be calculated
     
             Default = None
         verbose: bool, optional
@@ -1322,7 +1434,8 @@ class SimSiam(SSL_Base):
         self.to(device=device)
 
         if not( isinstance(train_dataloader, torch.utils.data.DataLoader)):
-            raise ValueError('Current implementation accept only training data as a pytorch DataLoader')
+            raise ValueError('Current implementation accept only training '
+                             'data as a pytorch DataLoader')
         if not(isinstance(epochs, int)):
             epochs= int(epochs)
         if epochs<1:
@@ -1362,12 +1475,14 @@ class SimSiam(SSL_Base):
                     N_train = math.ceil(sum(1 for _ in train_dataloader.sampler.__iter__())/(train_dataloader.batch_size))
                 
         N_val = 0 if validation_dataloader is None else len(validation_dataloader)
-        if isinstance(validation_dataloader.sampler, EEGsampler):
+        if perform_validation and isinstance(validation_dataloader.sampler, EEGsampler):
             if validation_dataloader.sampler.Keep_only_ratio != 1:
                 if validation_dataloader.drop_last:
                     N_val = math.floor(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
                 else:
                     N_val = math.ceil(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
+
+        # trainin loop (classical pytorch style)
         for epoch in range(epochs):
             print(f'epoch [{epoch+1:6>}/{epochs:6>}]') if verbose else None
         
@@ -1567,16 +1682,19 @@ class MoCo(SSL_Base):
         The encoder part of the module. It is the one you wish to pretrain and
         transfer to the new model
     projection_head: Union[list[int], nn.Module]
-        The projection head to use. It can be an nn.Module or a list of ints.
+        The projection head to use. It can be:
+        
+            1. an nn.Module
+            2. a list of ints.
+        
         In case a list is given, a nn.Sequential module with Dense, BatchNorm
         and Relu will be automtically created. The list will be used to set 
         input and output dimension of each Dense Layer. For instance, if 
         [64, 128, 64] is given, two hidden layers will be created. The first
         with input 64 and output 128, the second with input 128 and output 64.
     predictor: Union[list[int], nn.Module], optional
-        The predictor to put after the projection head. Accepted arguments
-        are the same as for the projection_head. It can be left to None since
-        MoCo v2 doesn't use it (MoCo v3 use it although).
+        The predictor to put after the projection head. Use it with 0 bank size to set
+        Moco v3. Accepted arguments are the same as for the projection_head. 
 
         Default = None
     feat_size: int, optional
@@ -1593,15 +1711,20 @@ class MoCo(SSL_Base):
         Default = 0
     m: float, optional
         The value of the momentum coefficient. Suggested values are in the 
-        range [0.995, 0.999].
+        range [0.9960, 0.9999].
 
-        Default = 0.995
+        Default = 0.999
 
     Warnings
     --------
     This class will not check the compatibility of the encoder's output and
     the projection head's input (as well as between the projection head and the 
-    predictor). Make sure that they have the same size. 
+    predictor). Make sure that they have the same size.
+
+    Warnings
+    --------
+    Using ADAM optimizer with MoCo v2 (with bank size) can prevent the training loss
+    from decreasing. We highly suggest to use SGD 
         
     References
     ----------
@@ -1610,6 +1733,44 @@ class MoCo(SSL_Base):
       the IEEE/CVF conference on computer vision and pattern recognition, pp. 9729–9738, 2020.
     .. [moco31] X. Chen, H. Fan, R. Girshick, and K. He, “Improved base- lines with momentum 
       contrastive learning,” arXiv preprint arXiv:2003.04297, 2020.
+
+    Example
+    -------
+    >>> import pickle, torch, selfeeg
+    >>> import selfeeg.dataloading as dl
+    >>> utils.create_dataset()
+    >>> def loadEEG(path, return_label=False):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x , y= EEG['data'], EEG['label']
+    >>>     return (x, y) if return_label else x
+    >>> def loss_fineTuning(yhat, ytrue):
+    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    >>> torch.manual_seed(1234)
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
+    >>>                              overlap=0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
+    >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
+    >>> enc = selfeeg.models.ShallowNetEncoder(8)
+
+    MoCo v2
+    
+    >>> moco2 = selfeeg.ssl.MoCo(enc, [16,32,32], bank_size=4096)
+    >>> print( moco2(torch.randn(32,8,128)).shape) # should return [32,32])
+    >>> loss_train = moco2.fit(Loader, 1, return_loss_info=True)
+    >>> print(loss_train[0][0]) # should return 79.2622
+    >>> loss_test = moco2.test(Loader) # just to show it works
+    >>> print(loss_test) # should return 85.8382
+
+    MoCo v3
+    
+    >>> moco3 = selfeeg.ssl.MoCo(enc, [16,32,32], [32,32])
+    >>> print( moco3(torch.randn(32,8,128)).shape) # should return [32,32])
+    >>> loss_train = moco3.fit(Loader, 1, return_loss_info=True)
+    >>> print(loss_train[0][0]) # should return 0.93120
+    >>> loss_test = moco3.test(Loader) # just to show it works
+    >>> print(loss_test) # should return 0.8531
       
     """
     
@@ -1619,7 +1780,7 @@ class MoCo(SSL_Base):
                  predictor: Union[list[int], nn.Module]=None,
                  feat_size: int=-1,
                  bank_size: int=0,
-                 m: float=0.995
+                 m: float=0.999
                 ):
         
         super(MoCo,self).__init__(encoder)
@@ -1670,9 +1831,11 @@ class MoCo(SSL_Base):
                 self.predictor = predictor
 
         if (self.predictor is None) and (bank_size<=0):
-            msgWarning= 'You are trying to initialize MoCo with only the projection head and no memory bank. '
-            msgWarning += ' Training will follow MoCo v3 setup for loss calculation during training,'
-            msgWarning += ' but it\'s suggested to set up an 2-hidden layer MLP predictor as in the original paper'
+            msgWarning= 'You are trying to initialize MoCo with only the projection head and '
+            msgWarning +='no memory bank. Training will follow MoCo v3 setup for loss'
+            msgWarning +=' calculation. Training will follow MoCo v3 setup for loss calculation' 
+            msgWarning += ' during training, but it\'s suggested to set up an 2-hidden layer MLP'
+            msgWarning += ' predictor as in the original paper'
             print(msgWarning)
 
         if self.bank_size>0:
@@ -1682,8 +1845,8 @@ class MoCo(SSL_Base):
             elif isinstance(projection_head,list):
                 self.feat_size=projection_head[-1]
             else:
-                msgErr= 'feature size cannot be extracted from a nn.Module.'
-                msgErr += ' Please provide the feature size, otherwise memory bank cannot be initialized'
+                msgErr= 'feature size cannot be extracted from a nn.Module. Please '
+                msgErr += 'provide the feature size, otherwise memory bank cannot be initialized'
                 raise ValueError(msgErr)
             # create the queue
             self.register_buffer( "queue", torch.randn(self.feat_size, self.bank_size) )
@@ -1763,16 +1926,17 @@ class MoCo(SSL_Base):
         ----------
         train_dataloader: Dataloader
             the pytorch Dataloader used to get the training batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor
+            must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
     
             Default = 1
         optimizer: torch Optimizer, optional
             The optimizer used for weight's update. It can be any optimizer
-            provided in the torch.optim module. If not given Adam with default
-            parameters will be instantiated.
+            provided in the torch.optim module. If not given:
+            
+                1. SGD with learning rate 0.01 will be used for moco v2.
+                2. Adam with default parameters will be used for moco v3.
     
             Default = torch.optim.Adam
         augmenter: function, optional
@@ -1788,9 +1952,10 @@ class MoCo(SSL_Base):
             Default = None
         loss_func: function, optional
             the custom loss function. It can be any loss function which 
-            accepts as input the model's prediction and the true labels 
-            as required arguments and loss_args as optional arguments.
-            If not given MoCo loss will be automatically chosen.
+            accepts as input only the model's predictions (2 torch Tensor) as 
+            required arguments and loss_args as optional arguments. Check the input
+            arguments of ``Moco_loss`` to check how to design custom loss functions
+            to give to this method.
 
             Default = None
         loss_args: Union[list, dict], optional
@@ -1814,9 +1979,8 @@ class MoCo(SSL_Base):
             Default = None
         validation_dataloader: Dataloader, optional
             the pytorch Dataloader used to get the validation batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor. If not given, no validation loss will be 
-            calculated
+            must return a batch as a single tensor X, thus without label tensor Y.
+            If not given, no validation loss will be calculated
     
             Default = None
         verbose: bool, optional
@@ -1873,12 +2037,15 @@ class MoCo(SSL_Base):
         if epochs<1:
             raise ValueError('epochs must be bigger than 1')
         if optimizer==None:
-            optimizer=torch.optim.Adam(self.parameters())
+            if self.bank_size is not None:
+                optimizer=torch.optim.SGD(self.parameters(), 0.01)
+            else: 
+                optimizer=torch.optim.Adam(self.parameters(), 0.001)
         if augmenter==None:
             print('augmenter not given. Using a basic one with with flip + random noise')
             augmenter=Default_augmentation
         if loss_func==None:
-            loss_func=Loss.MoCo_loss   
+            loss_func=Loss.Moco_loss   
         if not( isinstance(loss_args,list) or isinstance(loss_args,dict) or loss_args==None):
             raise ValueError('loss_args must be a list or a dict with all'
                              ' optional arguments of the loss function')
@@ -1907,7 +2074,7 @@ class MoCo(SSL_Base):
                     N_train = math.ceil(sum(1 for _ in train_dataloader.sampler.__iter__())/(train_dataloader.batch_size))
                 
         N_val = 0 if validation_dataloader is None else len(validation_dataloader)
-        if isinstance(validation_dataloader.sampler, EEGsampler):
+        if perform_validation and isinstance(validation_dataloader.sampler, EEGsampler):
             if validation_dataloader.sampler.Keep_only_ratio != 1:
                 if validation_dataloader.drop_last:
                     N_val = math.floor(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
@@ -1947,7 +2114,7 @@ class MoCo(SSL_Base):
                             k = self.momentum_projection_head(k)
                             k = k.detach() # keys
                         self._update_queue(k)
-                        train_loss = self.evaluate_loss(loss_func, [q, k, self.queue] , loss_args )
+                        train_loss = self.evaluate_loss(loss_func,[q, k, self.queue],loss_args)
                     else:
                         # if no memory bank, follow moco v3 setup
                         q1 = self(data_aug1)
@@ -2084,7 +2251,7 @@ class MoCo(SSL_Base):
             print('augmenter not given. Using a basic one with with flip + random noise')
             augmenter=Default_augmentation
         if loss_func==None:
-            los_func=Loss.Moco_loss   
+            loss_func=Loss.Moco_loss   
         if not( isinstance(loss_args,list) or isinstance(loss_args,dict) or loss_args==None):
             raise ValueError('loss_args must be a list or a dict with all'
                              ' optional arguments of the loss function')
@@ -2096,7 +2263,7 @@ class MoCo(SSL_Base):
                     N_test = math.floor(sum(1 for _ in test_dataloader.sampler.__iter__())/(test_dataloader.batch_size))
                 else:
                     N_test = math.ceil(sum(1 for _ in test_dataloader.sampler.__iter__())/(test_dataloader.batch_size))
-        elf.eval()
+        self.eval()
         with torch.no_grad():
             test_loss=0
             test_loss_tot=0
@@ -2117,7 +2284,7 @@ class MoCo(SSL_Base):
                         k = self.momentum_encoder(data_aug2)
                         k = self.momentum_projection_head(k)
                         k = k.detach() # keys
-                        test_loss = self.evaluate_loss(loss_func, [q, k, self.queue] , loss_args )
+                        test_loss = self.evaluate_loss(loss_func, [q, k, self.queue],loss_args)
                     else:
                         # if no memory bank, follow moco v3 setup
                         q1 = self(data_aug1)
@@ -2155,7 +2322,11 @@ class BYOL(SSL_Base):
         The encoder part of the module. It is the one you wish to pretrain and
         transfer to the new model
     projection_head: Union[list[int], nn.Module]
-        The projection head to use. It can be an nn.Module or a list of ints.
+        The projection head to use. It can be:
+        
+            1. an nn.Module
+            2. a list of ints.
+        
         In case a list is given, a nn.Sequential module with Dense, BatchNorm
         and Relu will be automtically created. The list will be used to set 
         input and output dimension of each Dense Layer. For instance, if 
@@ -2166,9 +2337,9 @@ class BYOL(SSL_Base):
         are the same as for the projection_head.
     m: float, optional
         The value of the momentum coefficient. Suggested values are in the 
-        range [0.995, 0.999].
+        range [0.9960, 0.9999].
 
-        Default = 0.995
+        Default = 0.999
 
     Warnings
     --------
@@ -2182,13 +2353,40 @@ class BYOL(SSL_Base):
       C. Doersch, B. Avila Pires, Z. Guo, M. Gheshlaghi Azar, et al., “Bootstrap your own 
       latent- a new approach to self-supervised learning,” Advances in neural information
       processing systems, vol. 33, pp. 21271– 21284, 2020.
+
+    Example
+    -------
+    >>> import pickle, torch, selfeeg
+    >>> import selfeeg.dataloading as dl
+    >>> utils.create_dataset()
+    >>> def loadEEG(path, return_label=False):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x , y= EEG['data'], EEG['label']
+    >>>     return (x, y) if return_label else x
+    >>> def loss_fineTuning(yhat, ytrue):
+    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    >>> torch.manual_seed(1234)
+    >>> # usual pipeline to construct the dataloader
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
+    >>>                              overlap=0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
+    >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
+    >>> enc = selfeeg.models.ShallowNetEncoder(8)
+    >>> byol = selfeeg.ssl.BYOL(enc, [16,32,32], [32,32])
+    >>> print( byol(torch.randn(32,8,128)).shape) # should return [32,32])
+    >>> loss_train = byol.fit(TrainLoader, 1, return_loss_info=True)
+    >>> print(loss_train[0][0]) # will return 2.16688
+    >>> loss_test = byol.test(TrainLoader)
+    >>> print(loss_test) # will return 1.2185
       
     """
     def __init__(self, 
                  encoder: nn.Module, 
                  projection_head: Union[list[int], nn.Module],
                  predictor: Union[list[int], nn.Module]=None,
-                 m: float=0.99
+                 m: float=0.999
                 ):
         
         super(BYOL,self).__init__(encoder)
@@ -2284,8 +2482,7 @@ class BYOL(SSL_Base):
         ----------
         train_dataloader: Dataloader
             the pytorch Dataloader used to get the training batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor
+            must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
     
@@ -2309,19 +2506,15 @@ class BYOL(SSL_Base):
             Default = None
         loss_func: function, optional
             the custom loss function. It can be any loss function which 
-            accepts as input the model's prediction and the true labels 
-            as required arguments and loss_args as optional arguments.
-            If not given BYOL loss will be automatically chosen.
+            accepts as input only the model's predictions (4 torch Tensor) as 
+            required arguments and loss_args as optional arguments. Check the input
+            arguments of ``BYOL_loss`` to check how to design custom loss functions
+            to give to this method.
 
             Default = None
         loss_args: Union[list, dict], optional
             The optional arguments to pass to the function. it can be a list
             or a dict.
-    
-            Default = None
-        label_encoder: function, optional
-            A custom function used to encode the returned Dataloaders true labels.
-            If None, the Dataloader's true label is used directly.
     
             Default = None
         lr_scheduler: torch Scheduler
@@ -2334,10 +2527,9 @@ class BYOL(SSL_Base):
     
             Default = None
         validation_dataloader: Dataloader, optional
-            the pytorch Dataloader used to get the validation batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor. If not given, no validation loss will be 
-            calculated
+            the pytorch Dataloader used to get the validation batches.  It
+            must return a batch as a single tensor X, thus without label tensor Y. 
+            If not given, no validation loss will be calculated
     
             Default = None
         verbose: bool, optional
@@ -2428,12 +2620,14 @@ class BYOL(SSL_Base):
                     N_train = math.ceil(sum(1 for _ in train_dataloader.sampler.__iter__())/(train_dataloader.batch_size))
                 
         N_val = 0 if validation_dataloader is None else len(validation_dataloader)
-        if isinstance(validation_dataloader.sampler, EEGsampler):
+        if perform_validation and isinstance(validation_dataloader.sampler, EEGsampler):
             if validation_dataloader.sampler.Keep_only_ratio != 1:
                 if validation_dataloader.drop_last:
                     N_val = math.floor(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
                 else:
                     N_val = math.ceil(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
+
+        # classical torch training loop with some additions
         for epoch in range(epochs):
             print(f'epoch [{epoch+1:6>}/{epochs:6>}]') if verbose else None
         
@@ -2634,7 +2828,11 @@ class Barlow_Twins(SimCLR):
         The encoder part of the module. It is the one you wish to pretrain and
         transfer to the new model
     projection_head: Union[list[int], nn.Module]
-        The projection head to use. It can be an nn.Module or a list of ints.
+        The projection head to use. It can be:
+        
+            1. an nn.Module
+            2. a list of ints.
+        
         In case a list is given, a nn.Sequential module with Dense, BatchNorm
         and Relu will be automtically created. The list will be used to set 
         input and output dimension of each Dense Layer. For instance, if 
@@ -2644,14 +2842,41 @@ class Barlow_Twins(SimCLR):
     Warnings
     --------
     This class will not check the compatibility of the encoder's output and
-    the projection head's input (as well as between the projection head and the 
-    predictor). Make sure that they have the same size. 
+    the projection head's input (as well as between the projection head). 
+    Make sure that they have the same size. 
         
     References
     ----------
     .. [barlow1] J. Zbontar, L. Jing, I. Misra, Y. LeCun, and S. Deny, 
       “Barlow twins: Self-supervised learning via redundancy re- duction,” in International 
       Conference on Machine Learning, pp. 12310–12320, PMLR, 2021.
+
+    Example
+    -------
+    >>> import pickle, torch, selfeeg
+    >>> import selfeeg.dataloading as dl
+    >>> utils.create_dataset()
+    >>> def loadEEG(path, return_label=False):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x , y= EEG['data'], EEG['label']
+    >>>     return (x, y) if return_label else x
+    >>> def loss_fineTuning(yhat, ytrue):
+    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    >>> torch.manual_seed(1234)
+    >>> # usual pipeline to construct the dataloader
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
+    >>>                              overlap=0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
+    >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
+    >>> enc = selfeeg.models.ShallowNetEncoder(8)
+    >>> barl = selfeeg.ssl.Barlow_Twins(enc, [16,32,32])
+    >>> print( barl(torch.randn(32,8,128)).shape) # should return [32,32])
+    >>> loss_train = barl.fit(TrainLoader, 1, return_loss_info=True)
+    >>> print(loss_train[0][0]) # will return 3.8910
+    >>> loss_test = barl.test(TrainLoader)
+    >>> print(loss_test) # will return 2.1368
       
     """
     def __init__(self, 
@@ -2682,9 +2907,8 @@ class Barlow_Twins(SimCLR):
         Parameters
         ----------
         train_dataloader: Dataloader
-            the pytorch Dataloader used to get the training batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor
+            the pytorch Dataloader used to get the training batches.  It
+            must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
     
@@ -2708,19 +2932,16 @@ class Barlow_Twins(SimCLR):
             Default = None
         loss_func: function, optional
             the custom loss function. It can be any loss function which 
-            accepts as input the model's prediction and the true labels 
-            as required arguments and loss_args as optional arguments.
-            If not given Barlow loss will be automatically used.
+            accepts as input only the model's predictions as required arguments 
+            and loss_args as optional arguments.
+            If not given Barlos loss will be automatically used. Check the input
+            arguments of ``Barlos_loss`` to check how to design custom loss functions
+            to give to this method
 
             Default = None
         loss_args: Union[list, dict], optional
             The optional arguments to pass to the function. it can be a list
             or a dict.
-    
-            Default = None
-        label_encoder: function, optional
-            A custom function used to encode the returned Dataloaders true labels.
-            If None, the Dataloader's true label is used directly.
     
             Default = None
         lr_scheduler: torch Scheduler
@@ -2733,10 +2954,9 @@ class Barlow_Twins(SimCLR):
     
             Default = None
         validation_dataloader: Dataloader, optional
-            the pytorch Dataloader used to get the validation batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor. If not given, no validation loss will be 
-            calculated
+            the pytorch Dataloader used to get the validation batches.  It
+            must return a batch as a single tensor X, thus without label tensor Y. 
+            If not given, no validation loss will be calculated
     
             Default = None
         verbose: bool, optional
@@ -2777,11 +2997,12 @@ class Barlow_Twins(SimCLR):
         
         if loss_func==None:
             loss_func=Loss.Barlow_loss
-            loss_args=[]
-        super().fit(train_dataloader, epochs, optimizer, augmenter, loss_func, loss_args, 
-                    lr_scheduler, EarlyStopper, validation_dataloader, verbose, device, 
-                    cat_augmentations, return_loss_info
-                   ) 
+            loss_args=[None]
+        loss_info = super().fit(train_dataloader, epochs, optimizer, augmenter, loss_func, 
+                                loss_args, lr_scheduler, EarlyStopper, validation_dataloader, 
+                                verbose, device, cat_augmentations, return_loss_info)
+        if return_loss_info:
+            return loss_info
 
     def test(self, 
              test_dataloader,
@@ -2791,11 +3012,12 @@ class Barlow_Twins(SimCLR):
              verbose: bool=True,
              device: str=None
             ):
-        
         if loss_func==None:
             loss_func=Loss.Barlow_loss
-            loss_args=[]
-        super().test(test_dataloader, augmenter, loss_func, loss_args,  verbose, device) 
+            loss_args=[None]
+        loss_info = super().test(test_dataloader, augmenter, loss_func, 
+                                loss_args, verbose, device)
+        return loss_info
 
 
 
@@ -2810,7 +3032,11 @@ class VICReg(SimCLR):
         The encoder part of the module. It is the one you wish to pretrain and
         transfer to the new model
     projection_head: Union[list[int], nn.Module]
-        The projection head to use. It can be an nn.Module or a list of ints.
+        The projection head to use. It can be:
+        
+            1. an nn.Module
+            2. a list of ints.
+        
         In case a list is given, a nn.Sequential module with Dense, BatchNorm
         and Relu will be automtically created. The list will be used to set 
         input and output dimension of each Dense Layer. For instance, if 
@@ -2830,6 +3056,33 @@ class VICReg(SimCLR):
     ----------
     .. [VIC1] A. Bardes, J. Ponce, and Y. LeCun, “Vicreg: Variance- invariance-covariance
       regularization for self-supervised learning,” arXiv preprint arXiv:2105.04906, 2021.
+
+    Example
+    -------
+    >>> import pickle, torch, selfeeg
+    >>> import selfeeg.dataloading as dl
+    >>> utils.create_dataset()
+    >>> def loadEEG(path, return_label=False):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x , y= EEG['data'], EEG['label']
+    >>>     return (x, y) if return_label else x
+    >>> def loss_fineTuning(yhat, ytrue):
+    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    >>> torch.manual_seed(1234)
+    >>> # usual pipeline to construct the dataloader
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
+    >>>                              overlap=0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
+    >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
+    >>> enc = selfeeg.models.ShallowNetEncoder(8)
+    >>> vic = selfeeg.ssl.VICReg(enc, [16,32,32])
+    >>> print( vic(torch.randn(32,8,128)).shape) # should return [32,32])
+    >>> loss_train = vic.fit(TrainLoader, 2, return_loss_info=True)
+    >>> print(loss_train[0][0]) # will return 21.6086
+    >>> loss_test = vic.test(TrainLoader)
+    >>> print(loss_test) # will return 21.6785
       
     """
     def __init__(self, 
@@ -2861,8 +3114,7 @@ class VICReg(SimCLR):
         ----------
         train_dataloader: Dataloader
             the pytorch Dataloader used to get the training batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor
+            must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
     
@@ -2886,19 +3138,16 @@ class VICReg(SimCLR):
             Default = None
         loss_func: function, optional
             the custom loss function. It can be any loss function which 
-            accepts as input the model's prediction and the true labels 
-            as required arguments and loss_args as optional arguments.
-            If not given VICReg loss will be automatically used.
+            accepts as input only the model's predictions as required arguments 
+            and loss_args as optional arguments.
+            If not given VICReg loss will be automatically used. Check the input
+            arguments of ``VICReg_loss`` to check how to design custom loss functions
+            to give to this method
 
             Default = None
         loss_args: Union[list, dict], optional
             The optional arguments to pass to the function. it can be a list
             or a dict.
-    
-            Default = None
-        label_encoder: function, optional
-            A custom function used to encode the returned Dataloaders true labels.
-            If None, the Dataloader's true label is used directly.
     
             Default = None
         lr_scheduler: torch Scheduler
@@ -2911,10 +3160,9 @@ class VICReg(SimCLR):
     
             Default = None
         validation_dataloader: Dataloader, optional
-            the pytorch Dataloader used to get the validation batches. It
-            must return a batch as a tuple (X, Y), with X the feature tensor
-            and Y the label tensor. If not given, no validation loss will be 
-            calculated
+            the pytorch Dataloader used to get the validation batches.  It
+            must return a batch as a single tensor X, thus without label tensor Y. 
+            If not given, no validation loss will be calculated
     
             Default = None
         verbose: bool, optional
@@ -2956,10 +3204,13 @@ class VICReg(SimCLR):
         if loss_func==None:
             loss_func=Loss.VICReg_loss
             loss_args=[]
-        super().fit(train_dataloader, epochs, optimizer, augmenter, loss_func, loss_args, 
-                    lr_scheduler, EarlyStopper, validation_dataloader, verbose, device,
-                    cat_augmentations, return_loss_info
-                   ) 
+        loss_info = super().fit(train_dataloader, epochs, optimizer, augmenter, 
+                                loss_func, loss_args, lr_scheduler, EarlyStopper, 
+                                validation_dataloader, verbose, device,
+                                cat_augmentations, return_loss_info
+                               ) 
+        if return_loss_info:
+            return loss_info
 
     def test(self, 
              test_dataloader,
@@ -2973,5 +3224,7 @@ class VICReg(SimCLR):
         if loss_func==None:
             loss_func=Loss.VICReg_loss
             loss_args=[]
-        super().test(test_dataloader, augmenter, loss_func, loss_args,  verbose, device) 
+        loss_info = super().test(test_dataloader, augmenter, loss_func, 
+                                 loss_args, verbose, device) 
+        return loss_info
 

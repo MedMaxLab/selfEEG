@@ -148,7 +148,7 @@ def Moco_loss(q: torch.Tensor,
               k: torch.Tensor, 
               queue: torch.Tensor=None,
               projections_norm: bool=True,
-              temperature: float=0.15)-> torch.Tensor:
+              temperature: float=0.07)-> torch.Tensor:
     
     """
     Simple implementation of the Moco loss function [moco2]_. 
@@ -355,6 +355,7 @@ def Barlow_loss(z1: torch.Tensor,
     #loss = (c_mat_diff*lambda_mat).sum()
     
     c_mat2 = c_mat.pow(2)
+    
     loss = D - 2*torch.trace(c_mat) + lambda_coeff*torch.sum(c_mat**2) + (1-lambda_coeff)*torch.trace(c_mat**2)
     return loss
 
