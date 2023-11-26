@@ -12,7 +12,8 @@ from ..losses import losses as Loss
 from ..dataloading import EEGsampler
 from typing import Any, Callable, Iterable, TypeVar, Generic, Sequence, List, Optional, Union
 
-__all__ = ['EarlyStopping', 'SSL_Base', 'SimCLR', 'SimSiam', 'MoCo', 'BYOL', 'Barlow_Twins', 'VICReg']
+__all__ = ['EarlyStopping', 'SSL_Base', 'SimCLR', 'SimSiam', 'MoCo', 
+           'BYOL', 'Barlow_Twins', 'VICReg', 'evaluateLoss', 'fine_tune']
 
 def Default_augmentation(x):
     """
@@ -34,7 +35,7 @@ def Default_augmentation(x):
     return x_noise
 
 def evaluateLoss( loss_fun: 'function', 
-                  arguments, 
+                  arguments: torch.Tensor or list[torch.Tensor], 
                   loss_arg: Union[list, dict]=None
                 ) -> 'loss_fun output':
     """
@@ -46,8 +47,11 @@ def evaluateLoss( loss_fun: 'function',
     ----------
     loss_fun: function
         the custom loss function. It can be any loss function which 
-        accepts as input the model's prediction (or predictions) and
-        true labels as required argument and loss_args as optional arguments.
+        accepts as input:
+        
+            1. the model's prediction (or predictions) and the true labels as required argument
+            2. any element included in loss_args as optional arguments.
+        
         Note that for the ``fine_tune`` method the number of required
         arguments must be 2, i.e. the model's prediction and true labels.
     arguments: torch.Tensor or list[torch.Tensors]
@@ -55,17 +59,27 @@ def evaluateLoss( loss_fun: 'function',
         in a training pipeline it can be a single or multiple tensors.
     loss_arg: Union[list, dict], optional
         The optional arguments to pass to the function. it can be a list
-        or a dict
+        or a dict.
 
         Default = None
 
     Returns
     -------
     loss: 'loss_fun output'
-        the output of the given loss function. It is expected to be 
-        a torch.Tensor
+        the output of the given loss function. It is expected to be a torch.Tensor
+
+    Example
+    -------
+    >>> import torch
+    >>> import selfeeg.ssl
+    >>> torch.manual_seed(1234)
+    >>> ytrue = torch.randn(64, 1)
+    >>> yhat  = torch.randn(64, 1)
+    >>> loss = ssl.evaluateLoss(torch.nn.functional.mse_loss, [yhat,ytrue])
+    >>> print(loss) # will print 1.9893
     
     """
+    # multiple if else to assess which syntax use for loss function call
     if isinstance(arguments, list):
         if loss_arg==None or loss_arg==[]:
             loss=loss_fun( *arguments )
@@ -106,9 +120,9 @@ def fine_tune(model: nn.Module,
     model: nn.Module
         the pytorch model to fine tune. Must be a nn.Module.
     train_dataloader: Dataloader
-        the pytorch Dataloader used to get the training batches. It
+        the pytorch Dataloader used to get the training batches. The Dataloar
         must return a batch as a tuple (X, Y), with X the feature tensor
-        and Y the label tensor
+        and Y the label tensor.
     epochs: int, optional
         The number of training epochs. Must be an integer bigger than 0.
 
@@ -118,7 +132,7 @@ def fine_tune(model: nn.Module,
         provided in the torch.optim module. If not given Adam with default
         parameters will be instantiated.
 
-        Default = torch.optim.Adam
+        Default = None
     augmenter: function, optional
         Any function (or callable object) used to perform data augmentation
         on the batch. It is highly suggested to resort to the augmentation
@@ -128,10 +142,12 @@ def fine_tune(model: nn.Module,
         training set and to get more different samples.
 
         Default = None
-    loss_func: function
+    loss_func: function, optional
         the custom loss function. It can be any loss function which 
         accepts as input the model's prediction and the true labels 
         as required arguments and loss_args as optional arguments.
+
+        Default = None
     loss_args: Union[list, dict], optional
         The optional arguments to pass to the function. it can be a list
         or a dict.
@@ -139,7 +155,8 @@ def fine_tune(model: nn.Module,
         Default = None
     label_encoder: function, optional
         A custom function used to encode the returned Dataloaders true labels.
-        If None, the Dataloader's true label is used directly.
+        If None, the Dataloader's true label is used directly. It can be any
+        funtion which accept as input the batch label tensor Y.
 
         Default = None
     lr_scheduler: torch Scheduler
@@ -186,6 +203,28 @@ def fine_tune(model: nn.Module,
     If an EarlyStopping instance is given with monitoring loss set to 
     validation loss, but no validation dataloader is given, monitoring
     loss will be automatically set to training loss.
+
+    Example
+    -------
+    >>> import torch, pickle, selfeeg.losses
+    >>> import selfeeg.dataloading as dl
+    >>> import selfeeg.models
+    >>> def loadEEG(path, return_label=False):
+    >>>     with open(path, 'rb') as handle:
+    >>>         EEG = pickle.load(handle)
+    >>>     x , y= EEG['data'], EEG['label']
+    >>>     return (x, y) if return_label else x
+    >>> def loss_fineTuning(yhat, ytrue):
+    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    >>> random.seed(1234)
+    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> ratios = dl.check_split(EEGlen,EEGsplit, return_ratio=True)
+    >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit, [128,2,0.3], 'train', True, loadEEG, 
+    >>>                              optional_load_fun_args=[True], label_on_load=True)
+    >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
+    >>> shanet= models.ShallowNet(2, 8, 256)
+    >>> loss_info = ssl.fine_tune(shanet, TrainLoader, loss_func=loss_fineTuning)
     
     """
     
@@ -208,7 +247,7 @@ def fine_tune(model: nn.Module,
     if epochs<1:
         raise ValueError('epochs must be bigger than 1')
     if optimizer is None:
-        optimizer=torch.optim.Adam(self.parameters())
+        optimizer=torch.optim.Adam(model.parameters())
     if loss_func is None:
         raise ValueError('loss function not given') 
     if not( isinstance(loss_args,list) or isinstance(loss_args,dict)):
@@ -233,7 +272,7 @@ def fine_tune(model: nn.Module,
     N_train = len(train_dataloader)
     N_val = 0 if validation_dataloader is None else len(validation_dataloader)
     for epoch in range(epochs):
-        print(f'epoch [{epoch+1:6>}/{epochs:6>}]')
+        print(f'epoch [{epoch+1:6>}/{epochs:6>}]') if verbose else None
         
         train_loss=0
         val_loss=0
@@ -891,7 +930,7 @@ class SimCLR(SSL_Base):
                 else:
                     N_val = math.ceil(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
         for epoch in range(epochs):
-            print(f'epoch [{epoch+1:6>}/{epochs:6>}]')
+            print(f'epoch [{epoch+1:6>}/{epochs:6>}]') if verbose else None
         
             train_loss=0
             val_loss=0
@@ -1330,7 +1369,7 @@ class SimSiam(SSL_Base):
                 else:
                     N_val = math.ceil(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
         for epoch in range(epochs):
-            print(f'epoch [{epoch+1:6>}/{epochs:6>}]')
+            print(f'epoch [{epoch+1:6>}/{epochs:6>}]') if verbose else None
         
             train_loss=0
             val_loss=0
@@ -1875,7 +1914,7 @@ class MoCo(SSL_Base):
                 else:
                     N_val = math.ceil(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
         for epoch in range(epochs):
-            print(f'epoch [{epoch+1:6>}/{epochs:6>}]')
+            print(f'epoch [{epoch+1:6>}/{epochs:6>}]') if verbose else None
         
             train_loss=0
             val_loss=0
@@ -2396,7 +2435,7 @@ class BYOL(SSL_Base):
                 else:
                     N_val = math.ceil(sum(1 for _ in validation_dataloader.sampler.__iter__())/(validation_dataloader.batch_size))
         for epoch in range(epochs):
-            print(f'epoch [{epoch+1:6>}/{epochs:6>}]')
+            print(f'epoch [{epoch+1:6>}/{epochs:6>}]') if verbose else None
         
             train_loss=0
             val_loss=0

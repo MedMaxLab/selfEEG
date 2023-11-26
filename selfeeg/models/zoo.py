@@ -1370,6 +1370,10 @@ class ShallowNetEncoder(nn.Module):
         the temporal pooling kernel size.
 
         Default = 75
+    p: float, optional
+        Dropout probability
+
+        Default= 0.2
     
     Note
     ----
@@ -1379,12 +1383,14 @@ class ShallowNetEncoder(nn.Module):
 
     """
     
-    def __init__(self, Chans, F = 8, K1 = 25, Pool = 75):
+    def __init__(self, Chans, F = 8, K1 = 25, Pool = 75, p = 0.2):
         
         super(ShallowNetEncoder, self).__init__() 
         self.conv1      = nn.Conv2d(1, F, (1, K1), stride=(1,1))
         self.conv2      = nn.Conv2d(F, F, (Chans, 1), stride=(1,1))
+        self.batch1     = nn.BatchNorm2d(F)
         self.pool2      = nn.AvgPool2d((1, Pool), stride=(1,15))
+        self.drop1      = nn.Dropout(p)
         self.flatten2   = nn.Flatten()
     
     def forward(self,x):
@@ -1395,8 +1401,11 @@ class ShallowNetEncoder(nn.Module):
         x = torch.unsqueeze(x, 1)
         x = self.conv1(x)
         x = self.conv2(x)
+        x = self.batch1(x)
+        x = torch.square(x)
         x = self.pool2(x)
-        x = torch.log(x)
+        x = torch.log(torch.clamp(x, 1e-7, 10000))
+        x = self.drop1(x)
         x = self.flatten2(x) 
         return x
     
@@ -1430,6 +1439,10 @@ class ShallowNet(nn.Module):
         the temporal pooling kernel size.
 
         Default = 75
+    p: float, optional
+        Dropout probability
+
+        Default= 0.2
     return_logits: bool, optional
         Whether to return the output as logit or probability.  It is suggested 
         to not use False as the pytorch crossentropy apply the softmax internally.
@@ -1448,13 +1461,14 @@ class ShallowNet(nn.Module):
       for decoding and visualization of EEG pathology, arXiv:1708.08012
     
     """
-    def __init__(self, nb_classes, Chans, Samples, F = 40, K1 = 25, Pool = 75, return_logits=True):
+    def __init__(self, nb_classes, Chans, Samples, F = 40, K1 = 25, Pool = 75,
+                 p=0.2, return_logits=True):
         
         super(ShallowNet, self).__init__()
 
         self.nb_classes = nb_classes
         self.return_logits = return_logits
-        self.encoder   = ShallowNetEncoder(Chans, F = F, K1 = K1, Pool = Pool)
+        self.encoder   = ShallowNetEncoder(Chans, F = F, K1 = K1, Pool = Pool, p = p)
         self.Dense     = nn.Linear(F*((Samples-K1+1-Pool)//15 +1), 1 if nb_classes<=2 else nb_classes )
     
     def forward(self, x):
