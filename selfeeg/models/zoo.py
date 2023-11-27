@@ -18,7 +18,8 @@ __all__ =['ConstrainedConv2d', 'ConstrainedDense','DepthwiseConv2d', 'SeparableC
 # ### Special Kernels not implemented in pytorch
 class DepthwiseConv2d(nn.Conv2d):
     """
-    Pytorch implementation of the Depthwise Convolutional layer.
+    Pytorch implementation of the Depthwise Convolutional layer with the possibility to
+    add a norm constraint on the filter (feature) dimension.
     Most of the parameters are the same as described in pytorch conv2D help.
 
     Parameters
@@ -49,13 +50,24 @@ class DepthwiseConv2d(nn.Conv2d):
         The maximum norm each filter can have. If None no constraint will be included.
 
         Default = None
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,1,8,64)
+    >>> mdl = models.DepthwiseConv2d(1,2,(1,15))
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 2, 8, 64])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
     def __init__(self, in_channels, depth_multiplier, kernel_size, 
                  stride=1, padding='same', dilation=1, bias=False, max_norm=None
                 ):
-        super(DepthwiseConv2d, self).__init__(in_channels, depth_multiplier*in_channels, kernel_size, 
-                                              groups=in_channels,stride=stride, padding=padding, 
+        super(DepthwiseConv2d, self).__init__(in_channels, depth_multiplier*in_channels, 
+                                              kernel_size, groups=in_channels,
+                                              stride=stride, padding=padding, 
                                               dilation=dilation, bias=bias)
         if max_norm is not None:
             if max_norm <=0:
@@ -68,7 +80,7 @@ class DepthwiseConv2d(nn.Conv2d):
     @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
-        CONSIDERING THE DESCRIPTION PROVIDED IN TENSORFLOW 
+        Citing the Tensorflow documentation, the implementation try to replicate this
         
         integer, axis along which to calculate weight norms. 
         For instance, in a Dense layer the weight 
@@ -95,7 +107,6 @@ class DepthwiseConv2d(nn.Conv2d):
     def forward(self, input):
         """
         :meta private:
-        
         """
         if self.max_norm is not None:
             self.scale_norm(self.max_norm)
@@ -104,9 +115,9 @@ class DepthwiseConv2d(nn.Conv2d):
 
 class SeparableConv2d(nn.Module):
     """
-    Pytorch implementation of the Separable Convolutional layer.
-    It apply first a depthwise conv2d, then a pointwise conv2d 
-    (kernel size = 1)
+    Pytorch implementation of the Separable Convolutional layer with the possibility of 
+    adding a norm constraint on the depthwise filters (feature) dimension.
+    The layer apply first a depthwise conv2d, then a pointwise conv2d (kernel size = 1)
     Most of the parameters are the same as described in pytorch conv2D help.
 
     Parameters
@@ -135,10 +146,23 @@ class SeparableConv2d(nn.Module):
         Default = True
     depth_multiplier: int, optional
         The depth multiplier of the depthwise block.
+
+        Default = 1
     depth_max_norm: float, optional
-        The maximum norm each filter can have in the depthwise block. If None no constraint will be included
+        The maximum norm each filter can have in the depthwise block. 
+        If None no constraint will be included
 
         Default = None
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,1,8,64)
+    >>> mdl = models.SeparableConv2d(1,4,(1,15), depth_multiplier=4)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4, 8, 64])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding='same', 
@@ -151,7 +175,6 @@ class SeparableConv2d(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         out = self.depthwise(x)
         out = self.pointwise(out)
@@ -160,7 +183,7 @@ class SeparableConv2d(nn.Module):
 
 class ConstrainedDense(nn.Linear):
     """
-    Pytorch implementation of the Dense layer with norm constraint.
+    Pytorch implementation of the Dense layer with the possibility of adding a norm constraint.
     Most of the parameters are the same as described in pytorch Linear help.
 
     Parameters
@@ -181,9 +204,20 @@ class ConstrainedDense(nn.Linear):
         The maximum norm of the layer. If None no constraint will be included
 
         Default = None
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,64)
+    >>> mdl = models.ConstrainedDense(64,32)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 32])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
-    def __init__(self, in_features, out_features, bias=True, device=None, dtype=None, max_norm=None):
+    def __init__(self, in_features, out_features, bias=True, 
+                 device=None, dtype=None, max_norm=None):
         super(ConstrainedDense, self).__init__(in_features, out_features, bias, device, dtype)
         
         if max_norm is not None:
@@ -197,7 +231,7 @@ class ConstrainedDense(nn.Linear):
     @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
-        CONSIDERING THE DESCRIPTION PROVIDED IN TENSORFLOW 
+        Citing the Tensorflow documentation, the implementation try to replicate this
         
         integer, axis along which to calculate weight norms. For instance, in a Dense 
         layer the weight matrix has shape 
@@ -209,9 +243,9 @@ class ConstrainedDense(nn.Linear):
         cols, input_depth).
         
         :meta private:
-        
         """
-        # calcuate the norm of each filter of size (row, cols, input_depth), here (1, kernel_size)
+        # calcuate the norm of each filter of size (row, cols, input_depth), 
+        # here (1, kernel_size)
         norm = self.weight.norm(dim=1, keepdim=True)
 
         # rescale only those filters which have a norm bigger than the maximum allowed
@@ -223,7 +257,6 @@ class ConstrainedDense(nn.Linear):
     def forward(self, input):
         """
         :meta private:
-        
         """
         if self.max_norm is not None:
             self.scale_norm(self.max_norm)
@@ -232,7 +265,8 @@ class ConstrainedDense(nn.Linear):
 
 class ConstrainedConv2d(nn.Conv2d):
     """
-    Pytorch implementation of the Convolutional 2D layer with max_norm constraint.
+    Pytorch implementation of the Convolutional 2D layer with the possibilty of 
+    adding a max_norm constraint on the filter (feature) dimension.
     Most of the parameters are the same as described in pytorch conv2D help.
 
     Parameters
@@ -275,6 +309,16 @@ class ConstrainedConv2d(nn.Conv2d):
         The maximum norm each filter can have. If None no constraint will be included
 
         Default = None
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,1,8,64)
+    >>> mdl = models.ConstrainedConv2d(1,4,(1,15))
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4, 8, 64])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
 
@@ -296,10 +340,21 @@ class ConstrainedConv2d(nn.Conv2d):
     @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
-        :meta private:
+        Citing the Tensorflow documentation, the implementation try to replicate this
         
+        integer, axis along which to calculate weight norms. For instance, in a Dense 
+        layer the weight matrix has shape 
+        (input_dim, output_dim), set axis to 0 to constrain each weight vector of length 
+        (input_dim,). 
+        In a Conv2D layer with data_format="channels_last", the weight tensor has shape (rows, 
+        cols, input_depth, output_depth), 
+        set axis to [0, 1, 2] to constrain the weights of each filter tensor of size (rows, 
+        cols, input_depth).
+        
+        :meta private:
         """
-        # calcuate the norm of each filter of size (row, cols, input_depth), here (1, kernel_size)
+        # calcuate the norm of each filter of size 
+        # (row, cols, input_depth), here (1, kernel_size)
         if self.kernel_size[1]>1:
             norm= self.weight.norm(dim=2, keepdim=True).norm(dim=3,keepdim=True)
         else:
@@ -313,7 +368,6 @@ class ConstrainedConv2d(nn.Conv2d):
     def forward(self, input):
         """
         :meta private:
-        
         """
         if self.max_norm is not None:
             self.scale_norm(self.max_norm)
@@ -372,14 +426,26 @@ class EEGNetEncoder(nn.Module):
 
         Default = 16
     depthwise_max_norm: float, optional
-        The maximum norm each filter can have in the depthwise block. If None no constraint will be included
+        The maximum norm each filter can have in the depthwise block. 
+        If None no constraint will be included
 
         Default = None
 
     
     Note
     ----
-    This implementation referres to the latest version of EEGNet which can be found in the official repository
+    This implementation referres to the latest version of EEGNet which 
+    can be found in the official repository
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,64)
+    >>> mdl = models.EEGNetEncoder(8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 32])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
     def __init__(self, Chans, kernLength = 64, dropRate = 0.5, F1 = 8, 
@@ -389,7 +455,8 @@ class EEGNetEncoder(nn.Module):
         
         
         if dropType not in ['SpatialDropout2D','Dropout']:
-            raise ValueError('implemented Dropout types are \'Dropout\' or \'SpatialDropout2D \'')
+            raise ValueError('implemented Dropout types are'
+                             ' \'Dropout\' or \'SpatialDropout2D \'')
         
         super(EEGNetEncoder, self).__init__()
 
@@ -416,9 +483,7 @@ class EEGNetEncoder(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
-        
         # Layer 1
         x = torch.unsqueeze(x, 1)
         x = self.conv1(x)
@@ -454,7 +519,7 @@ class EEGNet(nn.Module):
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
+        (output dimensions will be [batch, 1] in this case)
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -465,7 +530,7 @@ class EEGNet(nn.Module):
 
         Default = 64
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage. must be in [0,1]. 
 
         Default = 0.5
     F1: int, optional
@@ -473,7 +538,7 @@ class EEGNet(nn.Module):
 
         Default = 8
     D: int, optional
-        The depth of the depthwise conv layer.
+        The depth of the depthwise convolutional layer.
 
         Default = 16
     dropType: str, optional
@@ -497,24 +562,37 @@ class EEGNet(nn.Module):
 
         Default = 16
     depthwise_max_norm: float, optional
-        The maximum norm each filter can have in the depthwise block. If None no constraint will be included
+        The maximum norm each filter can have in the depthwise block. 
+        If None no constraint will be included
 
         Default = None
     return_logits: bool, optional
-        Whether to return the output as logit or probability. It is suggested to not use False as 
-        the pytorch crossentropy apply the softmax internally.
+        Whether to return the output as logit or probability. 
+        It is suggested to not use False as the pytorch crossentropy loss function 
+        apply the softmax internally.
 
         Default = True
 
+    Note
+    ----
+    This implementation referres to the latest version of EEGNet which 
+    can be found in the official repository (see references).
+    
     References
     ----------
     .. [EEGnet] Lawhern et al., EEGNet: a compact convolutional neural network for EEG-based 
       brain–computer interfaces. Journal of Neural Engineering. 2018
     .. [eegnetgit] https://github.com/vlawhern/arl-eegmodels/blob/master/EEGModels.py
     
-    Note
-    ----
-    This implementation referres to the latest version of EEGNet which can be found in the official repository
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,64)
+    >>> mdl = models.EEGNet(4,8,64)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
 
     """
     def __init__(self, nb_classes, Chans, Samples, kernLength = 64, dropRate = 0.5, F1 = 8, 
@@ -527,14 +605,16 @@ class EEGNet(nn.Module):
 
         self.nb_classes = nb_classes
         self.return_logits = return_logits
-        self.encoder    = EEGNetEncoder(Chans, kernLength, dropRate, F1, D, F2, dropType, ELUalpha,
-                                        pool1, pool2, separable_kernel, depthwise_max_norm)
-        self.Dense      = ConstrainedDense( F2*(Samples//int(pool1*pool2)), 1 if nb_classes<=2 else nb_classes, max_norm=norm_rate)
+        self.encoder    = EEGNetEncoder(Chans, kernLength, dropRate, F1, D, F2, 
+                                        dropType, ELUalpha, pool1, pool2, 
+                                        separable_kernel, depthwise_max_norm)
+        self.Dense      = ConstrainedDense( F2*(Samples//int(pool1*pool2)), 
+                                           1 if nb_classes<=2 else nb_classes, 
+                                           max_norm=norm_rate)
     
     def forward(self, x):
         """
         :meta private:
-        
         """
         x=self.encoder(x)
         x=self.Dense(x)
@@ -566,7 +646,7 @@ class  DeepConvNetEncoder(nn.Module):
         Default = 64
     F: int, optional
         The number of filters in the first layer. Next layers
-        will continue to double the previous output.
+        will continue to double the previous output feature size.
 
         Default = 25
     Pool: int, optional
@@ -579,7 +659,7 @@ class  DeepConvNetEncoder(nn.Module):
         Default = 3
     max_norm: int, optional
         A max norm constraint to apply to each filter of the convolutional layer. See 
-        ``ConstrainedConv2d`` for more info
+        ``ConstrainedConv2d`` for more info.
 
         Default = 2
     batch_momentum: float, optional
@@ -591,9 +671,19 @@ class  DeepConvNetEncoder(nn.Module):
 
         Default = 1
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage. Must be in [0,1] 
 
         Default = 0.5
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.DeepConvNetEncoder(8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 200])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
 
@@ -634,9 +724,7 @@ class  DeepConvNetEncoder(nn.Module):
     def forward(self,x):
         """
         :meta private:
-        
         """
-        
         x = torch.unsqueeze(x, 1)
         x = self.conv1(x)
         x = self.conv2(x)
@@ -662,7 +750,7 @@ class  DeepConvNetEncoder(nn.Module):
         x = self.flatten(x)
         return x
 
-class  DeepConvNet(nn.Module):
+class DeepConvNet(nn.Module):
     """
     Pytorch Implementation of the DeepConvNet neural network.
     Official paper can be found here [deepconv]_ .
@@ -674,7 +762,7 @@ class  DeepConvNet(nn.Module):
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
+        (output dimensions will be [batch, 1] in this case)
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -731,6 +819,16 @@ class  DeepConvNet(nn.Module):
       networks for EEG decoding and visualization." Human brain mapping 38.11 (2017): 5391-5420.
       https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/hbm.23730
     .. [deepconvgit] https://github.com/vlawhern/arl-eegmodels/blob/master/EEGModels.py
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.DeepConvNet(4,8,512)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
         
     """
 
@@ -756,7 +854,6 @@ class  DeepConvNet(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         x=self.encoder(x)
         x=self.Dense(x)
@@ -790,7 +887,7 @@ class EEGInceptionEncoder(nn.Module):
 
         Default = 2
     kernel_size: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 64
     pool: int, optional
@@ -798,7 +895,7 @@ class EEGInceptionEncoder(nn.Module):
 
         Default = 4
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage. must be in [0,1]
 
         Default = 0.5
     ELUalpha: float, optional
@@ -814,9 +911,20 @@ class EEGInceptionEncoder(nn.Module):
 
         Default = 0.9
     max_depth_norm: float, optional
-        The maximum norm each filter can have in the depthwise block. If None no constraint will be included
+        The maximum norm each filter can have in the depthwise block. 
+        If None no constraint will be included
 
         Default = 1.
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,64)
+    >>> mdl = models.EEGInceptionEncoder(8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 12])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
 
@@ -856,7 +964,7 @@ class EEGInceptionEncoder(nn.Module):
                                    nn.ELU(alpha=ELUalpha),
                                    nn.Dropout(dropRate)
                                  )
-        # concatenate inc1 inc2 e inc3 on filter size
+        # concatenate inc1 inc2 e inc3 on filter size in forward
         self.pool1 = nn.AvgPool2d((1,pool))
         
         self.inc4 = nn.Sequential( nn.Conv2d(F1*D*3, F1, (1,int(kernel_size//4)), 
@@ -877,7 +985,7 @@ class EEGInceptionEncoder(nn.Module):
                                    nn.ELU(alpha=ELUalpha),
                                    nn.Dropout(dropRate),
                                  )
-        # concatenate inc4 inc5 e inc6 on filter size
+        # concatenate inc4 inc5 e inc6 on filter size in forward
         self.pool2 = nn.AvgPool2d((1,int(pool//2)))
         self.out1 = nn.Sequential( nn.Conv2d(F1*3, int((F1*3)/2), (1,int(kernel_size//8)), 
                                              padding='same', bias=bias),
@@ -898,7 +1006,6 @@ class EEGInceptionEncoder(nn.Module):
     def forward(self,x):
         """
         :meta private:
-        
         """
         x = torch.unsqueeze(x,1)
         x1 = self.inc1(x)
@@ -930,7 +1037,7 @@ class EEGInception(nn.Module):
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
+        (output dimensions will be [batch, 1] in this case)
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -947,7 +1054,7 @@ class EEGInception(nn.Module):
 
         Default = 2
     kernel_size: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 64
     pool: int, optional
@@ -963,7 +1070,7 @@ class EEGInception(nn.Module):
 
         Default = 1
     bias: bool, optional 
-        If True, adds a learnable bias to the output. 
+        If True, add a learnable bias to the output. 
         
         Default = True
     batch_momentum: float, optional
@@ -971,11 +1078,13 @@ class EEGInception(nn.Module):
 
         Default = 0.9
     max_depth_norm: float, optional
-        The maximum norm each filter can have in the depthwise block. If None no constraint will be included
+        The maximum norm each filter can have in the depthwise block. 
+        If None no constraint will be included
 
         Default = 1.
     return_logits: bool, optional
-        Whether to return the output as logit or probability. It is suggested to not use False as 
+        Whether to return the output as logit or probability. 
+        It is suggested to not use False as 
         the pytorch crossentropy apply the softmax internally.
 
         Default = True
@@ -987,9 +1096,19 @@ class EEGInception(nn.Module):
       Journal of Neural Engineering 18.4 (2021): 046014.
       https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9311146
     .. [eegincgit] https://github.com/esantamariavazquez/EEG-Inception/blob/main/EEGInception/EEGInception.py
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,64)
+    >>> mdl = models.EEGInception(4,8,64)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
         
     """
-    def __init__(self, nb_classes, Samples, Chans, F1=8, D=2, kernel_size=64, 
+    def __init__(self, nb_classes, Chans, Samples, F1=8, D=2, kernel_size=64, 
                  pool=4, dropRate=0.5, ELUalpha=1.0, bias=True, batch_momentum=0.1, 
                  max_depth_norm=1., return_logits=True):
         super(EEGInception, self).__init__()
@@ -1046,15 +1165,25 @@ class  TinySleepNetEncoder(nn.Module):
     pool: int, optional
         the temporal pooling kernel size.
 
-        Default = 4
+        Default = 8
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage. Must be in [0,1]. 
 
         Default = 0.5
     hidden_lstm: int, optional
         Hidden size of the lstm block.
 
         Default = 128
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,1024)
+    >>> mdl = models.TinySleepNetEncoder(8,32)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 128])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
 
@@ -1130,7 +1259,7 @@ class  TinySleepNet(nn.Module):
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
+        (output dimensions will be [batch, 1] in this case)
     Chans: int
         The number of EEG channels.
     Fs: float
@@ -1146,9 +1275,9 @@ class  TinySleepNet(nn.Module):
     pool: int, optional
         the temporal pooling kernel size.
 
-        Default = 4
+        Default = 8
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage. Must be in [0,1].
 
         Default = 0.5
     batch_momentum: float, optional
@@ -1157,7 +1286,7 @@ class  TinySleepNet(nn.Module):
         Default = 0.9
     max_dense_norm: float, optional
         A value indicating the max norm constraint to apply on the final dense layer. 
-        If None no constraint will be included
+        If None no constraint will be included.
 
         Default = 1.
     hidden_lstm: int, optional
@@ -1165,7 +1294,7 @@ class  TinySleepNet(nn.Module):
 
         Default = 128
     return_logits: bool, optional
-        Whether to return the output as logit or probability.  It is suggested 
+        Whether to return the output as logit or probability. It is suggested 
         to not use False as the pytorch crossentropy apply the softmax internally.
 
         Default = True
@@ -1177,6 +1306,16 @@ class  TinySleepNet(nn.Module):
       Conference of the IEEE Engineering in Medicine & Biology Society (EMBC). IEEE, 2020.
       https://ieeexplore.ieee.org/abstract/document/9176741?casa_token=wl2VSsbgvq8AAAAA:EAzcLSaXXMzu7ghNoZRaRvEsEEAVH2sqQAi4OdMXVfxDPg296haJXJKIkq_4MVMwr-0rXIgU  
     .. [tinygit] https://github.com/akaraspt/tinysleepnet
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,1024)
+    >>> mdl = models.TinySleepNet(4,8,32)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
 
     """
 
@@ -1198,7 +1337,6 @@ class  TinySleepNet(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         x=self.encoder(x)
         x=self.drop3(x) 
@@ -1238,6 +1376,16 @@ class StagerNetEncoder(nn.Module):
         the temporal pooling kernel size.
 
         Default = 4
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.StagerNetEncoder(8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 128])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
         
     """
     
@@ -1281,7 +1429,7 @@ class StagerNet(nn.Module):
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
+        (output dimensions will be [batch, 1] in this case)
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -1314,6 +1462,16 @@ class StagerNet(nn.Module):
     .. [stager] Chambon et al., A deep learning architecture for temporal 
       sleep stage classification using multivariate and multimodal time series, 
       arXiv:1707.03321
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.StagerNet(4,8,512)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
     def __init__(self, nb_classes, Chans, Samples, dropRate = 0.5, 
@@ -1331,7 +1489,6 @@ class StagerNet(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         x = self.encoder(x)
         x = self.drop(x)
@@ -1363,7 +1520,7 @@ class ShallowNetEncoder(nn.Module):
 
         Default = 8
     K1: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 25
     Pool: int, optional
@@ -1380,6 +1537,16 @@ class ShallowNetEncoder(nn.Module):
     In this implementation, the number of channels is an argument. 
     However, in the original paper authors preprocess EEG data by selecting a subset of
     only 21 channels. Since the net is very minimalist, we suggest to follow author notes
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.ShallowNetEncoder(8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 224])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
 
     """
     
@@ -1421,7 +1588,7 @@ class ShallowNet(nn.Module):
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
+        (output dimensions will be [batch, 1] in this case)
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -1440,7 +1607,7 @@ class ShallowNet(nn.Module):
 
         Default = 75
     p: float, optional
-        Dropout probability
+        The dropout probability. Must be in [0,1]
 
         Default= 0.2
     return_logits: bool, optional
@@ -1459,6 +1626,16 @@ class ShallowNet(nn.Module):
     ----------
     .. [shall] Schirrmeister et al., Deep Learning with convolutional neural networks 
       for decoding and visualization of EEG pathology, arXiv:1708.08012
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.ShallowNet(4,8,512)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
     
     """
     def __init__(self, nb_classes, Chans, Samples, F = 40, K1 = 25, Pool = 75,
@@ -1469,12 +1646,12 @@ class ShallowNet(nn.Module):
         self.nb_classes = nb_classes
         self.return_logits = return_logits
         self.encoder   = ShallowNetEncoder(Chans, F = F, K1 = K1, Pool = Pool, p = p)
-        self.Dense     = nn.Linear(F*((Samples-K1+1-Pool)//15 +1), 1 if nb_classes<=2 else nb_classes )
+        self.Dense     = nn.Linear(F*((Samples-K1+1-Pool)//15 +1), 
+                                   1 if nb_classes<=2 else nb_classes )
     
     def forward(self, x):
         """
-        :meta private:
-        
+        :meta private:  
         """
         x = self.encoder(x)
         x=self.Dense(x)
@@ -1493,7 +1670,6 @@ class ShallowNet(nn.Module):
 class BasicBlock1(nn.Module):
     """
     Basic Resnet block 
-
     :meta private:
     """
     def __init__(self, inplanes, planes, kernLength = 7, stride = 1):
@@ -1501,8 +1677,8 @@ class BasicBlock1(nn.Module):
         super(BasicBlock1, self).__init__()
         self.stride = stride
 
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=(1, kernLength), stride=(1, stride), 
-                               padding=(0, kernLength//2), bias=False)
+        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=(1, kernLength), 
+                               stride=(1, stride), padding=(0, kernLength//2), bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
         
@@ -1522,7 +1698,6 @@ class BasicBlock1(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         residual = self.downsample(x)
         # print('residual: ', residual.shape)
@@ -1556,9 +1731,10 @@ class ResNet1DEncoder(nn.Module):
     block: nn.Module, optional
         An nn.Module defining the resnet block.
     Layers: list of 4 int, optional
-        The number of times a resnet is block before doubling the number of filters.
+        A list of integers indicating the number of times a resnet is block 
+        before doubling the number of filters.
 
-        Default = [2,3,4,6]
+        Default = [2,2,2,2]
     inplane: int, optional
         The number of output filters.
     kernLength: int, optional
@@ -1599,11 +1775,21 @@ class ResNet1DEncoder(nn.Module):
     The compatibility between each custom nn.Module given as argument is not checked.
     Design the network carefully.
 
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.ResNet1DEncoder(8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 296])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
     """
     def __init__(self, 
                  Chans, 
                  block: nn.Module = BasicBlock1, 
-                 Layers: "list of 4 ints"=[2, 3, 4, 6], 
+                 Layers: "list of 4 ints"=[2, 2, 2, 2], 
                  inplane: int=16, 
                  kernLength: int=7,
                  addConnection: bool=True,
@@ -1662,7 +1848,6 @@ class ResNet1DEncoder(nn.Module):
     def initialize(self):
         """
         :meta private:
-        
         """
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -1674,7 +1859,6 @@ class ResNet1DEncoder(nn.Module):
     def _make_layer(self, block, planes, blocks, kernLength=7, stride=1, **kwarg):
         """
         :meta private:
-        
         """
 
         strides = [stride] + [1] * (blocks - 1)
@@ -1688,7 +1872,6 @@ class ResNet1DEncoder(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         x = torch.unsqueeze(x, 1)
 
@@ -1724,7 +1907,7 @@ class ResNet1D(nn.Module):
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
+        (output dimensions will be [batch, 1] in this case)
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -1732,16 +1915,21 @@ class ResNet1D(nn.Module):
         (for head initialization).
     block: nn.Module, optional
         An nn.Module defining the resnet block.
-    Layers: list of 4 int, optional
-        The number of times a resnet is block before doubling the number of filters.
 
-        Default = [2,3,4,6]
+        Default: selfeeg.models.BasicBlock1
+    Layers: list of 4 int, optional
+        A list of integers indicating the number of times a resnet is block 
+        before doubling the number of filters.
+
+        Default = [2,2,2,2]
     inplane: int, optional
         The number of output filters.
+
+        Default = 16
     kernLength: int, optional
         The length of the temporal concolutional layer.
 
-        Default = 25
+        Default = 7
     addConnection: bool, optional
         Whether to add a connection from the start of the resnet part to the network head.
         If set to True the output of the following conv2d will be concatenate to the postblock
@@ -1773,6 +1961,8 @@ class ResNet1D(nn.Module):
     classifier: nn.Module, optional
         A custom nn.Module defining the network head. If none is left, 
         a single dense layer is used.
+
+        Default = None
     return_logits: bool, optional
         Whether to return the output as logit or probability.  It is suggested 
         to not use False as the pytorch crossentropy apply the softmax internally.
@@ -1789,12 +1979,19 @@ class ResNet1D(nn.Module):
     .. [res1] Zheng et al., Task-oriented Self-supervised Learning 
       for Anomaly Detection in Electroencephalography
 
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.ResNet1D(4,8,512)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
     """
     
-    def __init__(self, 
-                 nb_classes, 
-                 Chans, 
-                 Samples, 
+    def __init__(self, nb_classes, Chans, Samples, 
                  block: nn.Module=BasicBlock1, 
                  Layers: "list of 4 int" = [0, 0, 0, 0],
                  inplane: int=16, 
@@ -1829,7 +2026,6 @@ class ResNet1D(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         x=self.encoder(x)
         x=self.Dense(x)
@@ -1847,7 +2043,6 @@ class ResNet1D(nn.Module):
 class STNetInceptionBlock(nn.Module):
     """
     :meta private:
-    
     """
     def __init__(self, in_channels, out_channels, kernel_size, bias=False):
         super(STNetInceptionBlock, self).__init__()
@@ -1862,7 +2057,6 @@ class STNetInceptionBlock(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         return self.convBig(x) + self.convMedium(x) + self.convSmall(x)
         
@@ -1872,12 +2066,11 @@ class  STNetEncoder(nn.Module):
     Pytorch implementation of the STNet Encoder. 
     See STNet for some references.
         
-    The expected **input** is a **4D tensor** with 
-    size (Batch x Samples x Grid_width x Grid_width), i.e. the classical 2d matrix
+    The expected **input** is a **4D tensor** with size 
+    (Batch x Samples x Grid_width x Grid_width), i.e. the classical 2d matrix
     with rows as channels and columns as samples is rearranged in a 3d tensor where
-    the first 2 dimensions rearrange the channel dim in a 2d spatial rearrangement
-    and the third is the Sample dim. Check the original paper for a better understanding
-    of the input
+    the first is the Sample dimension and the last 2 dimensions are the channel dim rearrange
+    in a 2d grid. Check the original paper for a better understanding of the input
 
     Parameters
     ----------
@@ -1890,15 +2083,25 @@ class  STNetEncoder(nn.Module):
     kernLength: int, optional
         The length of the concolutional layer.
 
-        Default = 25
+        Default = 5
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage. Must be in [0,1] 
 
         Default = 0.5
     bias: bool, optional 
         If True, adds a learnable bias to the convolutional layers. 
         
         Default = True
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,128,9,9)
+    >>> mdl = models.STNetEncoder(128)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 1296])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
 
     """
 
@@ -1926,9 +2129,7 @@ class  STNetEncoder(nn.Module):
     def forward(self,x):
         """
         :meta private:
-        
         """
-
         x = self.conv1(x)
         x = self.selu(x)
         x = self.drop1(x)
@@ -1954,22 +2155,21 @@ class  STNet(nn.Module):
     Paper can be found here [stnet]_ .
     Another implementation [stnetgit]_ .
         
-    The expected **input** is a **4D tensor** with 
-    size (Batch x Samples x Grid_width x Grid_width), i.e. the classical 2d matrix
+    The expected **input** is a **4D tensor** with size 
+    (Batch x Samples x Grid_width x Grid_width), i.e. the classical 2d matrix
     with rows as channels and columns as samples is rearranged in a 3d tensor where
-    the first 2 dimensions rearrange the channel dim in a 2d spatial rearrangement
-    and the third is the Sample dim. Check the original paper for a better understanding
-    of the input
+    the first is the Sample dimension and the last 2 dimensions are the channel dim rearrange
+    in a 2d grid. Check the original paper for a better understanding of the input
 
     Parameters
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
+        (output dimensions will be [batch, 1] in this case)
     Samples: int
         The sample length. It will be used to calculate the embedding size 
     grid_size: int, optional
-        The grid size, i.e. the size of the first 2 dimensions of the input array.
+        The grid size, i.e. the size of the EEG channel 2D grid.
         
         Default = 9
     F: int, optional
@@ -1981,7 +2181,7 @@ class  STNet(nn.Module):
 
         Default = 5
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage. Must be in [0,1].
 
         Default = 0.5
     bias: bool, optional 
@@ -2003,6 +2203,16 @@ class  STNet(nn.Module):
     .. [stnet] https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9763358
     .. [stnetgit] https://github.com/torcheeg/torcheeg/blob/v1.1.0/torcheeg/models/cnn/stnet.py#L42-L135
 
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,128,9,9)
+    >>> mdl = models.STNet(4,128)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
     """
     def __init__(self, nb_classes, Samples, grid_size=9, F = 256, kernlength=5, dropRate=0.5, 
                  bias=True, dense_size=1024, return_logits=True
@@ -2023,7 +2233,6 @@ class  STNet(nn.Module):
     def forward(self, x):
         """
         :meta private:
-        
         """
         x=self.encoder(x)
         x=self.drop3(x) 
@@ -2055,7 +2264,6 @@ class EEGSymInput(nn.Module):
     def forward(self,x):
         """
         :meta private:
-        
         """
         # expand dimension: 
         # new tensor will be 5D with ( batch x filter x hemisphere x channel x samples )
@@ -2110,7 +2318,6 @@ class EEGSymInception(nn.Module):
     def forward(self,x):
         """
         :meta private:
-        
         """
         x1 = self.branch1(x)
         x2 = self.branch2(x)
@@ -2157,7 +2364,6 @@ class EEGSymResBlock(nn.Module):
     def forward(self,x):
         """
         :meta private:
-        
         """
         x1 = self.temporal1(x)
         x2 = self.temporal2(x)
@@ -2177,19 +2383,20 @@ class  EEGSymEncoder(nn.Module):
     However Channel order is expected to be symmetrical along lateral channels to perform
     the reshaping operation correctly. For instance, if the first channel index refers to 
     the FP1 channel, then the last must refer to the other hemisphere counterpart, i.e. FP2.
+    See the original paper to further understand this operation.
 
     Parameters
     ----------
-    Sample: int
-        The number of EEG Samples.
     Chans: int
         The number of EEG channels.
+    Sample: int
+        The number of EEG Samples.
     Fs: float
         The sampling frequency. 
     scales_time: tuple of 3 float, optional
         The portion of EEG (in milliseconds) the short, medium and long temporal convolutional
-        layers must cover. kernel size will be automatically calculated based on the sampling 
-        rate given.
+        layers must cover. kernel size will be automatically calculated based on the given 
+        sampling rate
         
         Default = (500,250,125)
     lateral_chans: int, optional
@@ -2221,13 +2428,23 @@ class  EEGSymEncoder(nn.Module):
         Default = True
     residual: bool, optional
         Whether to add a residual block after the inception block. 
-        Currently not implemented
+        Currently not implemented, will be added in future releases
         
         Default = True
 
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,1024)
+    >>> mdl = models.EEGSymEncoder(8,1024,64)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 36])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
     """
 
-    def __init__(self, Samples, Chans, Fs, scales_time=(500, 250, 125),
+    def __init__(self, Chans, Samples, Fs, scales_time=(500, 250, 125),
                  lateral_chans=3, first_left=True, F = 8, pool=2, dropRate=0.5, 
                  ELUalpha=1.0, bias=True, residual=True
                 ):
@@ -2340,7 +2557,6 @@ class  EEGSymEncoder(nn.Module):
     def forward(self,x):
         """
         :meta private:
-        
         """
         x = self.symInput(x)
         x = self.inception1(x)
@@ -2385,11 +2601,11 @@ class EEGSym(nn.Module):
     ----------
     nb_classes: int
         The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1])
-    Samples: int
-        The number of EEG Samples.
+        (output dimensions will be [batch, 1] in this case)
     Chans: int
         The number of EEG channels.
+    Samples: int
+        The number of EEG Samples.
     Fs: float
         The sampling frequency. 
     scales_time: tuple of 3 float, optional
@@ -2442,22 +2658,31 @@ class EEGSym(nn.Module):
     .. [eegsym] https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9807323
     .. [eegsymgit] https://github.com/Serpeve/EEGSym/blob/main/EEGSym_architecture.py
 
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,1024)
+    >>> mdl = models.EEGSym(4,8,1024,64)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
     """
-    def __init__(self, nb_classes, Samples, Chans, Fs, scales_time=(500, 250, 125),
+    def __init__(self, nb_classes, Chans, Samples, Fs, scales_time=(500, 250, 125),
                  lateral_chans=3, first_left=True, F = 8, pool=2, dropRate=0.5, 
                  ELUalpha=1.0, bias=True, residual=True, return_logits=True):
         super(EEGSym, self).__init__()
         self.nb_classes    = nb_classes
         self.return_logits = return_logits
-        self.encoder       = EEGSymEncoder(Samples, Chans, Fs, scales_time, lateral_chans, 
+        self.encoder       = EEGSymEncoder(Chans, Samples, Fs, scales_time, lateral_chans, 
                                            first_left, F, pool, dropRate, ELUalpha, 
                                            bias, residual)
         self.Dense  = nn.Linear( int((F*9)/2), 1 if nb_classes<=2 else nb_classes)
     
     def forward(self, x):
         """
-        :meta private:
-        
+        :meta private: 
         """
         x=self.encoder(x)
         x=self.Dense(x)
