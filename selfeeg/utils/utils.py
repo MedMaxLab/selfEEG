@@ -8,7 +8,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 import torch
 
-__all__ = ['create_dataset',
+__all__ = ['check_models',
+           'create_dataset',
            'get_subarray_closest_sum',
            'RangeScaler',
            'scale_range_soft_clip',
@@ -541,11 +542,11 @@ def create_dataset(folder_name: str='Simulated_EEG',
         3. C = session ID
         4. D = trial ID
 
-    In total, ``create_dataset`` will generate files:
+    In total, ``create_dataset`` will generate files associated to:
     
         1. 5 datasets (200 files per dataset).
         2. 40 subjects per dataset.
-        3. 5 session per subject.
+        3. 5 sessions per subject.
         4. 1 trial per session.
 
     All files will store a dictionary with two keys:
@@ -553,7 +554,7 @@ def create_dataset(folder_name: str='Simulated_EEG',
         1. 'data' = the array with random length and given channels (channels in column dimension)
         2. 'label' = an integer with a random binary label (0=normal, 1=abnormal)
 
-    EEG will report values in uV, with range 
+    EEG files have values in uV, with range at most in [-550,550] uV.
 
     Parameters
     ----------
@@ -582,6 +583,13 @@ def create_dataset(folder_name: str='Simulated_EEG',
     -------
     classes: ArrayLike
         An array with the generated label. Index association is based on the file sorted by names.
+
+    Example
+    -------
+    >>> import selfeeg.utils
+    >>> import glob
+    >>> utils.create_dataset()
+    >>> print(len(glob.glob('Simulated_EEG/*'))==1000) #shoud return True
     
     """
     # Various checks
@@ -637,8 +645,36 @@ def create_dataset(folder_name: str='Simulated_EEG',
         return classes
 
 
-#def check_models(model1, model2):
-#    for p1, p2 in zip(model1.parameters(), model2.parameters()):
-#        if p1.data.ne(p2.data).sum() > 0:
-#            return False
-#    return True
+def check_models(model1: torch.nn.Module, 
+                 model2: torch.nn.Module) -> bool:
+    """
+    ``check_models`` checks that two nn.Modules are equal.
+
+    Parameters
+    ----------
+    model1: nn.Module
+        The first model to compare
+    model2: nn.Module
+        The second model to compare
+
+    Returns
+    -------
+    equals: bool
+        A boolean stating if the models are equal or not.
+
+    Example
+    -------
+    import selfeeg.models
+    model1 = models.EEGNet(4,8,512)
+    model2 = models.EEGNet(4,8,512)
+    print( utils.utils.check_models(model1,model2)) # Should return False
+    model2.load_state_dict(model1.state_dict())
+    utils.check_models(model1,model2)  # Should return False
+    
+    """
+    for p1, p2 in zip(model1.parameters(), model2.parameters()):
+        if p1.data.ne(p2.data).sum() > 0:
+            return False
+    return True
+
+
