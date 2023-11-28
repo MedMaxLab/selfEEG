@@ -2,16 +2,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ =['ConstrainedConv2d', 'ConstrainedDense','DepthwiseConv2d', 'SeparableConv2d', 
-          'EEGNetEncoder', 'EEGNet', 
-          'DeepConvNetEncoder', 'DeepConvNet',
-          'EEGInceptionEncoder', 'EEGInception',
-          'TinySleepNetEncoder', 'TinySleepNet', 
-          'StagerNetEncoder', 'StagerNet', 
-          'ShallowNetEncoder', 'ShallowNet', 
-          'BasicBlock1', 'ResNet1DEncoder', 'ResNet1D',
-          'STNetEncoder', 'STNet',
-          'EEGSymEncoder', 'EEGSym'
+__all__ =['BasicBlock1',
+          'ConstrainedConv2d',
+          'ConstrainedDense',
+          'DeepConvNet','DeepConvNetEncoder',
+          'DepthwiseConv2d',
+          'EEGInception', 'EEGInceptionEncoder',
+          'EEGNet', 'EEGNetEncoder',
+          'EEGSym','EEGSymEncoder',
+          'ResNet1D','ResNet1DEncoder',
+          'SeparableConv2d',
+          'ShallowNet','ShallowNetEncoder',
+          'StagerNet','StagerNetEncoder',
+          'STNet','STNetEncoder',
+          'TinySleepNet','TinySleepNetEncoder'
          ]
 
 

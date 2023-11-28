@@ -155,12 +155,12 @@ def GetEEGPartitionNumber(EEGpath: str,
     >>> import selfeeg.utils
     >>> utils.create_dataset()
     >>> def loadEEG(path):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x = EEG['data']
-    >>>     return x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x = EEG['data']
+    ...     return x
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                   overlap=0.3, load_function=loadEEG )
+    ...                                   overlap=0.3, load_function=loadEEG )
     >>> EEGlen.head()
 
     References
@@ -492,12 +492,12 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
     >>> import selfeeg.utils
     >>> labels = utils.create_dataset()
     >>> def loadEEG(path):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x = EEG['data']
-    >>>     return x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x = EEG['data']
+    ...     return x
     >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                    overlap=0.3, load_function=loadEEG )
+    ...                                    overlap=0.3, load_function=loadEEG )
     >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 split
     >>>  dl.check_split(EEGlen,EEGsplit) #will return 60/20/20
             
@@ -980,12 +980,12 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     >>> import selfeeg.utils
     >>> labels = utils.create_dataset()
     >>> def loadEEG(path):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x = EEG['data']
-    >>>     return x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x = EEG['data']
+    ...     return x
     >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                    overlap=0.3, load_function=loadEEG )
+    ...                                    overlap=0.3, load_function=loadEEG )
     >>>  EEGsplit = dl.GetEEGSplitTableKfold(EEGlen, seed=1234) #default 60/20 train/test split
     >>>  dl.check_split(EEGlen,dl.getsplit(EEGsplit,1)) # will return 0.72/0.08/0.2 ratios
             
@@ -1098,17 +1098,16 @@ def getsplit(split_table: pd.DataFrame, split: int) -> pd.DataFrame:
     Example
     -------
     >>> import pickle
-    >>> import pandas as pd
     >>> import selfeeg.dataloading as dl
     >>> import selfeeg.utils
     >>> labels = utils.create_dataset()
     >>> def loadEEG(path):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x = EEG['data']
-    >>>     return x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x = EEG['data']
+    ...     return x
     >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                    overlap=0.3, load_function=loadEEG )
+    ...                                    overlap=0.3, load_function=loadEEG )
     >>>  EEGsplit = dl.GetEEGSplitTableKfold(EEGlen) #default 60/20 train/test split
     >>>  EEGsplit1 = dl.getsplit(EEGsplit,1) #will extract first CV split
     >>>  EEGsplit1.head()
@@ -1159,17 +1158,16 @@ def check_split(EEGlen: pd.DataFrame,
     Example
     -------
     >>> import pickle
-    >>> import pandas as pd
     >>> import selfeeg.dataloading as dl
     >>> import selfeeg.utils
     >>> labels = utils.create_dataset()
     >>> def loadEEG(path):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x = EEG['data']
-    >>>     return x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x = EEG['data']
+    ...     return x
     >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                    overlap=0.3, load_function=loadEEG )
+    ...                                    overlap=0.3, load_function=loadEEG )
     >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen) #default 60/20/20 ratio
     >>>  ratios = dl.check_split(EEGlen, EEGsplit, return_ratio=True) # will return 0.6/0.2/0.2
     >>>  print(ratios['train_ratio'], ratios['val_ratio'], ratios['test_ratio'])
@@ -1357,17 +1355,16 @@ class EEGDataset(Dataset):
     Example
     -------
     >>> import pickle
-    >>> import pandas as pd
     >>> import selfeeg.dataloading as dl
     >>> import selfeeg.utils
     >>> labels = utils.create_dataset()
     >>> def loadEEG(path):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x = EEG['data']
-    >>>     return x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x = EEG['data']
+    ...     return x
     >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                    overlap=0.3, load_function=loadEEG )
+    ...                                    overlap=0.3, load_function=loadEEG )
     >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 ratio
     >>>  TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,2,0.3],load_function=loadEEG)
     >>>  print(len(TrainSet))
@@ -1623,13 +1620,13 @@ class EEGsampler(Sampler):
     >>> import selfeeg.utils
     >>> labels = utils.create_dataset()
     >>> def loadEEG(path):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x = EEG['data']
-    >>>     return x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x = EEG['data']
+    ...     return x
     >>> random.seed(1234)
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2, 
-    >>>                                   overlap=0.3, load_function=loadEEG )
+    ...                                   overlap=0.3, load_function=loadEEG )
     >>> EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 ratio
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,2,0.3],load_function=loadEEG)
     >>> smplr = EEGsampler(TrainSet, 16, 8)

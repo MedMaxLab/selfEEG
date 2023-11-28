@@ -5,18 +5,21 @@ import numpy as np
 from typing import Any, Dict
 from numpy.typing import ArrayLike
 
-__all__ = ['StaticSingleAug', 'DynamicSingleAug', 'SequentialAug', 'RandomAug']
+__all__ = ['DynamicSingleAug','RandomAug','SequentialAug','StaticSingleAug']
 
 class StaticSingleAug():
     """
-    ``StaticSingleAug`` is a class designed to perform a single data augmentation 
+    ``StaticSingleAug`` performs a single data augmentation 
     where the optional arguments are previously set and given during initialization. 
     No random choice of the arguments is performed. The class accepts multiple set of 
     optional arguments. In this case they are called individually at each class
-    call, in a sequential manner. This means that the first call use the first set of 
+    call, in a sequential and cyclic manner. This means that the first call use the first set of 
     arguments, the second will use the second set of arguments, and so on. 
     When the last set of arguments is used, the class will restart from the
     first set of arguments.
+
+    To perform an augmentation, simply call the instantiated class 
+    (see provided example or check the introductory notebook)
 
     Parameters
     ----------
@@ -27,8 +30,6 @@ class StaticSingleAug():
         The set of arguments to pass to the augmentation function. It can be:
         
             1. None. In this case the default parameters of the function are used. 
-            Remember that if there are other non optional arguments, the call 
-            will throw an error.
             
             2. list. In this case the function is called with the sintax 
             ``augmentation(x, *arguments)``
@@ -36,12 +37,12 @@ class StaticSingleAug():
             3. dict. In this case the function is called with the sintax 
             ``augmentation(x, **arguments)``
             
-            4. a list of dict or lists. This is a particular case where multiple combination 
-            of arguments is given. Each element of the list must be a list or a dict 
-            with the specific argument combination. Every time ``PerformAugmentation`` , 
+            4. a list of dicts or lists. This is a particular case where multiple combinations 
+            of arguments are given. Each element of the list must be a list or a dict 
+            with the specific argument combination. Every time ``PerformAugmentation`` is called, 
             one of the given combination is used to perform the data augmentation. The list
-            is followed sequentially with repetion, meaning that the first call use the first 
-            set of arguments of the list, the second the second set of arguments, and so on. 
+            is followed sequentially with repetion, meaning that the first call uses the first 
+            set of arguments of the list, the second call uses the second set of arguments, and so on. 
             When the last element of the list is used, the function will restart scrolling
             the given list. 
         
@@ -50,7 +51,34 @@ class StaticSingleAug():
     Methods
     -------
     PerformAugmentation(X: ArrayLike)
-        Apply the augmentation with the given arguments
+        Apply the augmentation with the given arguments. __call__() will call this method.
+
+    Example
+    -------
+    >>> import selfeeg.augmentation as aug
+    >>> import torch
+    >>> BatchEEG = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*np.pi,1024))
+    >>> Fs = 64
+    >>> Aug_eye = aug.StaticSingleAug(aug.add_eeg_artifact, 
+    ...                               [{'Fs': Fs, 'artifact': 'eye', 'amplitude': 0.5, 'batch_equal': False},
+    ...                                {'Fs': Fs, 'artifact': 'eye', 'amplitude': 1.0, 'batch_equal': False}
+    ...                               ]
+    ...                              )
+    >>> BatchEEGaug1 = Aug_eye(BatchEEG)
+    >>> BatchEEGaug2 = Aug_eye(BatchEEG)
+
+    plot the augmentations (require matplotlib to be installed)
+    
+    >>> import matplotlib.pyplot as plt
+    >>> plt.style.use('seaborn-v0_8-white')
+    >>> plt.rcParams['figure.figsize'] = (15.0, 6.0)
+    >>> plt.plot(BatchEEG[0,0],linewidth=2.5)
+    >>> plt.plot(BatchEEGaug1[0,0])
+    >>> plt.plot(BatchEEGaug2[0,0])
+    >>> plt.tick_params(axis='both', which='major', labelsize=12)
+    >>> plt.title('Example of addition of EEG eye blink artifact', fontsize=15)
+    >>> plt.legend(['original sample', 'augmented sample amp 0.5', 'augmented sample amp 1'])
+    >>> plt.show()
     
     """
     
@@ -75,10 +103,6 @@ class StaticSingleAug():
     def PerformAugmentation(self, 
                             X: ArrayLike 
                            ) -> ArrayLike:
-        """
-        :meta private:
-        
-        """
         
         if self.multipleStaticArguments:
             argument=self.arguments[self.counter]
@@ -107,9 +131,12 @@ class StaticSingleAug():
         
 class DynamicSingleAug():
     """
-    ``DynamicSingleAug`` is a class designed to perform a single data augmentation 
-    where the optional arguments are chosen at random from a given discrete set or a 
-    given range. Random choice of the arguments is performed at each call.
+    ``DynamicSingleAug`` performs a single data augmentation 
+    where the optional arguments are chosen at random from a given discrete or a continuous range
+    of values. Random choice of the arguments is performed at each call.
+
+    To perform an augmentation, simply call the instantiated class 
+    (see provided example or check the introductory notebook)
         
     Parameters
     ----------
@@ -122,7 +149,7 @@ class DynamicSingleAug():
         
             - Keys as string with the name of one of the optional arguments.
             - Values as lists of elements to be randomly chosen. 
-              Single elements are accepted if a specific value for an argument needs to be set. 
+              Single elements are allowed if a specific value for an argument needs to be set. 
               In this case it's not mandatory to give it as list, as automatic conversion will 
               be performed internally.
             
@@ -139,15 +166,15 @@ class DynamicSingleAug():
     range_type: dict or list, optional
         A dictionary or a list specifying if values in range_arg must be given to the 
         augmentation function as integers. If given as a dict, keys must be the same as 
-        the one of range_arg. If given as a list, the length must be the same of range_arg. 
+        the one of range_arg argument. If given as a list, the length must be the same of range_arg. 
         In particular:
             
             1. if range_type is a **dict**:
             
                 - Keys must be the ones in range_arg
                 - Values must be single element specifying if the argument must be an integer. 
-                  In this case, use a boolean True or a string 'int' to specify if the argument
-                  must be converted to an int.
+                  In this case, use a **boolean True** or a **string 'int'** to specify if the argument
+                  must be converted to an integer.
                 
             2. if range_arg is a **list**:
                 
@@ -162,13 +189,41 @@ class DynamicSingleAug():
 
     Methods
     -------
-    PerformAugmentation(X: ArrayLike)
-        Apply the augmentation with the given arguments
+    PerformAugmentation(x: ArrayLike)
+        Apply the augmentation with the given arguments. __call__() will call this method.
 
     Note
     ----
     At least one of **discrete_arg** or **range_arg** arguments must be given, 
-    otherwise simply use a StaticSingleAug
+    the class simply suggest to use ``StaticSingleAug``.
+
+    Example
+    -------
+    >>> import selfeeg.augmentation as aug
+    >>> import torch
+    >>> BatchEEG = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*np.pi,1024))
+    >>> Aug_warp = aug.DynamicSingleAug(aug.warp_signal, 
+    ...                                 discrete_arg = {'batch_equal': [True, False]},
+    ...                                 range_arg= {'segments': [5,15], 'stretch_strength': [1.5,2.5],
+    ...                                             'squeeze_strength': [0.4,2/3]},
+    ...                                 range_type={'segments': True, 'stretch_strength': False,
+    ...                                             'squeeze_strength': False}
+    ...                                )
+    >>> BatchEEGaug1 = Aug_warp(BatchEEG)
+    >>> BatchEEGaug2 = Aug_warp(BatchEEG)
+
+    plot the augmentations (require matplotlib to be installed)
+    
+    >>> import matplotlib.pyplot as plt
+    >>> plt.style.use('seaborn-v0_8-white')
+    >>> plt.rcParams['figure.figsize'] = (15.0, 6.0)
+    >>> plt.plot(BatchEEG[0,0],linewidth=2.5)
+    >>> plt.plot(BatchEEGaug1[0,0])
+    >>> plt.plot(BatchEEGaug2[0,0])
+    >>> plt.tick_params(axis='both', which='major', labelsize=12)
+    >>> plt.title('Example of dynamic aug with warp augmentation', fontsize=15)
+    >>> plt.legend(['original sample', 'augmented sample 1', 'augmented sample 2'])
+    >>> plt.show()
     
     """
     def __init__(self, 
@@ -244,10 +299,6 @@ class DynamicSingleAug():
     def PerformAugmentation(self, 
                             X: ArrayLike
                            ) -> ArrayLike:
-        """
-        :meta private:
-        
-        """
         arguments={i:None for i in self.given_arg}
         if self.discrete_arg!=None:
             for i in self.discrete_arg:
@@ -278,23 +329,62 @@ class DynamicSingleAug():
     
 class SequentialAug():
     """
-    ``SequentialAug`` apply a composition of augmentations in a sequential manner.
-    No random choices between the given list of augmentation is performes, just
-    pure call of all the augmentation in the specified order
+    ``SequentialAug`` apply a sequence of augmentations in a specified order.
+    No random choices between the given list of augmentation is performed, just
+    pure call of all the augmentation in the specified order.
+
+    To perform an augmentation, simply call the instantiated class 
+    (see provided example or check the introductory notebook)
 
     Parameters
     ----------
     *augmentations: "callable objects"
         The sequence of augmentations to apply at each call. 
         It can be any callable object, but the first argument to pass must be the element 
-        to augment.
-        We suggest to give a sequence of ``StaticSingleAug`` or ``DynamicSingleAug`` 
+        to augment. We suggest to give a sequence of ``StaticSingleAug`` or ``DynamicSingleAug`` 
         instantiations.
+
+    Note
+    ----
+    If you provide an augmentation implemented outside of this this library be sure that the
+    function will return a single output with the element to pass to the next augmentation function
+    of the list.
         
     Methods
     -------
     PerformAugmentation(X: ArrayLike)
-        Apply the augmentations with the given arguments and specified order
+        Apply the augmentations with the given arguments and specified order. __call__() will call this method.
+
+
+    Example
+    -------
+    >>> import selfeeg.augmentation as aug
+    >>> import torch
+    >>> BatchEEG = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*np.pi,1024))
+    >>> Aug_eye = aug.StaticSingleAug(aug.add_eeg_artifact,{'Fs': 64, 'artifact': 'eye', 'amplitude': 0.5})
+    >>> Aug_warp = aug.DynamicSingleAug(aug.warp_signal, 
+    ...                                 discrete_arg = {'batch_equal': [True, False]},
+    ...                                 range_arg= {'segments': [5,15], 'stretch_strength': [1.5,1.8],
+    ...                                             'squeeze_strength': [0.5,2/3]},
+    ...                                 range_type={'segments': True, 'stretch_strength': False,
+    ...                                             'squeeze_strength': False}
+    ...                                )
+    >>> Sequence1= aug.SequentialAug(Aug_eye, Aug_warp)
+    >>> BatchEEGaug1 = Sequence1(BatchEEG)
+    >>> BatchEEGaug2 = Sequence1(BatchEEG)
+
+    plot the augmentations (require matplotlib to be installed)
+    
+    >>> import matplotlib.pyplot as plt
+    >>> plt.style.use('seaborn-v0_8-white')
+    >>> plt.rcParams['figure.figsize'] = (15.0, 6.0)
+    >>> plt.plot(BatchEEG[0,0],linewidth=2.5)
+    >>> plt.plot(BatchEEGaug1[0,0])
+    >>> plt.plot(BatchEEGaug2[0,0])
+    >>> plt.tick_params(axis='both', which='major', labelsize=12)
+    >>> plt.title('Example of Sequential aug with eye blink artifact and warp augmentation', fontsize=15)
+    >>> plt.legend(['original sample', 'augmented sample 1', 'augmented sample 2'])
+    >>> plt.show()
         
     """
     
@@ -304,11 +394,6 @@ class SequentialAug():
     def PerformAugmentation(self, 
                             X: ArrayLike
                            ) -> ArrayLike:
-        """
-        :meta private:
-        
-        """
-        
         Xaugs = self.augs[0](X)
         for i in range(1,len(self.augs)):
             Xaugs = self.augs[i](Xaugs)
@@ -320,6 +405,9 @@ class SequentialAug():
 class RandomAug():
     """
     ``RandomAug`` apply an augmentations selected randomly from a given set.
+
+    To perform an augmentation, simply call the instantiated class 
+    (see provided example or check the introductory notebook)
 
     Parameters
     ----------
@@ -338,7 +426,47 @@ class RandomAug():
     Methods
     -------
     PerformAugmentation(X: ArrayLike)
-        Apply the augmentations with the given arguments and specified order
+        Apply a random augmentation from the given list of augmenters. __call__() will call this method.
+
+    Example
+    -------
+    >>> import selfeeg.augmentation as aug
+    >>> import numpy as np
+    >>> import torch
+    >>> BatchEEG = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*np.pi,1024))
+    >>> Aug_eye = aug.StaticSingleAug(aug.add_eeg_artifact,{'Fs': Fs, 'artifact': 'eye', 'amplitude': 0.5})
+    >>> Aug_warp = aug.DynamicSingleAug(aug.warp_signal, 
+    ...                                 discrete_arg = {'batch_equal': [True, False]},
+    ...                                 range_arg= {'segments': [5,15], 'stretch_strength': [1.5,1.8],
+    ...                                             'squeeze_strength': [0.5,2/3]},
+    ...                                 range_type={'segments': True, 'stretch_strength': False,
+    ...                                             'squeeze_strength': False}
+    ...                                )
+    >>> Sequence2= aug.RandomAug(Aug_eye, Aug_warp, p=[0.7, 0.3])
+    >>> BatchEEGaug1 = Sequence2(BatchEEG)
+    >>> BatchEEGaug2 = Sequence2(BatchEEG)
+
+    plot the augmentations (require matplotlib to be installed)
+    
+    >>> import matplotlib.pyplot as plt
+    >>> # simulate 10000 augmentations calls this line is used in RandomAug to choose the index of the list 
+    >>> # of augmentations to call. Note that we have added the size argument to make computation faster, in 
+    >>> # the class only 1 value is returned
+    >>> idx=np.random.choice(Sequence2.nprange_, size= 1000, p=Sequence2.p)
+    >>> counts=[(1000-len(np.nonzero(idx)[0]))/1000, len(np.nonzero(idx)[0])/1000]
+    >>> plt.subplot(1,3,(1,2))
+    >>> plt.plot(BatchEEG[0,0],linewidth=2.5)
+    >>> plt.plot(BatchEEGaug1[0,0])
+    >>> plt.plot(BatchEEGaug2[0,0])
+    >>> plt.tick_params(axis='both', which='major', labelsize=12)
+    >>> plt.title('Example of Random aug between eye blinking artifact and warp', fontsize=15)
+    >>> plt.legend(['original sample', 'augmented sample 1', 'augmented sample 2'],loc='upper left')
+    >>> plt.subplot(1,3,3)
+    >>> plt.bar(['eye blinking', 'warp'],counts)
+    >>> plt.tick_params(axis='both', which='major', labelsize=12)
+    >>> plt.title('barplot of chosen augmentations', fontsize=15)
+    >>> plt.ylabel('probability',fontsize=12)
+    >>> plt.show()
         
     """
     def __init__(self,*augmentations, p=None):
@@ -355,10 +483,6 @@ class RandomAug():
             
      
     def PerformAugmentation(self, X):
-        """
-        :meta private:
-        
-        """
         if self.p is None:
             idx=random.randint(0,self.N-1)
         else:

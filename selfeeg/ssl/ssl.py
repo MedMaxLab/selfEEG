@@ -13,8 +13,16 @@ from ..losses import losses as Loss
 from ..dataloading import EEGsampler
 from typing import Any, Callable, Iterable, TypeVar, Generic, Sequence, List, Optional, Union
 
-__all__ = ['EarlyStopping', 'SSL_Base', 'SimCLR', 'SimSiam', 'MoCo', 
-           'BYOL', 'Barlow_Twins', 'VICReg', 'evaluateLoss', 'fine_tune']
+__all__ = ['Barlow_Twins',
+           'BYOL',
+           'EarlyStopping',
+           'evaluateLoss',
+           'fine_tune',
+           'MoCo',
+           'SimCLR',
+           'SimSiam',
+           'SSL_Base',
+           'VICReg']
 
 def Default_augmentation(x):
     """
@@ -211,18 +219,18 @@ def fine_tune(model: nn.Module,
     >>> import selfeeg.dataloading as dl
     >>> import selfeeg.models
     >>> def loadEEG(path, return_label=False):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x , y= EEG['data'], EEG['label']
-    >>>     return (x, y) if return_label else x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x , y= EEG['data'], EEG['label']
+    ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
-    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> random.seed(1234)
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
     >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
     >>> ratios = dl.check_split(EEGlen,EEGsplit, return_ratio=True)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit, [128,2,0.3], 'train', True, loadEEG, 
-    >>>                              optional_load_fun_args=[True], label_on_load=True)
+    ...                              optional_load_fun_args=[True], label_on_load=True)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> shanet= models.ShallowNet(2, 8, 256)
     >>> loss_info = ssl.fine_tune(shanet, TrainLoader, loss_func=loss_fineTuning)
@@ -421,24 +429,24 @@ class EarlyStopping:
     >>> import selfeeg.models
     >>> utils.create_dataset()
     >>> def loadEEG(path, return_label=False):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x , y= EEG['data'], EEG['label']
-    >>>     return (x, y) if return_label else x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x , y= EEG['data'], EEG['label']
+    ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
-    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
     >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
     >>> ratios = dl.check_split(EEGlen,EEGsplit, return_ratio=True)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit, [128,2,0.3], 'train', True, loadEEG, 
-    >>>                              optional_load_fun_args=[True], label_on_load=True)
+    ...                              optional_load_fun_args=[True], label_on_load=True)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> shanet= models.ShallowNet(2, 8, 256)
     >>> Stopper = ssl.EarlyStopping( patience=1, monitored= 'train' )
     >>> Stopper.rec_best_weights(shanet) # little hack to force early stop correctly
     >>> Stopper.best_loss = 0 # little hack to force early stop correctly
     >>> loss_info = ssl.fine_tune(shanet, TrainLoader, 2, EarlyStopper=Stopper, 
-    >>>                           loss_func=loss_fineTuning) 
+    ...                           loss_func=loss_fineTuning) 
     >>> # it should stop training and print "no improvement after 1 epochs. Training stopped."
     
     References
@@ -597,10 +605,10 @@ class SSL_Base(nn.Module):
     >>> print(base.evaluate_loss(losses.SimCLR_loss, [a])) # should return 9.4143
     >>> enc2 = base.get_encoder()
     >>> def check_models(model1, model2):
-    >>>     for p1, p2 in zip(model1.parameters(), model2.parameters()):
-    >>>         if p1.data.ne(p2.data).sum() > 0:
-    >>>             return False
-    >>>     return True
+    ...     for p1, p2 in zip(model1.parameters(), model2.parameters()):
+    ...         if p1.data.ne(p2.data).sum() > 0:
+    ...             return False
+    ...     return True
     >>> print(check_models(base.encoder,enc2)) # should return True
     >>> # assert that they are different objects
     >>> enc2.conv1.weight = torch.nn.Parameter(enc2.conv1.weight*10)
@@ -778,15 +786,15 @@ class SimCLR(SSL_Base):
     >>> import selfeeg.dataloading as dl
     >>> utils.create_dataset()
     >>> def loadEEG(path, return_label=False):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x , y= EEG['data'], EEG['label']
-    >>>     return (x, y) if return_label else x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x , y= EEG['data'], EEG['label']
+    ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
-    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
-    >>>                              overlap=0.3, load_function=loadEEG)
+    ...                              overlap=0.3, load_function=loadEEG)
     >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
@@ -1239,15 +1247,15 @@ class SimSiam(SSL_Base):
     >>> import selfeeg.dataloading as dl
     >>> utils.create_dataset()
     >>> def loadEEG(path, return_label=False):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x , y= EEG['data'], EEG['label']
-    >>>     return (x, y) if return_label else x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x , y= EEG['data'], EEG['label']
+    ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
     >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
-    >>>                              overlap=0.3, load_function=loadEEG)
+    ...                              overlap=0.3, load_function=loadEEG)
     >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
@@ -1740,15 +1748,15 @@ class MoCo(SSL_Base):
     >>> import selfeeg.dataloading as dl
     >>> utils.create_dataset()
     >>> def loadEEG(path, return_label=False):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x , y= EEG['data'], EEG['label']
-    >>>     return (x, y) if return_label else x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x , y= EEG['data'], EEG['label']
+    ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
-    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
-    >>>                              overlap=0.3, load_function=loadEEG)
+    ...                              overlap=0.3, load_function=loadEEG)
     >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
@@ -2360,16 +2368,16 @@ class BYOL(SSL_Base):
     >>> import selfeeg.dataloading as dl
     >>> utils.create_dataset()
     >>> def loadEEG(path, return_label=False):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x , y= EEG['data'], EEG['label']
-    >>>     return (x, y) if return_label else x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x , y= EEG['data'], EEG['label']
+    ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
-    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> # usual pipeline to construct the dataloader
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
-    >>>                              overlap=0.3, load_function=loadEEG)
+    ...                              overlap=0.3, load_function=loadEEG)
     >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
@@ -2857,16 +2865,16 @@ class Barlow_Twins(SimCLR):
     >>> import selfeeg.dataloading as dl
     >>> utils.create_dataset()
     >>> def loadEEG(path, return_label=False):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x , y= EEG['data'], EEG['label']
-    >>>     return (x, y) if return_label else x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x , y= EEG['data'], EEG['label']
+    ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
-    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> # usual pipeline to construct the dataloader
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
-    >>>                              overlap=0.3, load_function=loadEEG)
+    ...                              overlap=0.3, load_function=loadEEG)
     >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
@@ -3063,16 +3071,16 @@ class VICReg(SimCLR):
     >>> import selfeeg.dataloading as dl
     >>> utils.create_dataset()
     >>> def loadEEG(path, return_label=False):
-    >>>     with open(path, 'rb') as handle:
-    >>>         EEG = pickle.load(handle)
-    >>>     x , y= EEG['data'], EEG['label']
-    >>>     return (x, y) if return_label else x
+    ...     with open(path, 'rb') as handle:
+    ...         EEG = pickle.load(handle)
+    ...     x , y= EEG['data'], EEG['label']
+    ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
-    >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
+    ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> # usual pipeline to construct the dataloader
     >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1, 
-    >>>                              overlap=0.3, load_function=loadEEG)
+    ...                              overlap=0.3, load_function=loadEEG)
     >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)

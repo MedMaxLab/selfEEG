@@ -2,7 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ = ['SimCLR_loss', 'SimSiam_loss', 'Moco_loss', 'BYOL_loss', 'Barlow_loss', 'VICReg_loss']
+__all__ = ['Barlow_loss',
+           'BYOL_loss',
+           'Moco_loss',
+           'SimCLR_loss',
+           'SimSiam_loss',
+           'VICReg_loss'
+          ]
 
 def SimCLR_loss(projections: torch.Tensor, 
                 projections_norm: bool=True,

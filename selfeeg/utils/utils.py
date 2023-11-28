@@ -1,13 +1,17 @@
 from __future__ import annotations
 from typing import Union, Sequence, Optional
+import os
+import pickle
 import copy
 import random
 import numpy as np
 from numpy.typing import ArrayLike
 import torch
 
-__all__ = ['get_subarray_closest_sum',
-           'scale_range_soft_clip','RangeScaler',
+__all__ = ['create_dataset',
+           'get_subarray_closest_sum',
+           'RangeScaler',
+           'scale_range_soft_clip',
            'torch_pchip'
           ]
 
@@ -117,14 +121,14 @@ def get_subarray_closest_sum(arr: Sequence[int],
         the tolerance to apply to the sum in percentage. It must be a value between 0 and 1.
         
         Default = 0.01
-    return_subarray: bool, optional
-        whether to also return the subarray or not
-        
-        Default = True
     perseverance: int, optional
         The maximum number of tries before stopping searching the subarray with closest sum.
         
         Default = 1000
+    return_subarray: bool, optional
+        whether to also return the subarray or not
+        
+        Default = True
 
     Returns
     -------
@@ -132,6 +136,15 @@ def get_subarray_closest_sum(arr: Sequence[int],
         a list with the index of the identified subarray
     best_sub_arr: list, optional
         the identified subarray
+
+    Example
+    -------
+    >>> import random
+    >>> import selfeeg.utils
+    >>> random.seed(1235)
+    >>> arr = [i for i in range (1,100)]
+    >>> final_idx, best_sub_arr = utils.get_subarray_closest_sum(arr, 3251, perseverance=10000)
+    >>> print( sum(best_sub_arr)) #should print 3251
     
     """
     
@@ -187,10 +200,10 @@ def scale_range_soft_clip(x: ArrayLike,
            an exponential saturating curve with first derivative in -1 and 1
            preserved and horizontal asintote (the saturating point) given by the user
 
-    To provide faster computation, this function can also be approximated with a 
-    sigmoid scaled with the given input range and asintote. To check the difference
-    in those functions see the geogebra file provided in the extra folder of the github
-    repository.
+    To provide faster computation, this function can also approximate its behaviour with a 
+    sigmoid function which scale the given input using the specified range and asintote.
+    To check the difference in those functions see the geogebra file provided in the extra 
+    folder of the github repository.
 
     Parameters
     ----------
@@ -223,6 +236,15 @@ def scale_range_soft_clip(x: ArrayLike,
     -------
     x_scaled: ArrayLike
         The rescaled array
+
+    Example
+    -------
+    >>> import selfeeg.utils
+    >>> import torch
+    >>> x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))*500
+    >>> x_scaled = utils.scale_range_soft_clip(x, 200, 2.5, 'uV' )
+    >>> print( x.max()<=2.5 and x.min()>=-2.5) # should return False
+    >>> print( x_scaled.max()<=2.5 and x_scaled.min()>=-2.5) # should return True
     
     """
     
@@ -233,15 +255,16 @@ def scale_range_soft_clip(x: ArrayLike,
     elif asintote<1:
         raise ValueError('asintote must be a value bigger than 1')
     scale=scale.lower()
+    
+    x_scaled = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
     if scale not in ['mv','uv','nv']:
         raise ValueError('scale must be any of \'mV\', \'uV\', \'nV\'')
     else:
         if scale=='uv':
-            x /= 1.0e3
+            x_scaled /= 1.0e3
         elif scale=='nv':
-            x /= 1.0e6
+            x_scaled /= 1.0e6
     Range=Range/1000
-    x_scaled = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
 
     # CASE 1: HARD clipping
     if asintote==1.0:
@@ -279,18 +302,17 @@ class RangeScaler():
     """
     ``RangeScaler`` is the class adaptation of the 
     ``scale_range_with_soft_clip`` function. 
-    It rescale the EEG data.
-    The class will rescale the data in the following way:
+    Upon call, RangeScaler rescales the given EEG data in the following way:
 
-        1. Values in Range will be rescaled in the range [-1,1] linearly
+        1. Values in Range will be linearly rescaled in the range [-1,1]
         2. Values outside the range will be either clipped or soft clipped with 
            an exponential saturating curve with first derivative in -1 and 1
            preserved and horizontal asintote (the saturating point) given by the user
 
-    To provide faster computation, this function can also be approximated with a 
-    sigmoid scaled with the given input range and asintote. To check the difference
-    in those functions see the geogebra file provided in the extra folder of the github
-    repository.
+    To provide faster computation, this function can also approximate its behaviour with a 
+    sigmoid function which scale the given input using the specified range and asintote. 
+    To check the difference in those functions see the geogebra file provided in the extra folder of 
+    the github repository.
 
     Parameters
     ----------
@@ -319,6 +341,15 @@ class RangeScaler():
         a sigmoid. It will make the rescaling much faster but won't preserve the linearity 
         in the range [-1, 1]
 
+    Example
+    -------
+    >>> import selfeeg.utils
+    >>> import torch
+    >>> x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))*500
+    >>> x_scaled = utils.RangeScaler(200, 2.5, 'uV' )(x)
+    >>> print( x.max()<=2.5 and x.min()>=-2.5) # should return False
+    >>> print( x_scaled.max()<=2.5 and x_scaled.min()>=-2.5) # should return True
+
     """
 
     def __init__(self, Range=200, asintote=1.2, scale='mV', exact=True):
@@ -340,7 +371,6 @@ class RangeScaler():
         """
         :meta private:
         """
-        print('called function')
         return scale_range_soft_clip(x, self.Range, self.asintote, self.scale, self.exact)
 
 
@@ -350,30 +380,31 @@ def torch_pchip(x: "1D Tensor",
                 xv: "1D Tensor",
                 save_memory: bool=True,
                 new_y_max_numel: int=4194304
-               ):
+               ) -> torch.Tensor:
     """
-    ``torch_pchip`` performs the pchip interpolation on 
-    the last dimension of the input tensor y.
+    ``torch_pchip`` performs the pchip interpolation on the last dimension of the input tensor y.
     
     This function is a pytorch adaptation of the scipy's pchip_interpolate [pchip]_ . 
     It performs sp-pchip interpolation (Shape Preserving Piecewise Cubic Hermite Interpolating 
     Polynomial) on the last dimension of the y tensor.
     x is the original time grid and xv new virtual grid. So, the new values of y at time xv are 
     given by the polynomials evaluated at the time grid x.
+
+    This function is compatible with GPU devices.
     
     Parameters
     ----------
     x: 1D Tensor
         Tensor with the original time grid. Must be the same length as the last dimension of y
     y: ND Tensor
-        Tensor to interpolate. The last dimension must have the signals to interpolate
+        Tensor to interpolate. The last dimension must be the time dimension of the signals to interpolate
     xv: 1D Tensor
         Tensor with the new virtual grid, i.e. the time points where to interpolate
     save_memory: bool, optional
         whether to perform the interpolation on subsets of the y tensor by recursively function 
         calls or not. Does not apply if y is a 1-D tensor. If set to False memory usage can 
-        drastically increase (for example with a 128 MB tensor, the memory usage of the 
-        function is 1.2 GB), but in some devices it can speed up the process. 
+        greatly increase (for example with a 128 MB tensor, the memory usage of the 
+        function is 1.2 GB), but it can speed up the process. 
         However, this is not the case for all devices and performance may also decrease.
         
         Default = True
@@ -384,6 +415,11 @@ def torch_pchip(x: "1D Tensor",
         
         Default = 256*1024*16 (approximately 16s of recording of a 256 Channel 
         EEG sampled at 1024 Hz)
+
+    Returns
+    -------
+    new_y: torch.Tensor
+        The pchip interpolated tensor
     
     Note
     ----
@@ -394,12 +430,24 @@ def torch_pchip(x: "1D Tensor",
     ----
     have a look also at the Scipy's documentation: 
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.PchipInterpolator.html
-    Some parts of the code are inspired from:
+    \n Some parts of the code are inspired from:
     https://github.com/scipy/scipy/blob/v1.10.1/scipy/interpolate/_cubic.py#L157-L302
 
     References
     ----------
     .. [pchip] https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.pchip_interpolate.html
+
+    Example
+    -------
+    >>> from scipy.interpolate import pchip_interpolate
+    >>> import numpy as np
+    >>> import selfeeg.utils
+    >>> import torch
+    >>> x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))*500
+    >>> xnp = x.numpy()
+    >>> x_pchip = utils.torch_pchip(torch.arange(1024), x, torch.linspace(0,1023,475)).numpy()
+    >>> xnp_pchip = pchip_interpolate(np.arange(1024),xnp, np.linspace(0,1023,475), axis=-1)
+    >>> print( np.isclose(x_pchip, xnp_pchip, rtol=1e-3,atol=0.5*1e-3).sum()==16*32*475) # Should return True
     
     """
     
@@ -472,3 +520,125 @@ def torch_pchip(x: "1D Tensor",
     py_coef = torch.stack((a, b, slope[...,:-1], y[...,:-1]),-1)
     new_y = (py_coef[...,bucket,:] * infer_tv ).sum(axis=-1)
     return new_y
+
+
+
+def create_dataset(folder_name: str='Simulated_EEG',
+                   Sample_range: list= [512, 1025],
+                   Chans: int= 8,
+                   p: list= 0.8,
+                   return_labels: bool= False,
+                   seed: int=1234) -> Optional[np.ndarray]:
+    """
+    ``create_dataset`` creates a simulated EEG dataset for normal abnormal binary classification,
+    with samples having random length within a given range. 
+
+    Once called, the function will generate 1000 files in a new directory.
+    Samples will have name 'A_B_C_D.pickle' with:
+
+        1. A = dataset ID
+        2. B = subject ID
+        3. C = session ID
+        4. D = trial ID
+
+    In total, ``create_dataset`` will generate files:
+    
+        1. 5 datasets (200 files per dataset).
+        2. 40 subjects per dataset.
+        3. 5 session per subject.
+        4. 1 trial per session.
+
+    All files will store a dictionary with two keys:
+
+        1. 'data' = the array with random length and given channels (channels in column dimension)
+        2. 'label' = an integer with a random binary label (0=normal, 1=abnormal)
+
+    EEG will report values in uV, with range 
+
+    Parameters
+    ----------
+    folder_name: str, optional
+        A string with the optional name of the subdirectory to store the generated files.
+
+        Default = 'Simulated_EEG'
+    Sample_range: list, optional
+        A length 2 list with the possible minimum and maximum length of the generated EEGs.
+
+        Default = [512, 1025]
+    Chans: int, optional
+        An integer defining the number of channels each EEG must have.
+
+        Default = 8
+    p: float, optional
+        A scalar in range [0, 1] with the probability of a sample being normal.
+
+        Default = 0.8
+    seed: int, optional
+        A seed to set for reproducibility.
+
+        Default = 1234
+
+    Returns
+    -------
+    classes: ArrayLike
+        An array with the generated label. Index association is based on the file sorted by names.
+    
+    """
+    # Various checks
+    if not( isinstance(Sample_range,list)):
+        raise ValueError('Sample_range must be a list')
+    else:
+        if len(Sample_range)!= 2:
+            raise ValueError('Sample_range must have length 2')
+    if Chans < 1:
+        raise ValueError('Chans must be bigger than 1')
+    if (p<0) or (p>1):
+        raise ValueError('p must be in range [0, 1]')
+
+    # create new sub-folder if that does not exist
+    if not(os.path.isdir(folder_name)):
+        os.mkdir(folder_name)
+
+    # prepare elements for file generation
+    Sample_range.sort()
+    N=1000
+    np.random.seed(seed=seed)
+    classes = np.zeros(N)
+    for i in range(N):
+        # get random length and class label
+        Sample = np.random.randint(Sample_range[0],Sample_range[1])
+        y = np.random.choice([0,1], p=[p, 1-p])
+        classes[i] = y
+
+        # generate sample while being sure that values will not have
+        # strange ranges
+        x = 600
+        while (np.max(x)>550 or np.min(x)<-550):
+            if y == 1:
+                stderr = np.sqrt(122.35423)
+                F1 = np.random.normal(0.932649, 0.040448)
+                F0 = np.random.normal(2.1159355, 2.3523977)
+            else:
+                stderr = np.sqrt(454.232666)
+                F1 = np.random.normal(0.9619603, 0.0301687)
+                F0 = np.random.normal(-0.1810323, 3.4712047)
+            x = np.zeros((Chans,Sample))
+            x[:,0] = np.random.normal( 0, stderr, Chans )  
+            for k in range(1,Sample):
+                x[:,k] = F0+ F1*x[:,k-1] + np.random.normal( 0, stderr, Chans )
+
+        # store files
+        sample = {'data': x, 'label': y}
+        A, B, C = (int(i//200)+1), (int( (i - 200*int(i//200)))//5+1), (i%5+1)
+        file_name = 'Simulated_EEG/' + str(A) + '_' + str(B) + '_' + str(C) + '_1.pickle'
+        with open(file_name, 'wb') as f:
+            pickle.dump(sample, f)
+    if return_labels:
+        return classes
+
+
+#def check_models(model1, model2):
+#    for p1, p2 in zip(model1.parameters(), model2.parameters()):
+#        if p1.data.ne(p2.data).sum() > 0:
+#            return False
+#    return True
