@@ -1,10 +1,10 @@
-selfeeg.dataloading package
-===========================
+selfeeg.dataloading
+===================
 
 loading module
 
-selfeeg.dataloading.load module
--------------------------------
+dataloading.load module
+-----------------------
 .. automodapi:: selfeeg.dataloading.load
   :no-inheritance-diagram:
   :no-main-docstr:

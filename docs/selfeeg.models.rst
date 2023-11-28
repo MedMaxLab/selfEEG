@@ -1,8 +1,8 @@
-selfeeg.models package
-======================
+selfeeg.models
+==============
 
-selfeeg.models.zoo module
--------------------------
+models.zoo module
+-----------------
 
 .. automodapi:: selfeeg.models.zoo
   :no-inheritance-diagram:

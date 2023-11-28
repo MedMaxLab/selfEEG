@@ -1,8 +1,8 @@
-selfeeg.losses package
-======================
+selfeeg.losses
+==============
 
-selfeeg.losses.losses module
-----------------------------
+losses.losses module
+--------------------
 
 .. automodapi:: selfeeg.losses.losses
   :no-inheritance-diagram:

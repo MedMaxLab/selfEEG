@@ -5,10 +5,12 @@ import pickle
 import copy
 import random
 import numpy as np
+import pandas as pd
 from numpy.typing import ArrayLike
 import torch
 
 __all__ = ['check_models',
+           'count_parameters',
            'create_dataset',
            'get_subarray_closest_sum',
            'RangeScaler',
@@ -431,7 +433,7 @@ def torch_pchip(x: "1D Tensor",
     ----
     have a look also at the Scipy's documentation: 
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.PchipInterpolator.html
-    \n Some parts of the code are inspired from:
+    Some parts of the code are inspired from:
     https://github.com/scipy/scipy/blob/v1.10.1/scipy/interpolate/_cubic.py#L157-L302
 
     References
@@ -664,12 +666,12 @@ def check_models(model1: torch.nn.Module,
 
     Example
     -------
-    import selfeeg.models
-    model1 = models.EEGNet(4,8,512)
-    model2 = models.EEGNet(4,8,512)
-    print( utils.utils.check_models(model1,model2)) # Should return False
-    model2.load_state_dict(model1.state_dict())
-    utils.check_models(model1,model2)  # Should return False
+    >>> import selfeeg.models
+    >>> model1 = models.EEGNet(4,8,512)
+    >>> model2 = models.EEGNet(4,8,512)
+    >>> print( utils.utils.check_models(model1,model2)) # Should return False
+    >>> model2.load_state_dict(model1.state_dict())
+    >>> utils.check_models(model1,model2)  # Should return False
     
     """
     for p1, p2 in zip(model1.parameters(), model2.parameters()):
@@ -677,4 +679,75 @@ def check_models(model1: torch.nn.Module,
             return False
     return True
 
+def count_parameters(model: torch.nn.Module, 
+                     return_table: bool = False,
+                     print_table: bool = False,
+                     add_not_trainable = False
+                    ) -> [int, Optional[pd.DataFrame]]:
+    """
+    ``count_parameters`` counts the number of **trainable parameters** of a Pytorch's nn.Module.
+    It can additionally create a two column dataframe with module's name and number of trainable 
+    parameters. Not trainable parameters can be also added to the table if specified.
 
+    The implementation is an enriched implementation inspired from [stacko1]_ and [stacko2]_ .
+
+    Parameters
+    ----------
+    model: nn.Module
+        The model to scroll.
+    return_table: bool, optional
+        Whether to return a with module's name and number of trainable parameters or not.
+
+        Default = False
+    print_table: bool, optional
+        Whether to print the created table or not.
+
+        Default = False
+    add_not_trainable: bool, optional
+        Whether to add blocks with 0 trainable parameters to the table or not
+
+        Default = False
+
+    Returns
+    -------
+    total_params: int
+        The number of trainable parameters
+    layer_table: pd.DataFrame, optional
+        a two column dataframe with module's name and number of trainable parameters.
+
+    References
+    ----------
+    .. [stacko1] https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model
+    .. [stacko2] https://discuss.pytorch.org/t/how-do-i-check-the-number-of-parameters-of-a-model/4325/9
+
+    Example
+    -------
+    >>> import selfeeg.utils
+    >>> import selfeeg.models
+    >>> mdl = models.ShallowNet(4,8,1024)
+    >>> for n, i in enumerate(mdl.parameters()): # bias require grad put to False
+    ...     i.requires_grad=False if n in [1,3,5,7] else True
+    >>> a,b = utils.count_parameters(mdl, True,True,True)
+    >>> print (b == 23760) # should return True
+
+    """
+    table = []
+    total_params = 0
+    for name, parameter in model.named_parameters():
+        if not parameter.requires_grad:
+            if add_not_trainable:
+                params = 0
+            else:
+                continue
+        else:
+            params = parameter.numel()
+        table.append([name, params])
+        total_params += params
+    layer_table = pd.DataFrame(table, columns=["Modules", "Parameters"])
+    if print_table:
+        print(layer_table.to_string())
+        print('='*len(layer_table.to_string().split('\n')[0]))
+        char2add = len(layer_table.to_string().split('\n')[0].split('Modules')[0])-15
+        char2add2 = len(layer_table.to_string().split('\n')[0].split('Modules')[1]) - len(str(total_params))-1
+        print(' '*char2add + 'TOTAL TRAINABLE PARAMS'+ ' '*char2add2, total_params)
+    return (layer_table, total_params) if return_table else total_params

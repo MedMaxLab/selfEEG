@@ -1,5 +1,5 @@
-selfeeg package
-===============
+selfeeg API
+===========
 
 .. toctree::
    :maxdepth: 1

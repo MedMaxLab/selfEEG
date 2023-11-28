@@ -1,3 +1,7 @@
+.. image:: _static/LibraryLogo.png
+   :width: 40%
+   :align: center
+
 What is selfEEG?
 ================
 
@@ -27,10 +31,9 @@ SelfEEG may be installed both via pip or conda::
     pip install selfeeg
     conda install selfeeg
 
-Additionally, optinal but useful packages which we suggest to include in your environment, especially if you plan to work with jupyter, can be automatically installed with the following pip or conda commands::
+Additionally, optinal but useful packages which we suggest to include in your environment, especially if you plan to work with jupyter, can be automatically installed with the following pip command::
     
     pip install selfeeg[interactive]
-    conda install selfeeg --install-optional
 
 Dependencies
 ------------
@@ -52,21 +55,21 @@ Optional packages which we suggest to include in your environment are listed as 
 - seaborn (or simply matplotlib)
 
 
-Turorial Notebooks
+Tutorial Notebooks
 ==================
 
-The following notebook-style pages include a detailed guide on how to use some library functionalities.
+The following notebook-style pages include a detailed guide on how to use some library functionalities that we believe require further explanation in addition to the library API.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   Dataload_guide
-   Augmentation_guide
-   SSL_guide
+   tutorials
 
 
 API
 ===
+
+The following pages provide a detailed explanation of each function and class included in the selfEEG library.
 
 .. toctree::
    :maxdepth: 2
@@ -76,7 +79,7 @@ API
 
 Contribution Guidelines
 -----------------------
-If you'd like to contribute to selfEEG, or simply want some suggestions on how to exploit this library in your SSL experiments, please consider writing a mail to our MedMax Team.
+If you'd like to contribute to selfEEG, or simply want some suggestions on how to exploit this library in your SSL experiments, please consider writing a mail to our `MedMax Team <mailto:manfredo.atzori@unipd.it,federico.delpup@studenti.unipd.it,andrea.zanola@studenti.unipd.it,louisfabrice.tshimanga@unipd.it>`_.
 
 Our team is really open to new collaborations!
 

@@ -5,11 +5,6 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 import os
 import sys
 sys.path.insert(0, '..')
@@ -35,29 +30,30 @@ release = '0.1.0'
 extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
+    #'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'nbsphinx',
     'myst_parser',
-    'sphinx_automodapi.automodapi'    
+    'sphinx_automodapi.automodapi',
+    #'sphinx.ext.doctest'
 ]
-#    'jupyter_sphinx',
-#    'sphinx_autodoc_typehints',
-#    'reno.sphinxext',
-#    'sphinxcontrib.bibtex',
-#]
+#doctest_test_doctest_blocks = 'default'
+#doctest_global_setup = '''
+#try:
+#    import matplotlib.pyplot as plt
+#except ImportError:
+#    plt = None
+#'''
 numpydoc_show_class_members = False
 autodoc_type_aliases = {
     'Iterable': 'Iterable',
     'ArrayLike': 'ArrayLike',
 }
 autodoc_default_options = {
-    "members": True,
-    "undoc-members": True,
-    "private-members": False
+    "private-members": True,
 }
 napoleon_custom_sections = [('Returns', 'params_style')]
 
@@ -78,11 +74,11 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store','**.ipynb_checkpoints']
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-html_logo = '_static/LibraryLogo.png'
+#html_logo = '_static/LibraryLogo.png'
 
 # html rtd theme configuration parameters
 html_theme_options = {
-    'logo_only': True,
+    'logo_only': False,
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': False,
