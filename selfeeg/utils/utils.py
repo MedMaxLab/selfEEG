@@ -259,16 +259,17 @@ def scale_range_soft_clip(x: ArrayLike,
         raise ValueError('asintote must be a value bigger than 1')
     scale=scale.lower()
     
-    x_scaled = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
+    Range=Range/1000
     if scale not in ['mv','uv','nv']:
         raise ValueError('scale must be any of \'mV\', \'uV\', \'nV\'')
     else:
         if scale=='uv':
-            x_scaled /= 1.0e3
+            x = x/1.0e3
         elif scale=='nv':
-            x_scaled /= 1.0e6
-    Range=Range/1000
-
+            x = x/1.0e6
+    
+    x_scaled = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
+    
     # CASE 1: HARD clipping
     if asintote==1.0:
         mask1 = x>Range
