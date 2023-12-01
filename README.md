@@ -26,12 +26,9 @@ If you want to preprocess EEG data in a really good way, we suggest to take a lo
 - **BIDSAlign** (an EEGLab extension provided by our team)
 
 ## installation
-SelfEEG may be installed both via pip or conda:
+SelfEEG may be installed both via pip:
 ```
 pip install selfeeg
-```
-```
-conda install selfeeg
 ```
 Additionally, optinal but useful packages which we suggest to include in your environment, especially if you plan to work with jupyter, can be automatically installed with the following pip command:
 ```
