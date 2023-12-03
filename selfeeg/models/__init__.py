@@ -1,6 +1,3 @@
-"""
-model zoo import
-"""
 from .zoo import (ConstrainedConv2d, ConstrainedDense, DepthwiseConv2d, SeparableConv2d, 
           EEGNetEncoder, EEGNet, 
           DeepConvNetEncoder, DeepConvNet,

@@ -1522,7 +1522,7 @@ class ShallowNetEncoder(nn.Module):
     F: int, optional
         The number of output filters in the temporal convolution layer.
 
-        Default = 8
+        Default = 40
     K1: int, optional
         The length of the temporal convolutional layer.
 
@@ -1796,7 +1796,7 @@ class ResNet1DEncoder(nn.Module):
                  Layers: "list of 4 ints"=[2, 2, 2, 2], 
                  inplane: int=16, 
                  kernLength: int=7,
-                 addConnection: bool=True,
+                 addConnection: bool=False,
                  preBlock: nn.Module=None,
                  postBlock: nn.Module=None
                 ):

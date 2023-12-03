@@ -985,7 +985,6 @@ class SimCLR(SSL_Base):
             print('augmenter not given. Using a basic one with with flip + random noise')
             augmenter=Default_augmentation
         if loss_func is None:
-            print('Use base SimCLR loss')
             loss_func=Loss.SimCLR_loss   
         if not( isinstance(loss_args,list) or isinstance(loss_args,dict) or loss_args==None):
             raise ValueError('loss_args must be a list or a dict with all'
@@ -1086,7 +1085,7 @@ class SimCLR(SSL_Base):
                             data_aug = torch.cat((augmenter(X), augmenter(X)), dim=0 )
                             z = self(data_aug)
                             val_loss = self.evaluate_loss(loss_func, z, loss_args )
-                            val_loss_tot += val_loss
+                            val_loss_tot += val_loss.item()
                             if verbose:
                                 pbar.set_description(f"   val {batch_idx+1:8<}/{N_val:8>}")
                                 pbar.set_postfix_str(f"train_loss={train_loss_tot:.5f}, val_loss={val_loss_tot/(batch_idx+1):.5f}")
@@ -1559,7 +1558,7 @@ class SimSiam(SSL_Base):
                             z2 = self.encoder(data_aug2)
                             z2 = self.projection_head(z2).detach()
                             val_loss = self.evaluate_loss( loss_func, [p1, z1, p2, z2], loss_args )
-                            val_loss_tot += val_loss
+                            val_loss_tot += val_loss.item()
                             if verbose:
                                 pbar.set_description(f"   val {batch_idx+1:8<}/{N_val:8>}")
                                 pbar.set_postfix_str(f"train_loss={train_loss_tot:.5f}, val_loss={val_loss_tot/(batch_idx+1):.5f}")
@@ -2186,7 +2185,7 @@ class MoCo(SSL_Base):
                                 val_loss1 = self.evaluate_loss(loss_func, [q1, k2] , loss_args )
                                 val_loss2 = self.evaluate_loss(loss_func, [q2, k1] , loss_args )
                                 val_loss = val_loss1 + val_loss2
-                            val_loss_tot += val_loss
+                            val_loss_tot += val_loss.item()
                             if verbose:
                                 pbar.set_description(f"   val {batch_idx+1:8<}/{N_val:8>}")
                                 pbar.set_postfix_str(f"train_loss={train_loss_tot:.5f}, val_loss={val_loss_tot/(batch_idx+1):.5f}")
@@ -2706,7 +2705,7 @@ class BYOL(SSL_Base):
                             z2 = z2.detach() # keys
                             val_loss = self.evaluate_loss(loss_func, [p1,z1,p2,z2] , loss_args )
             
-                            val_loss_tot += val_loss
+                            val_loss_tot += val_loss.item()
                             if verbose:
                                 pbar.set_description(f"   val {batch_idx+1:8<}/{N_val:8>}")
                                 pbar.set_postfix_str(f"train_loss={train_loss_tot:.5f}, val_loss={val_loss_tot/(batch_idx+1):.5f}")

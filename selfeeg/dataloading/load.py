@@ -1573,8 +1573,8 @@ class EEGsampler(Sampler):
     ``EEGsampler`` is a custom pytorch Sampler designed to efficiently reduce the file 
     loading operations when combined with the ``EEGDataset`` class. To do that, it exploits the 
     parallelization properties of the pytorch Dataloader and the buffer of EEGDataset.
-    To further check how the custom iterator is created see the introductory notebook 
-    provided in the documentation
+    To further check how the custom iterator is created see image reported below and check 
+    the introductory notebook provided in the documentation.
 
     Parameters
     ----------
@@ -1631,6 +1631,12 @@ class EEGsampler(Sampler):
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,2,0.3],load_function=loadEEG)
     >>> smplr = EEGsampler(TrainSet, 16, 8)
     >>> print([i for i in a][:8]) # will return [599, 1661, 1354, 1942, 1907, 495, 489, 1013]
+
+
+    This image summarizes how the custom sampler iterator is created:
+
+    .. image:: ../../Images/sampler_example.png
+        :align: center
     
     """
     

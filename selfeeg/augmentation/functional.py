@@ -443,7 +443,7 @@ def flip_horizontal(x: ArrayLike) -> ArrayLike:
     >>> import torch
     >>> import selfeeg.augmentation as aug
     >>> x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
-    >>> xaug = aug.flip_vertical(x)
+    >>> xaug = aug.flip_horizontal(x)
     >>> print(torch.equal(xaug, torch.flip(x, [len(x.shape)-1]))) # should return True 
     
     """
@@ -1187,7 +1187,7 @@ def get_filter_coeff(Fs: float,
                 Wp, Ws, rp, rs = 4, 8, -20*np.log10(.95), -20*np.log10(.1)
                 btype = 'highpass' if btype.lower()=='bandstop' else 'lowpass'
             elif eeg_band.lower() == 'theta':
-                Wp, Ws, rp, rs = [4, 8], [0, 15], -20*np.log10(.95), -20*np.log10(.1)
+                Wp, Ws, rp, rs = [4.5, 8.5], [0, 17], -20*np.log10(.9), -20*np.log10(.15)
             elif eeg_band.lower() == 'alpha':
                 Wp, Ws, rp, rs = [8, 13], [4, 22], -20*np.log10(.95), -20*np.log10(.1)
             elif eeg_band.lower() == 'beta':
@@ -1349,7 +1349,7 @@ def filter_lowpass(x: ArrayLike,
     >>> f, per1 = periodogram(x[0,0], 128)
     >>> xaug = aug.filter_lowpass(x, 128, 20, 30)
     >>> f, per2 = periodogram(xaug[0,0], 128)
-    >>> print(np.isclose(np.max(per2[f>30]), 0, rtol=1e-04, atol=1e-04))# should return True
+    >>> print(np.isclose(np.max(per2[f>30]), 0, rtol=1e-04, atol=1e-04)) # should return True
     
     """
     
@@ -1489,7 +1489,8 @@ def filter_highpass(x: ArrayLike,
     
     if (a is None) or (b is None):
         b, a = get_filter_coeff(Fs=Fs, Wp = Wp, Ws = Ws, rp = rp, rs = rs, btype = 'highpass', 
-                                filter_type = filter_type, order = order, Wn = Wn,eeg_band = None,
+                                filter_type = filter_type, order = order, Wn = Wn, 
+                                eeg_band = None,
                                )
          
     if isinstance(x, np.ndarray):
@@ -1509,8 +1510,8 @@ def filter_bandpass(x: ArrayLike,
                     Fs: float,
                     Wp: list[float]=[8, 35],
                     Ws: list[float]=[1, 50],
-                    rp: float=-20*np.log10(.95), 
-                    rs: float=-20*np.log10(.05),
+                    rp: float=-20*np.log10(.9), 
+                    rs: float=-20*np.log10(.15),
                     filter_type: str='butter',
                     order: int=None, 
                     Wn: float=None,
@@ -2508,12 +2509,12 @@ def change_ref(x: ArrayLike,
     >>> import torch
     >>> import selfeeg.augmentation as aug
     >>> torch.manual_seed(1234)
-    >>> x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
+    >>> x = torch.ones(16,32,1024)*2 + torch.sin(torch.linspace(0, 8*torch.pi,1024))
     >>> x[:,0,:]= 0.
     >>> xaug = aug.change_ref(x, 'channel', 5)
     >>> print(x[0,0].max()!=0 and x[0,0].min()!=0) # should return False
-    >>> print( (xaug[0,[i for i in range(1,32)]].min() and 
-    ...         xaug[0,[i for i in range(1,32)]].min()!=0) # should return True
+    >>> print( (xaug[0,[i for i in range(1,32)]].min().item()==0 and 
+    ...         xaug[0,0].min().item()!=0) ) # should return True
     
     """
     
@@ -2703,9 +2704,9 @@ def channel_dropout(x: ArrayLike,
     -------
     >>> import torch
     >>> import selfeeg.augmentation as aug
-    >>> x = torch.ones(16,32,1024)*2 + torch.sin(torch.linspace(0, 8*torch.pi,1024))
+    >>> x = torch.ones(32,1024)*2 + torch.sin(torch.linspace(0, 8*torch.pi,1024))
     >>> xaug = aug.channel_dropout(x, 3)
-    >>> print( (xaug[0:,10]==0).sum()==0) # should return True
+    >>> print( (xaug[0:,10]==0).sum()==3) # should return True
     
     """
     
