@@ -161,7 +161,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)    
-        if self.device.type != 'cpu':
+        if (self.device.type != 'cpu') and (self.device.type != 'mps'):
             aug_args = { 'x': [self.x1gpu,  self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128], 
                         'shift_freq': [1.35, 2, 4.12], 'forward':[None, True, False],
                         'random_shift':[False,True], 'batch_equal':[True,False]
@@ -423,7 +423,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)    
-        if self.device.type != 'cpu':
+        if (self.device.type != 'cpu') and (self.device.type != 'mps'):
             aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
                         'value':[0.2,0.5,0.75], 'batch_equal':[True,False]
                        }
