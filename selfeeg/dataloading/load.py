@@ -180,16 +180,16 @@ def GetEEGPartitionNumber(EEGpath: str,
         
     # Extract all files from directory
     if isinstance(file_format, str):
-        if EEGpath[-1]=='/':
+        if EEGpath[-1]==os.sep:
             EEGfiles=glob.glob(EEGpath + file_format)
         else:
-            EEGfiles=glob.glob(EEGpath + '/' + file_format )
+            EEGfiles=glob.glob(EEGpath + os.sep + file_format )
     else:
         try:
-            if EEGpath[-1]=='/':
+            if EEGpath[-1]==os.sep:
                 EEGfiles = [glob.glob(eegpath + i) for i in file_format]
             else:
-                EEGfiles = [glob.glob(eegpath + '/' + i) for i in file_format]
+                EEGfiles = [glob.glob(eegpath + os.sep + i) for i in file_format]
             EEGfiles = [item for sublist in EEGfiles for item in sublist]
         except:
             print('file_format must be a string or an iterable (e.g. list) of strings')
