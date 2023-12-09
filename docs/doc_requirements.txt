@@ -1,3 +1,4 @@
+sphinx_rtd_theme
+sphinx_automodapi
 nbsphinx
 myst_parser
-sphinx_automodapi  

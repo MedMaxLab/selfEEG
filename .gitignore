@@ -32,6 +32,10 @@ Temporary Items
 
 # Python compiled
 __pycache__/
+*.ipynb_checkpoints/
 .ipynb_checkpoints
+*.egg-info/
+.installed.cfg
+*.egg
 
 # End of https://www.toptal.com/developers/gitignore/api/osx
