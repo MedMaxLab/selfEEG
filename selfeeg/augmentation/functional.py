@@ -142,7 +142,7 @@ def shift_horizontal(x: ArrayLike,
 
     Note
     ----
-    If random shift is set to False and forward is None, then batch_equal will be equal to 
+    If random shift is set to False and forward is None, then batch_equal will be set to 
     `True` since no differences in the shift can be applied.
 
     Example
@@ -2296,7 +2296,6 @@ def warp_signal(x: ArrayLike,
     >>> xaug = aug.warp_signal(x,20)
     
     """
-    
     Ndim=len(x.shape)
     x_warped_final= np.empty_like(x) if isinstance(x, np.ndarray) else torch.empty_like(x, device=x.device)
     
@@ -2313,57 +2312,43 @@ def warp_signal(x: ArrayLike,
         Lseg[:,0] = (seg_range*seglen).astype(int)
         Lseg[:,1] = ( (seg_range+1)*seglen).astype(int)
         Lseg = Lseg[:,1] - Lseg[:,0]
-        Lsegsum = np.cumsum(Lseg)
-
-        x_size= [int(i) for i in x.shape]
-        warped_len = int(np.sum(np.ceil(Lseg[stretch]*stretch_strength)) + 
-                         np.sum(np.ceil(Lseg[squeeze]*squeeze_strength)) )
-        x_size[-1]=warped_len
-
-        # initialize warped array (i.e. the array where to allocate stretched and squeezed segments)
-        x_warped = np.empty(x_size) if isinstance(x, np.ndarray) else torch.empty(x_size, device=x.device)
+        Lsegsum = np.zeros(segments+1)
+        Lsegsum[1:] = np.cumsum(Lseg)
         
         # iterate over segments and stretch or squeeze each segment, then allocate to x_warped
-        idx_cnt=0
+        new_tgrid = [None]*(segments)
         for i in range(segments):
-
-            piece = x[..., int(i * seglen):int( (i + 1) * seglen)]
             if i in stretch:
-                new_piece_dim = int(np.ceil(piece.shape[-1] * stretch_strength))
+                new_piece_dim = int(np.ceil(Lseg[i] * stretch_strength)) 
             else:
-                new_piece_dim = int(np.ceil(piece.shape[-1] * squeeze_strength))
-
-            if isinstance(x, np.ndarray):
-                warped_piece = interpolate.pchip_interpolate(np.linspace(0, seglen-1, 
-                                                                         piece.shape[-1]), piece, 
-                                                             np.linspace(0, seglen-1, new_piece_dim), 
-                                                             axis=-1)
+                new_piece_dim = int(np.ceil(Lseg[i] * squeeze_strength))
+            if isinstance(x, torch.Tensor):
+                L = torch.arange(math.ceil(new_piece_dim))
             else:
-                warped_piece = torch_pchip( torch.linspace(0, seglen-1, piece.shape[-1],
-                                                           device=x.device), 
-                                            piece, 
-                                            torch.linspace(0, seglen-1, new_piece_dim,
-                                                           device=x.device))
-
-            x_warped[..., idx_cnt : idx_cnt+new_piece_dim]=warped_piece
-            idx_cnt += new_piece_dim
+                L = np.arange(math.ceil(new_piece_dim))
+            L = L*(Lsegsum[i+1]-Lsegsum[i])/(len(L)-1) + Lsegsum[i]
+            new_tgrid[i] = L[:-1] if i<segments-1 else L
             
-        # resample x_warped to fit original size
-        if isinstance(x_warped, np.ndarray):
-            x_warped_final = interpolate.pchip_interpolate(np.linspace(0, warped_len-1, warped_len), 
-                                                           x_warped, 
-                                                             np.linspace(0, warped_len-1, 
-                                                                         x.shape[-1]), axis=-1)
+        if isinstance(x, np.ndarray):
+            new_tgrid =np.concatenate( new_tgrid )
+            old_tgrid = np.arange(x.shape[-1])
+            x_warped = interpolate.pchip_interpolate(old_tgrid, x, new_tgrid, axis=-1)
+            new_tgrid =np.linspace(0, old_tgrid[-1], x_warped.shape[-1])
+            x_warped_final = interpolate.pchip_interpolate(new_tgrid, x_warped, 
+                                                           old_tgrid, axis=-1)
         else:
-            x_warped_final = torch_pchip(torch.linspace(0, warped_len-1, warped_len, device=x.device), 
-                                         x_warped, 
-                                         torch.linspace(0, warped_len, x.shape[-1], device=x.device))
-    
+            device=x.device
+            new_tgrid =torch.cat( new_tgrid ).to(device=device)
+            old_tgrid = torch.arange(x.shape[-1]).to(device=device)
+            x_warped = torch_pchip( old_tgrid, x, new_tgrid)
+            new_tgrid = torch.linspace(0, old_tgrid[-1], x_warped.shape[-1]).to(device=device)
+            x_warped_final = torch_pchip( new_tgrid, x_warped, old_tgrid)
     
     else:
         # Recursively call until second to last dim is reached
         for i in range(x.shape[0]):
-            x_warped_final[i] =  warp_signal(x[i] ,segments, stretch_strength,squeeze_strength, batch_equal)
+            x_warped_final[i] =  warp_signal(x[i] ,segments, stretch_strength, 
+                                             squeeze_strength, batch_equal)
      
     return x_warped_final
 

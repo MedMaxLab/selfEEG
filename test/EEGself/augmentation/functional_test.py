@@ -28,9 +28,9 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('\n---------------------------')
         print('TESTING AUGMENTATION.FUNCTIONAL MODULE')
         if cls.device.type != 'cpu':
-            print('Found gpu device: testing ssl module on it')
+            print('Found gpu device: testing module on it')
         else:
-            print('Didn\'t found cuda device: testing ssl module on cpu')
+            print('Didn\'t found cuda device: testing module on cpu')
         print('---------------------------')
         dims = (32,2,32,1024)
         cls.x1  = torch.zeros(*dims[-1:]) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
@@ -730,7 +730,7 @@ class TestAugmentationFunctional(unittest.TestCase):
 
 
     def test_warp_signal(self):
-        print('Testing warp signal (this may take some time)...', end="", flush=True)
+        print('Testing warp signal...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
                            self.x1np, self.x2np, self.x3np, self.x4np], 'segments':[15], 
                     'stretch_strength':[2,1.5],'squeeze_strength':[0.4,0.8],

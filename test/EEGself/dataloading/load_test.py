@@ -4,7 +4,6 @@ import platform
 import random
 import pickle
 import sys
-sys.path.append(os.getcwd().split('/test')[0])
 import itertools
 import numpy as np
 import torch

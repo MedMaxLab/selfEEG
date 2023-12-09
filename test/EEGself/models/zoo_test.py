@@ -2,7 +2,6 @@ import unittest
 
 import os
 import sys
-sys.path.append(os.getcwd().split('/test')[0])
 import itertools
 import numpy as np
 import torch
@@ -25,9 +24,9 @@ class TestModels(unittest.TestCase):
         print('\n---------------------')
         print('TESTING MODELS MODULE')
         if cls.device.type != 'cpu':
-            print('Found gpu device: testing nn.modules with both cpu and gpu')
+            print('Found gpu device: testing module with both cpu and gpu')
         else:
-            print('Didn\'t found cuda device: testing nn.modules with only cpu')
+            print('Didn\'t found cuda device: testing module with only cpu')
         print('---------------------')
         cls.N       = 2
         cls.Chan    = 8

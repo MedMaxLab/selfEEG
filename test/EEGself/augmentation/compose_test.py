@@ -5,7 +5,6 @@ import itertools
 import numpy as np
 import random
 import torch
-sys.path.append(os.getcwd().split('/test')[0])
 from selfeeg import augmentation as aug
 
 

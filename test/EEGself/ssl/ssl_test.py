@@ -18,7 +18,6 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 # IMPORT CUSTOM SELF-SUPERVISED LEARNING FOR EEG LIBRARY
-sys.path.append(os.getcwd().split('/test')[0])
 import selfeeg
 from selfeeg import augmentation as aug
 from selfeeg import dataloading as dl
@@ -54,9 +53,9 @@ class TestSSL(unittest.TestCase):
         print('\n---------------------------')
         print('TESTING SSL MODULE')
         if cls.device.type != 'cpu':
-            print('Found cuda device: testing ssl module on it')
+            print('Found cuda device: testing module on it')
         else:
-            print('Didn\'t found cuda device: testing ssl module on cpu')
+            print('Didn\'t found cuda device: testing module on cpu')
         print('---------------------------')
         cls.eegpath  = 'Simulated_EEG'
         cls.freq     = 128        # sampling frequency in [Hz]

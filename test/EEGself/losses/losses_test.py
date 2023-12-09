@@ -4,8 +4,6 @@ import sys
 import itertools
 import numpy as np
 import torch
-
-sys.path.append(os.getcwd().split('/test')[0])
 from selfeeg import losses
 
 
@@ -27,9 +25,9 @@ class TestLoss(unittest.TestCase):
         print('\n---------------------')
         print('TESTING LOSSES MODULE')
         if cls.device.type != 'cpu':
-            print('Found other device: testing nn.modules with both cpu and gpu')
+            print('Found other device: testing module with both cpu and gpu')
         else:
-            print('Didn\'t found cuda device: testing nn.modules with only cpu')
+            print('Didn\'t found cuda device: testing module with only cpu')
         print('---------------------')
         N, Feat = 64, 128
         cls.N       = 64

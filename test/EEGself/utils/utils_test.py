@@ -9,8 +9,6 @@ import importlib
 import numpy as np
 import pandas as pd
 import torch
-
-sys.path.append(os.getcwd().split('/test')[0])
 from selfeeg import utils
 from selfeeg import models
 
