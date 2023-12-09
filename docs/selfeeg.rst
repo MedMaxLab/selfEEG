@@ -1,5 +1,5 @@
-selfeeg API
-===========
+SelfEEG
+=======
 
 .. toctree::
    :maxdepth: 1

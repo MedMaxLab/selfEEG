@@ -88,7 +88,7 @@ html_theme_options = {
     #'sticky_navigation': True,
     #'style_nav_header_background': '#E3E3E3',
     'navigation_depth': -1,
-    'includehidden': False,
+    'includehidden': True,
     'titles_only': True
 }
 

@@ -1,3 +1,44 @@
+.. toctree::
+   :maxdepth: 2
+   :caption: About Self-Supervised Learning
+   :hidden:
+
+   Self-Supervised Learning <SelfSupervisedLearning>
+   Contrastive Learning <Contrastive>
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorials
+   :hidden:
+
+   Dataload_guide
+   Augmentation_guide
+   SSL_guide
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API
+   :hidden:
+
+   selfeeg
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: about
+   :hidden:
+
+   FAQ <faq>
+   GitHub Page <https://github.com/MedMaxLab/selfEEG>
+   Bug Tracker <https://github.com/MedMaxLab/selfEEG/issues>
+   CONTRIBUTING
+   License <https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md>
+   MedMax Team <https://sites.google.com/view/medmaxproject/home>
+
+
+
 .. image:: _static/LibraryLogo.png
    :width: 40%
    :align: center
@@ -24,12 +65,24 @@ If you want to preprocess EEG data in a really good way, take a look at:
 - **EEGLAB** (matlab based)
 - **BIDSAlign** (an EEGLab extension provided by our team)
 
-installation
----------------
-SelfEEG may be installed both via pip or conda::
+
+Getting Started
+===============    
+
+About Self-Supervised Learning
+------------------------------
+If you are new to the concept of self-supervised learning, we suggest taking a look at the following content, which provided a brief intro to Self-Supervised Learning paradigm and the family of Contrastive Learning pretext task.
+
+:doc:`SelfSupervisedLearning`
+
+:doc:`Contrastive`
+
+
+Installation
+------------
+SelfEEG can be installed via pip::
     
     pip install selfeeg
-    conda install selfeeg
 
 Additionally, optinal but useful packages which we suggest to include in your environment, especially if you plan to work with jupyter, can be automatically installed with the following pip command::
     
@@ -37,16 +90,17 @@ Additionally, optinal but useful packages which we suggest to include in your en
 
 Dependencies
 ------------
-selfEEG depends on the following packages. If you want to use selfEEG via ``git clone``, be sure to install at least the following packages:
+selfEEG requires the following packages to correctly work. If you want to use selfEEG by forking and cloning the project, be sure to install them:
 
-- pandas >=1.5.3
-- scipy >=1.10.1
+- pandas
+- scipy 
+- torch >= 2.0.0
 - torchaudio >=2.0.2
 - torchvision >=0.15.2
 - tqdm
 
 The following list was extracted via ``pipdeptree`` (`github repo
-<https://github.com/tox-dev/pipdeptree/tree/main>`_). Packages like ``numpy`` or ``torch`` does not appear because they are dependencies of other listed packages.
+<https://github.com/tox-dev/pipdeptree/tree/main>`_). Packages like ``numpy`` does not appear because they are dependencies of other listed packages.
 
 Optional packages which we suggest to include in your environment are listed as follows:
 
@@ -58,30 +112,59 @@ Optional packages which we suggest to include in your environment are listed as 
 Tutorial Notebooks
 ==================
 
-The following notebook-style pages include a detailed guide on how to use some library functionalities that we believe require further explanation in addition to the library API.
+The following notebook-style pages include a detailed guide on how to use some library functionalities that we believe require further explanation in addition to the examples provided in the documentation API.
 
-.. toctree::
-   :maxdepth: 2
+:doc:`Dataload_guide`
+   learn how to use the dataloading module for creating Pytorch dataloaders 
 
-   tutorials
+:doc:`Augmentation_guide`
+   learn how to combine different data augmentations to construct custom augmenter
+
+:doc:`SSL_guide`
+   learn how to build a self-supervised learning pipeline, from the dataloader creation to the model pretraining and finetuning
+
 
 
 API
 ===
 
-The following pages provide a detailed explanation of each function and class included in the selfEEG library.
+.. list-table:: SelfEEG
+   :widths: 15 50
+   :header-rows: 1
 
-.. toctree::
-   :maxdepth: 2
+   * - Modules
+     - Functionalities
+   * - :doc:`dataloading <selfeeg.dataloading>`
+     - - Split data according to the experimental setting
+       - Create custom Datasets and Samplers to give to the Dataloader
+   * - :doc:`augmentation <selfeeg.augmentation>`
+     - - Implementations of several data augmentations
+       - Combine different data augmentations
+   * - :doc:`models <selfeeg.models>`
+     - - Implementation of several Deep Learning Models
+   * - :doc:`models <selfeeg.losses>`
+     - - Implementation of Contrastive Losses
+   * - :doc:`ssl <selfeeg.ssl>`
+     - - Implementation of SSL algorithms
+       - already implemented fine-tuning function
+   * - :doc:`utils <selfeeg.utils>`
+     - - Implementations of various utility functions
 
-   selfeeg
 
+About
+=====
 
 Contribution Guidelines
 -----------------------
-If you'd like to contribute to selfEEG, or simply want some suggestions on how to exploit this library in your SSL experiments, please consider writing a mail to our `MedMax Team <mailto:manfredo.atzori@unipd.it,federico.delpup@studenti.unipd.it,andrea.zanola@studenti.unipd.it,louisfabrice.tshimanga@unipd.it>`_.
+If you'd like to **contribute** to selfEEG, please take a look at our contributing guidelines.
 
-Our team is really open to new collaborations!
+:doc:`CONTRIBUTING`
+
+If you also have suggestions regarding novel features to add, or simply want some **support** or **suggestions** on how to exploit this library in your SSL experiments, please consider writing to our research team.
+
+`MedMax Team <mailto:manfredo.atzori@unipd.it,federico.delpup@studenti.unipd.it,andrea.zanola@studenti.unipd.it,louisfabrice.tshimanga@unipd.it>`_
+
+We are really open to new collaborations!
 
 Requests and bug tracker
 ------------------------
@@ -94,22 +177,13 @@ We have worked really hard to develop this library. If you use selfEEG during yo
 
 Contributors:
 
-- Eng. Federico Del Pup
+- Eng.  Federico Del Pup
 - M.Sc. Andrea Zanola
 - M.Sc. Louis Fabrice Tshimanga 
+- Eng.  Paolo Emilio Mazzon
 - Prof. Manfredo Atzori
 
 License
 -------
 see `MIT License
 <https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md>`_
-
-
-Indices and tables
-==================
-
-Here is a link to all functions documentation
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

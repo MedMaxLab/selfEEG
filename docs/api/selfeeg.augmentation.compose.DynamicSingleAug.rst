@@ -12,9 +12,7 @@ DynamicSingleAug
    .. autosummary::
 
       ~DynamicSingleAug.PerformAugmentation
-      ~DynamicSingleAug.__call__
 
    .. rubric:: Methods Documentation
 
    .. automethod:: PerformAugmentation
-   .. automethod:: __call__
