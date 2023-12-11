@@ -265,7 +265,7 @@ def GetEEGPartitionNumber(EEGpath: str,
                                '__getitem()__ method in the custom EEGDataset class'), Warning)
                 N_EEG*= np.prod(EEG.shape[0:-2])
                 
-            EEGlen.append([ii, ii.split('/')[-1],N_EEG])
+            EEGlen.append([ii, ii.split(os.sep)[-1],N_EEG])
     
     del EEG
     
