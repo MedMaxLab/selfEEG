@@ -5,6 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+
 # What is selfEEG?
 selfEEG is a pytorch-based library designed to facilitate self-supervised learning (SSL) experiments on electroencephalography (EEG) data. In selfEEG, you can find different functions and classes which will help you build an SSL pipeline, from the creation of the dataloaders, to the model's fine-tuning, passing by the definitions of custom data augmenters, models, and pretraining strategies.
 In particular, selfEEG comprises of the following modules:
@@ -24,6 +25,7 @@ If you want to preprocess EEG data in a really good way, we suggest to take a lo
 - **MNE** (python based)
 - **EEGLAB** (matlab based)
 - **BIDSAlign** (an EEGLab extension provided by our team)
+
 
 ## installation
 SelfEEG may be installed both via pip:
@@ -52,8 +54,10 @@ Optional packages which we suggest to include in your environment are:
 - scikit-learn
 - seaborn (or simply matplotlib)
 
+
 ## Usage
 in the Notebooks folder, you can find some notebooks which will explain how to properly use some modules. These notebooks are also included in the **official documentation**.
+
 
 ## Contribution Guidelines
 If you'd like to **contribute** to selfEEG, please take a look at our [contributing guidelines](CONTRIBUTING.md).
@@ -64,8 +68,10 @@ If you also have suggestions regarding novel features to add, or simply want som
 
 Our team is open to new collaborations!
 
+
 ## Requests and bug tracker
 If you have some requests or you have noticed some bugs, use the [GitHub issues](https://github.com/MedMaxLab/selfEEG/issues) page to report them. We will try to solve reported major bugs as fast as possible.
+
 
 ## Authors and Citation
 We have worked really hard to develop this library. If you use selfEEG during your research, please cite our work. It will help us to continue doing our research. We are working on a research paper to submit to a journal. Until then, you can cite the following work.
@@ -82,7 +88,8 @@ We have worked really hard to develop this library. If you use selfEEG during yo
 Contributors:
 - Eng. Federico Del Pup
 - M.Sc. Andrea Zanola
-- M.Sc. Louis Fabrice Tshimanga: 
+- M.Sc. Louis Fabrice Tshimanga
+- Eng. Paolo Emilio Mazzon
 - Prof. Manfredo Atzori
 
 ## License

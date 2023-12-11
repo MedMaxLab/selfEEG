@@ -153,8 +153,21 @@ if device.type != 'cpu':
 
 
 
+print('evaluating add_gaussian_noise')
+s ="""
+for i in range(10):
+    xaug = aug.add_gaussian_noise(x)   
+"""
+bench_dict['add_gaussian_noise'][1] = timeit.timeit(s, sup_np, number=n)
+bench_dict['add_gaussian_noise'][3] = timeit.timeit(s, sup_torch, number=n)
+if device.type != 'cpu':
+    bench_dict['add_gaussian_noise'][5] = timeit.timeit(s, sup_torch_gpu, number=n)
+print(bench_dict['add_gaussian_noise'])
 
-print('evaluating add_noise_SNR')
+
+
+
+
 s="""
 for i in range(10):
     xaug = aug.add_noise_SNR(x)   
