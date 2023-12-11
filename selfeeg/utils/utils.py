@@ -36,16 +36,16 @@ def subarray_closest_sum(arr: list,
     Parameters
     ----------
     arr: list
-        the array to search
+        The array to search.
     n: int
-        the length of the array
+        The length of the array.
     k: float
-        the target value
+        The target value.
 
     Returns
     -------
     best_arr: list
-        The subarray whose element sum is closest to k
+        The subarray whose element sum is closest to k.
 
     References
     ----------
@@ -117,11 +117,11 @@ def get_subarray_closest_sum(arr: Sequence[int],
     Parameters
     ----------
     arr: list
-        the array to search
+        The array to search.
     target: float
-        the target sum
+        The target sum.
     tolerance: float, optional
-        the tolerance to apply to the sum in percentage. It must be a value between 0 and 1.
+        The tolerance to apply to the sum in percentage, in range [0,1].
         
         Default = 0.01
     perseverance: int, optional
@@ -129,16 +129,16 @@ def get_subarray_closest_sum(arr: Sequence[int],
         
         Default = 1000
     return_subarray: bool, optional
-        whether to also return the subarray or not
+        whether to also return the subarray or not.
         
         Default = True
 
     Returns
     -------
     final_idx: list
-        a list with the index of the identified subarray
+        A list with the index of the identified subarray.
     best_sub_arr: list, optional
-        the identified subarray
+        The identified subarray.
 
     Example
     -------
@@ -198,10 +198,10 @@ def scale_range_soft_clip(x: ArrayLike,
     ``scale_range_soft_clip`` rescale the EEG data.
     The function will rescale the data in the following way:
 
-        1. Values in Range will be rescaled in the range [-1,1] linearly
-        2. Values outside the range will be either clipped or soft clipped with 
+        1. values in Range will be rescaled in the range [-1,1] linearly
+        2. values outside the range will be either clipped or soft clipped with 
            an exponential saturating curve with first derivative in -1 and 1
-           preserved and horizontal asintote (the saturating point) given by the user
+           preserved and horizontal asintote (the saturating point) given by the user.
 
     To provide faster computation, this function can also approximate its behaviour with a 
     sigmoid function which scale the given input using the specified range and asintote.
@@ -219,7 +219,7 @@ def scale_range_soft_clip(x: ArrayLike,
 
         Default = 200
     asintote: float, optional
-        The horizontal asintote of the soft clipping part. Must be a value bigger than 1
+        The horizontal asintote of the soft clipping part. Must be a value bigger than 1.
 
         Default = 1.2
     scale: str, optional
@@ -231,14 +231,14 @@ def scale_range_soft_clip(x: ArrayLike,
 
         Default = 'mV'
     exact: bool, optional
-        whether to approximate the composed function (linear + exponential function) with 
-        a sigmoid. It will make the rescaling much faster but won't preserve the linearity 
-        in the range [-1, 1]
+        Whether to approximate the composed function (linear + exponential function) with 
+        a sigmoid. It will make the rescaling much faster but will not preserve the linearity 
+        in the range [-1, 1].
 
     Returns
     -------
     x_scaled: ArrayLike
-        The rescaled array
+        The rescaled array.
 
     Example
     -------
@@ -308,10 +308,10 @@ class RangeScaler():
     ``scale_range_with_soft_clip`` function. 
     Upon call, RangeScaler rescales the given EEG data in the following way:
 
-        1. Values in Range will be linearly rescaled in the range [-1,1]
-        2. Values outside the range will be either clipped or soft clipped with 
+        1. values in Range will be linearly rescaled in the range [-1,1].
+        2. values outside the range will be either clipped or soft clipped with 
            an exponential saturating curve with first derivative in -1 and 1
-           preserved and horizontal asintote (the saturating point) given by the user
+           preserved and horizontal asintote (the saturating point) given by the user.
 
     To provide faster computation, this function can also approximate its behaviour with a 
     sigmoid function which scale the given input using the specified range and asintote. 
@@ -322,14 +322,14 @@ class RangeScaler():
     ----------
     x: ArrayLike
         The array or tensor to rescale. Rescaling can be perfomed along the last dimension.
-        Tensors can also be placed in a GPU. Computation in this case is much faster
+        Tensors can also be placed in a GPU. Computation in this case is faster.
     Range: float, optional
         The range of values to rescale given in microVolt. It rescale linearly the 
         values in [-range, range] to [-1, 1]. Must be a positive value.
 
         Default = 200
     asintote: float, optional
-        The horizontal asintote of the soft clipping part. Must be a value bigger than 1
+        The horizontal asintote of the soft clipping part. Must be a value bigger than 1.
 
         Default = 1.2
     scale: str, optional
@@ -341,9 +341,9 @@ class RangeScaler():
 
         Default = 'mV'
     exact: bool, optional
-        whether to approximate the composed function (linear + exponential function) with 
-        a sigmoid. It will make the rescaling much faster but won't preserve the linearity 
-        in the range [-1, 1]
+        Whether to approximate the composed function (linear + exponential function) with 
+        a sigmoid. It will make the rescaling much faster but will not preserve the linearity 
+        in the range [-1, 1].
 
     Example
     -------
@@ -399,13 +399,13 @@ def torch_pchip(x: "1D Tensor",
     Parameters
     ----------
     x: 1D Tensor
-        Tensor with the original time grid. Must be the same length as the last dimension of y
+        Tensor with the original time grid. Must be the same length as the last dimension of y.
     y: ND Tensor
-        Tensor to interpolate. The last dimension must be the time dimension of the signals to interpolate
+        Tensor to interpolate. The last dimension must be the time dimension of the signals to interpolate.
     xv: 1D Tensor
         Tensor with the new virtual grid, i.e. the time points where to interpolate
     save_memory: bool, optional
-        whether to perform the interpolation on subsets of the y tensor by recursively function 
+        Whether to perform the interpolation on subsets of the y tensor by recursively function 
         calls or not. Does not apply if y is a 1-D tensor. If set to False memory usage can 
         greatly increase (for example with a 128 MB tensor, the memory usage of the 
         function is 1.2 GB), but it can speed up the process. 
@@ -418,12 +418,12 @@ def torch_pchip(x: "1D Tensor",
         allowed memory usage since lower the number, lower the memory used. 
         
         Default = 256*1024*16 (approximately 16s of recording of a 256 Channel 
-        EEG sampled at 1024 Hz)
+        EEG sampled at 1024 Hz).
 
     Returns
     -------
     new_y: torch.Tensor
-        The pchip interpolated tensor
+        The pchip interpolated tensor.
     
     Note
     ----
@@ -543,19 +543,19 @@ def create_dataset(folder_name: str='Simulated_EEG',
         1. A = dataset ID
         2. B = subject ID
         3. C = session ID
-        4. D = trial ID
+        4. D = trial ID.
 
     In total, ``create_dataset`` will generate files associated to:
     
-        1. 5 datasets (200 files per dataset).
-        2. 40 subjects per dataset.
-        3. 5 sessions per subject.
+        1. 5 datasets (200 files per dataset)
+        2. 40 subjects per dataset
+        3. 5 sessions per subject
         4. 1 trial per session.
 
     All files will store a dictionary with two keys:
 
         1. 'data' = the array with random length and given channels (channels in column dimension)
-        2. 'label' = an integer with a random binary label (0=normal, 1=abnormal)
+        2. 'label' = an integer with a random binary label (0=normal, 1=abnormal).
 
     EEG files have values in uV, with range at most in [-550,550] uV.
 
@@ -656,9 +656,9 @@ def check_models(model1: torch.nn.Module,
     Parameters
     ----------
     model1: nn.Module
-        The first model to compare
+        The first model to compare.
     model2: nn.Module
-        The second model to compare
+        The second model to compare.
 
     Returns
     -------
@@ -705,16 +705,16 @@ def count_parameters(model: torch.nn.Module,
 
         Default = False
     add_not_trainable: bool, optional
-        Whether to add blocks with 0 trainable parameters to the table or not
+        Whether to add blocks with 0 trainable parameters to the table or not.
 
         Default = False
 
     Returns
     -------
     total_params: int
-        The number of trainable parameters
+        The number of trainable parameters.
     layer_table: pd.DataFrame, optional
-        a two column dataframe with module's name and number of trainable parameters.
+        A two column dataframe with module's name and number of trainable parameters.
 
     References
     ----------
