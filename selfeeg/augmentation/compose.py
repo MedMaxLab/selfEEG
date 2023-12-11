@@ -18,14 +18,14 @@ class StaticSingleAug():
     When the last set of arguments is used, the class will restart from the
     first set of arguments.
 
-    To perform an augmentation, simply call the instantiated class 
-    (see provided example or check the introductory notebook)
+    To perform an augmentation, simply call the instantiated class
+    (see provided example or check the introductory notebook).
 
     Parameters
     ----------
     augmentation: function
         The augmentation function to apply. It can be a custom function, 
-        but the first argument must be the element to augment
+        but the first argument must be the element to augment.
     arguments: list, dict, list[list or dict], optional
         The set of arguments to pass to the augmentation function. It can be:
         
@@ -41,7 +41,7 @@ class StaticSingleAug():
             of arguments are given. Each element of the list must be a list or a dict 
             with the specific argument combination. Every time ``PerformAugmentation`` is called, 
             one of the given combination is used to perform the data augmentation. The list
-            is followed sequentially with repetion, meaning that the first call uses the first 
+            is followed sequentially with repetition, meaning that the first call uses the first 
             set of arguments of the list, the second call uses the second set of arguments, and so on. 
             When the last element of the list is used, the function will restart scrolling
             the given list. 
@@ -147,10 +147,10 @@ class DynamicSingleAug():
         A dictionary specifying arguments whose value must be chosen within a discrete set. 
         The dict must have:
         
-            - Keys as string with the name of one of the optional arguments.
-            - Values as lists of elements to be randomly chosen. 
+            - keys as string with the name of one of the optional arguments
+            - walues as lists of elements to be randomly chosen. 
               Single elements are allowed if a specific value for an argument needs to be set. 
-              In this case it's not mandatory to give it as list, as automatic conversion will 
+              In this case it is not mandatory to give it as list, as automatic conversion will 
               be performed internally.
             
         Default = None
@@ -158,8 +158,8 @@ class DynamicSingleAug():
         A dictionary specifying arguments whose value must be chosen within a continuous range. 
         The dict must have:
         
-            - Keys as string with the name of one of the optional arguments
-            - Values as two element lists specifying the range of values where to randomly 
+            - keys as string with the name of one of the optional arguments
+            - values as two element lists specifying the range of values where to randomly 
               select the argument value. 
             
         Default = None
@@ -171,15 +171,15 @@ class DynamicSingleAug():
             
             1. if range_type is a **dict**:
             
-                - Keys must be the ones in range_arg
-                - Values must be single element specifying if the argument must be an integer. 
+                - keys must be the ones in range_arg
+                - values must be single element specifying if the argument must be an integer. 
                   In this case, use a **boolean True** or a **string 'int'** to specify if the argument
                   must be converted to an integer.
                 
             2. if range_arg is a **list**:
                 
-                - Values must be set as the values in the dict. The order is the one used 
-                  when iterating along the range_arg dict
+                - values must be set as the values in the dict. The order is the one used 
+                  when iterating along the range_arg dict.
             
             3. if **None** is given, a list of True with length equal to range_arg is 
                automatically created, since int arguments are more compatible compared 
@@ -341,7 +341,7 @@ class SequentialAug():
     *augmentations: "callable objects"
         The sequence of augmentations to apply at each call. 
         It can be any callable object, but the first argument to pass must be the element 
-        to augment. We suggest to give a sequence of ``StaticSingleAug`` or ``DynamicSingleAug`` 
+        to augment. It is suggested to give a sequence of ``StaticSingleAug`` or ``DynamicSingleAug`` 
         instantiations.
 
     Note
@@ -415,7 +415,7 @@ class RandomAug():
         The set of augmentations to randomly choose at each call. 
         It can be any callable object, but the first arguments to pass must 
         be the ArrayLike object to augment.
-        We suggest to give a set of ``StaticSingleAug`` or ``DynamicSingleAug`` instantiations.
+        It is suggested to give a set of ``StaticSingleAug`` or ``DynamicSingleAug`` instantiations.
     p: 1-D array-like, optional
         A 1-D array or list with the weights associated to each augmentation 
         (higher the weight, higher the frequency of an augmentation in a list is chosen).
@@ -450,7 +450,7 @@ class RandomAug():
     
     >>> import matplotlib.pyplot as plt
     >>> # simulate 10000 augmentations calls this line is used in RandomAug to choose the index of the list 
-    >>> # of augmentations to call. Note that we have added the size argument to make computation faster, in 
+    >>> # of augmentations to call. Note that the size argument has been added to make computation faster, in 
     >>> # the class only 1 value is returned
     >>> idx=np.random.choice(Sequence2.nprange_, size= 1000, p=Sequence2.p)
     >>> counts=[(1000-len(np.nonzero(idx)[0]))/1000, len(np.nonzero(idx)[0])/1000]
