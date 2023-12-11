@@ -26,25 +26,25 @@ def SimCLR_loss(projections: torch.Tensor,
         2D Tensor where projections[0:N/2] are the projections of one batch augmented version
         and projections[N/2:] are the projections of the other batch augmented version
     projections_norm: bool, optional
-        whether to normalize the projections or not.
+        Whether to normalize the projections or not.
         
         Default = True
     temperature: float, optional
-        temperature coefficient of the NTX_ent loss. (See references to check loss formula)
+        Temperature coefficient of the NTX_ent loss (See references to check loss formula).
         
         Default = 0.15
 
     Returns
     -------
     loss: torch.Tensor
-        the calculated loss
+        The calculated loss.
 
     Note
     ----
-    looking at some implementations (e.g. the one in lightlyAI), 
+    Looking at some implementations (e.g. the one in lightlyAI), 
     the returned loss seems to be double. 
     However the function add_contrastive_loss in the original repo return the same value as this 
-    implementation, so we preferred to keep it the same.
+    implementation.
 
     References
     ----------
@@ -101,22 +101,22 @@ def SimSiam_loss(p1: torch.Tensor,
     Parameters
     ----------
     p1: torch.Tensor
-        2D Tensor with one augmented batch predictor output
+        2D Tensor with one augmented batch predictor output.
     z1: torch.Tensor
-        2D Tensor with one augmented batch projection output
+        2D Tensor with one augmented batch projection output.
     p2: torch.Tensor
-        same as p1 but with the other augmented batch
+        Same as p1 but with the other augmented batch.
     z2: torch.Tensor
-        same as z1 with the other augmented batch
+        Same as z1 with the other augmented batch.
     projections_norm: bool, optional
-        whether to normalize the projections or not
+        Whether to normalize the projections or not.
         
         Default= True
 
     Returns
     -------
     loss: torch.Tensor
-        the calculated loss
+        The calculated loss.
         
     References
     ----------
@@ -158,7 +158,7 @@ def Moco_loss(q: torch.Tensor,
     
     """
     Simple implementation of the Moco loss function [moco2]_. 
-    It's the InfoNCE loss with dot product as similarity and memory bank as negative samples. 
+    It is the InfoNCE loss with dot product as similarity and memory bank as negative samples. 
     If no queue related to the memory bank is given, Moco v3 [moco3]_ loss calculation 
     is performed. Note that the real MoCo v3 loss is calculated by calling the function 2 times
     (with different q and k tensors) and summing up the results.
@@ -167,30 +167,30 @@ def Moco_loss(q: torch.Tensor,
     ----------
     q: torch.Tensor
         2D (NxC) Tensor with the queries, i.e. one augmented batch predictor or 
-        projection_head output. N = batch size, C = number of features 
+        projection_head output. N = batch size, C = number of features.
     k: torch.Tensor
         2D (NxC) Tensor with the keys, i.e. one augmented batch projection_head 
         output which will be added to the memory bank. 
-        N = batch size , C = number of features 
+        N = batch size , C = number of features.
     queue:  torch.Tensor, optional
         2D (CxK) Tensor with the memory bank, i.e. a collection of previous augmented batch 
         projection_head outputs which acts as negative samples. 
-        C = number of features, K = memory bank size
+        C = number of features, K = memory bank size.
 
         Default = None
     projections_norm: bool, optional
-        whether to normalize the projections or not.
+        Whether to normalize the projections or not.
         
         Default = True
     temperature: float, optional
-        temperature coefficient of the NTX_ent loss.
+        Temperature coefficient of the NTX_ent loss.
         
         Default = 0.15
 
     Returns
     -------
     loss: torch.Tensor
-        the calculated loss
+        The calculated loss.
     
     References
     ----------
@@ -255,22 +255,22 @@ def BYOL_loss(p1: torch.Tensor,
     Parameters
     ----------
     p1: torch.Tensor
-        2D Tensor with one augmented batch predictor output
+        2D Tensor with one augmented batch predictor output.
     z1: torch.Tensor
-        2D Tensor with one augmented batch projection output
+        2D Tensor with one augmented batch projection output.
     p2: torch.Tensor
-        same as p1 but with the other augmented batch
+        Same as p1 but with the other augmented batch.
     z2: torch.Tensor
-        same as z1 with the other augmented batch
+        Same as z1 with the other augmented batch.
     projections_norm: bool, optional
-        whether to normalize the projections or not
+        Whether to normalize the projections or not.
         
         Default= True
 
     Returns
     -------
     loss: torch.Tensor
-        the calculated loss
+        The calculated loss.
 
     References
     ----------
@@ -314,21 +314,21 @@ def Barlow_loss(z1: torch.Tensor,
     Parameters
     ----------
     z1: torch.tensor
-        2D tensor with projections of one augmented version of the batch
+        2D tensor with projections of one augmented version of the batch.
     z2: torch.tensor, optional
         2D projections of the other augmented version of the batch. Can be none if 
-        z1 and z2 are cat together. In this case internal split is done
+        z1 and z2 are cat together. In this case internal split is done.
 
         Default = None
     lambda_coeff: float, optional
-        off diagonal scaling factor described in the paper
+        Off diagonal scaling factor described in the paper.
         
         Default = 5e-3
 
     Returns
     -------
     loss: torch.Tensor
-        the calculated loss
+        The calculated loss.
 
     References
     ----------
@@ -379,7 +379,7 @@ def VICReg_loss(z1: torch.Tensor,
     Parameters
     ----------
     z1: torch.tensor
-        2D tensor with projections of one augmented version of the batch
+        2D tensor with projections of one augmented version of the batch.
     z2: torch.tensor, optional
         2D projections of the other augmented version of the batch. Can be none if 
         z1 and z2 are cat together. In this case internal split is done, but be sure that
@@ -387,26 +387,26 @@ def VICReg_loss(z1: torch.Tensor,
 
         Default = None
     Lambda: float, optional
-        coefficient applied to the invariant loss
+        Coefficient applied to the invariant loss.
 
         Default = 25
     Mu: float, optional
-        coefficient applied to the variance loss 
+        Coefficient applied to the variance loss .
 
         Default = 25
     Nu: float, optional
-        coefficient applied to the covariance
+        Coefficient applied to the covariance.
 
         Default = 1
     epsilon: float, optional
-        value summed to the variance for stability purposes
+        Value summed to the variance for stability purposes.
 
         Default = 1e-4
     
     Returns
     -------
     loss: torch.Tensor
-        the calculated loss
+        The calculated loss.
 
     References
     ----------
