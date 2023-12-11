@@ -55,7 +55,7 @@ def evaluateLoss( loss_fun: 'function',
     Parameters
     ----------
     loss_fun: function
-        the custom loss function. It can be any loss function which 
+        The custom loss function. It can be any loss function which 
         accepts as input:
         
             1. the model's prediction (or predictions) and the true labels as required argument
@@ -67,7 +67,7 @@ def evaluateLoss( loss_fun: 'function',
         the required arguments. Based on the way this function is used 
         in a training pipeline it can be a single or multiple tensors.
     loss_arg: Union[list, dict], optional
-        The optional arguments to pass to the function. it can be a list
+        The optional arguments to pass to the function. It can be a list
         or a dict.
 
         Default = None
@@ -75,7 +75,7 @@ def evaluateLoss( loss_fun: 'function',
     Returns
     -------
     loss: 'loss_fun output'
-        the output of the given loss function. It is expected to be a torch.Tensor
+        The output of the given loss function. It is expected to be a torch.Tensor.
 
     Example
     -------
@@ -127,13 +127,13 @@ def fine_tune(model: nn.Module,
     Parameters
     ----------
     model: nn.Module
-        the pytorch model to fine tune. Must be a nn.Module.
+        The pytorch model to fine tune. It must be a nn.Module.
     train_dataloader: Dataloader
-        the pytorch Dataloader used to get the training batches. The Dataloar
+        The pytorch Dataloader used to get the training batches. The Dataloar
         must return a batch as a tuple (X, Y), with X the feature tensor
         and Y the label tensor.
     epochs: int, optional
-        The number of training epochs. Must be an integer bigger than 0.
+        The number of training epochs. It must be an integer bigger than 0.
 
         Default = 1
     optimizer: torch Optimizer, optional
@@ -152,13 +152,13 @@ def fine_tune(model: nn.Module,
 
         Default = None
     loss_func: function, optional
-        the custom loss function. It can be any loss function which 
+        The custom loss function. It can be any loss function which 
         accepts as input the model's prediction and the true labels 
         as required arguments and loss_args as optional arguments.
 
         Default = None
     loss_args: Union[list, dict], optional
-        The optional arguments to pass to the function. it can be a list
+        The optional arguments to pass to the function. It can be a list
         or a dict.
 
         Default = None
@@ -406,7 +406,7 @@ class EarlyStopping:
         Whether to monitor the training or validation loss. This 
         attribute is used in the ``fine_tuning`` function or 
         others class ``fit`` methods to check which calculated loss 
-        must be given. Accepted values are "train" or "validation"
+        must be given. Accepted values are "train" or "validation".
 
         Default = "validation"
     record_best_weights: bool, optional
@@ -508,10 +508,10 @@ class EarlyStopping:
         Parameters
         ----------
         loss: float
-            The calculated loss
+            The calculated loss.
         count_add: int, optional
             The number to add to the counter. It can be useful if early stopping
-            checks will not be performed after each epoch
+            checks will not be performed after each epoch.
         
         """
         
@@ -539,25 +539,25 @@ class EarlyStopping:
                     
     def rec_best_weights(self, model):
         """
-        record model's best weights. The copy of the model is sent to
+        Record model's best weights. The copy of the model is sent to
         the cpu device to avoid increasing the GPU load.
 
         Parameters
         ----------
         model: nn.Module
-            The model to record
+            The model to record.
         
         """
         self.best_model = copy.deepcopy(model).to(device='cpu').state_dict()
     
     def restore_best_weights(self, model):
         """
-        restore model's best weights.
+        Restore model's best weights.
 
         Parameters
         ----------
         model: nn.Module
-            The model to restore
+            The model to restore.
 
         Warnings
         --------
@@ -571,7 +571,7 @@ class EarlyStopping:
 
     def reset_counter(self):
         """
-        reset the counter and early stopping flag. 
+        Reset the counter and early stopping flag. 
         It might be useful if you want to further train 
         your model after the first training is stopped 
         (maybe with a lower learning rate).
@@ -640,7 +640,7 @@ class SSL_Base(nn.Module):
         Parameters
         ----------
         loss_fun: function
-            the custom loss function. It can be any loss function which 
+            The custom loss function. It can be any loss function which 
             accepts as input:
             
                 1. the model's prediction (or predictions)
@@ -653,16 +653,16 @@ class SSL_Base(nn.Module):
             the required arguments. Based on the way this function is used 
             in a training pipeline it can be a single or multiple tensors.
         loss_arg: Union[list, dict], optional
-            The optional arguments to pass to the function. it can be a list
-            or a dict
+            The optional arguments to pass to the function. It can be a list
+            or a dict.
     
             Default = None
     
         Returns
         -------
         loss: torch.Tensor
-            the output of the given loss function. It is expected to be 
-            a torch.Tensor
+            The output of the given loss function. It is expected to be 
+            a torch.Tensor.
         
         """
         if isinstance(arguments, list):
@@ -683,12 +683,12 @@ class SSL_Base(nn.Module):
         
     def get_encoder(self, device='cpu'):
         """
-        returns a copy of the encoder on the selected device.
+        Returns a copy of the encoder on the selected device.
 
         Parameters
         ----------
         device: torch.device or str, optional
-            the pytorch device where the encoder must be moved
+            The pytorch device where the encoder must be moved.
 
             Default = 'cpu'
         
@@ -698,12 +698,12 @@ class SSL_Base(nn.Module):
     
     def save_encoder(self, path: str=None):
         """
-        a method for saving the pretrained encoder.
+        A method for saving the pretrained encoder.
 
         Parameters
         ----------
         path: str, optional
-            the saving path. it will be given to the ``torch.save()`` 
+            The saving path, that will be given to the ``torch.save()`` 
             method. If None is given, the encoder will be saved in a created
             SSL_encoders subdirectory. The name will contain the pretraining
             method used (e.g. SimCLR, MoCo etc) and the current time.
@@ -765,7 +765,7 @@ class SimCLR(SSL_Base):
     Note
     ----
     BatchNorm is not applied to the last output layer due to reasons explained in
-    more recent SSL works (see BYOL and SimSiam)
+    more recent SSL works (see BYOL and SimSiam).
 
     Warnings
     --------
@@ -868,7 +868,7 @@ class SimCLR(SSL_Base):
         Parameters
         ----------
         train_dataloader: Dataloader
-            the pytorch Dataloader used to get the training batches. It
+            The pytorch Dataloader used to get the training batches. It
             must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
@@ -892,7 +892,7 @@ class SimCLR(SSL_Base):
     
             Default = None
         loss_func: function, optional
-            the custom loss function. It can be any loss function which 
+            The custom loss function. It can be any loss function which 
             accepts as input only the model's predictions as required arguments 
             and loss_args as optional arguments.
             If not given SimCLR loss will be automatically used. Check the input
@@ -901,7 +901,7 @@ class SimCLR(SSL_Base):
 
             Default = None
         loss_args: Union[list, dict], optional
-            The optional arguments to pass to the function. it can be a list
+            The optional arguments to pass to the function. It can be a list
             or a dict.
     
             Default = None
@@ -1128,7 +1128,7 @@ class SimCLR(SSL_Base):
              device: str=None
             ):
         """
-        evaluate the loss on a test dataloader.
+        Evaluate the loss on a test dataloader.
         Parameters are the same as described in the fit method, aside for 
         those related to model training which are removed.
         
@@ -1343,7 +1343,7 @@ class SimSiam(SSL_Base):
         Parameters
         ----------
         train_dataloader: Dataloader
-            the pytorch Dataloader used to get the training batches. It
+            The pytorch Dataloader used to get the training batches. It
             must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
@@ -1362,12 +1362,12 @@ class SimSiam(SSL_Base):
             classes to combine them. If none is given a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
-            is also performed on the validation set, since it's part of the 
+            is also performed on the validation set, since it is part of the 
             SSL algorithm.
     
             Default = None
         loss_func: function, optional
-            the custom loss function. It can be any loss function which 
+            The custom loss function. It can be any loss function which 
             accepts as input only the model's predictions (4 torch Tensor) as 
             required arguments and loss_args as optional arguments. Check the input
             arguments of ``SimSiam_loss`` to check how to design custom loss functions
@@ -1375,7 +1375,7 @@ class SimSiam(SSL_Base):
 
             Default = None
         loss_args: Union[list, dict], optional
-            The optional arguments to pass to the function. it can be a list
+            The optional arguments to pass to the function. It can be a list
             or a dict.
     
             Default = None
@@ -1391,7 +1391,7 @@ class SimSiam(SSL_Base):
         validation_dataloader: Dataloader, optional
             the pytorch Dataloader used to get the validation batches. It
             must return a batch as a single tensor X, thus without label tensor Y.
-            If not given, no validation loss will be calculated
+            If not given, no validation loss will be calculated.
     
             Default = None
         verbose: bool, optional
@@ -1600,7 +1600,7 @@ class SimSiam(SSL_Base):
              device: str=None
             ):
         """
-        a method to evaluate the loss on a test dataloader.
+        aAmethod to evaluate the loss on a test dataloader.
         Parameters are the same as described in the fit method, aside for 
         those related to model training which are removed.
         
@@ -1687,7 +1687,7 @@ class MoCo(SSL_Base):
     ----------
     encoder: nn.Module
         The encoder part of the module. It is the one you wish to pretrain and
-        transfer to the new model
+        transfer to the new model.
     projection_head: Union[list[int], nn.Module]
         The projection head to use. It can be:
         
@@ -1731,7 +1731,7 @@ class MoCo(SSL_Base):
     Warnings
     --------
     Using ADAM optimizer with MoCo v2 (with bank size) can prevent the training loss
-    from decreasing. We highly suggest to use SGD 
+    from decreasing. SGD is highly suggested.
         
     References
     ----------
@@ -1932,7 +1932,7 @@ class MoCo(SSL_Base):
         Parameters
         ----------
         train_dataloader: Dataloader
-            the pytorch Dataloader used to get the training batches. It
+            The pytorch Dataloader used to get the training batches. It
             must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
@@ -1942,7 +1942,7 @@ class MoCo(SSL_Base):
             The optimizer used for weight's update. It can be any optimizer
             provided in the torch.optim module. If not given:
             
-                1. SGD with learning rate 0.01 will be used for moco v2.
+                1. SGD with learning rate 0.01 will be used for moco v2
                 2. Adam with default parameters will be used for moco v3.
     
             Default = torch.optim.Adam
@@ -1953,12 +1953,12 @@ class MoCo(SSL_Base):
             classes to combine them. If none is given a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
-            is also performed on the validation set, since it's part of the 
+            is also performed on the validation set, since it is part of the 
             SSL algorithm.
     
             Default = None
         loss_func: function, optional
-            the custom loss function. It can be any loss function which 
+            The custom loss function. It can be any loss function which 
             accepts as input only the model's predictions (2 torch Tensor) as 
             required arguments and loss_args as optional arguments. Check the input
             arguments of ``Moco_loss`` to check how to design custom loss functions
@@ -1966,7 +1966,7 @@ class MoCo(SSL_Base):
 
             Default = None
         loss_args: Union[list, dict], optional
-            The optional arguments to pass to the function. it can be a list
+            The optional arguments to pass to the function. It can be a list
             or a dict.
     
             Default = None
@@ -1985,9 +1985,9 @@ class MoCo(SSL_Base):
     
             Default = None
         validation_dataloader: Dataloader, optional
-            the pytorch Dataloader used to get the validation batches. It
+            The pytorch Dataloader used to get the validation batches. It
             must return a batch as a single tensor X, thus without label tensor Y.
-            If not given, no validation loss will be calculated
+            If not given, no validation loss will be calculated.
     
             Default = None
         verbose: bool, optional
@@ -2227,7 +2227,7 @@ class MoCo(SSL_Base):
              device: str=None
             ):
         """
-        a method to evaluate the loss on a test dataloader.
+        A method to evaluate the loss on a test dataloader.
         Parameters are the same as described in the fit method, aside for 
         those related to model training which are removed.
         
@@ -2327,7 +2327,7 @@ class BYOL(SSL_Base):
     ----------
     encoder: nn.Module
         The encoder part of the module. It is the one you wish to pretrain and
-        transfer to the new model
+        transfer to the new model.
     projection_head: Union[list[int], nn.Module]
         The projection head to use. It can be:
         
@@ -2488,7 +2488,7 @@ class BYOL(SSL_Base):
         Parameters
         ----------
         train_dataloader: Dataloader
-            the pytorch Dataloader used to get the training batches. It
+            The pytorch Dataloader used to get the training batches. It
             must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
@@ -2507,12 +2507,12 @@ class BYOL(SSL_Base):
             classes to combine them. If none is given a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
-            is also performed on the validation set, since it's part of the 
+            is also performed on the validation set, since it is part of the 
             SSL algorithm.
     
             Default = None
         loss_func: function, optional
-            the custom loss function. It can be any loss function which 
+            The custom loss function. It can be any loss function which 
             accepts as input only the model's predictions (4 torch Tensor) as 
             required arguments and loss_args as optional arguments. Check the input
             arguments of ``BYOL_loss`` to check how to design custom loss functions
@@ -2520,7 +2520,7 @@ class BYOL(SSL_Base):
 
             Default = None
         loss_args: Union[list, dict], optional
-            The optional arguments to pass to the function. it can be a list
+            The optional arguments to pass to the function. It can be a list
             or a dict.
     
             Default = None
@@ -2534,7 +2534,7 @@ class BYOL(SSL_Base):
     
             Default = None
         validation_dataloader: Dataloader, optional
-            the pytorch Dataloader used to get the validation batches.  It
+            The pytorch Dataloader used to get the validation batches.  It
             must return a batch as a single tensor X, thus without label tensor Y. 
             If not given, no validation loss will be calculated
     
@@ -2747,7 +2747,7 @@ class BYOL(SSL_Base):
              device: str=None
             ):
         """
-        a method to evaluate the loss on a test dataloader.
+        A method to evaluate the loss on a test dataloader.
         Parameters are the same as in the fit method, apart for the 
         ones specific for the training which are removed.
         
@@ -2914,7 +2914,7 @@ class Barlow_Twins(SimCLR):
         Parameters
         ----------
         train_dataloader: Dataloader
-            the pytorch Dataloader used to get the training batches.  It
+            The pytorch Dataloader used to get the training batches.  It
             must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
@@ -2938,16 +2938,16 @@ class Barlow_Twins(SimCLR):
     
             Default = None
         loss_func: function, optional
-            the custom loss function. It can be any loss function which 
+            The custom loss function. It can be any loss function which 
             accepts as input only the model's predictions as required arguments 
             and loss_args as optional arguments.
-            If not given Barlos loss will be automatically used. Check the input
-            arguments of ``Barlos_loss`` to check how to design custom loss functions
-            to give to this method
+            If not given Barlow's loss will be automatically used. Check the input
+            arguments of ``Barlow_loss`` to check how to design custom loss functions
+            to give to this method.
 
             Default = None
         loss_args: Union[list, dict], optional
-            The optional arguments to pass to the function. it can be a list
+            The optional arguments to pass to the function. It can be a list
             or a dict.
     
             Default = None
@@ -2961,9 +2961,9 @@ class Barlow_Twins(SimCLR):
     
             Default = None
         validation_dataloader: Dataloader, optional
-            the pytorch Dataloader used to get the validation batches.  It
+            The pytorch Dataloader used to get the validation batches.  It
             must return a batch as a single tensor X, thus without label tensor Y. 
-            If not given, no validation loss will be calculated
+            If not given, no validation loss will be calculated.
     
             Default = None
         verbose: bool, optional
@@ -3120,7 +3120,7 @@ class VICReg(SimCLR):
         Parameters
         ----------
         train_dataloader: Dataloader
-            the pytorch Dataloader used to get the training batches. It
+            The pytorch Dataloader used to get the training batches. It
             must return a batch as a single tensor X, thus without label tensor Y.
         epochs: int, optional
             The number of training epochs. Must be an integer bigger than 0.
@@ -3139,12 +3139,12 @@ class VICReg(SimCLR):
             classes to combine them. If none is given a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
-            is also performed on the validation set, since it's part of the 
+            is also performed on the validation set, since it is part of the 
             SSL algorithm.
     
             Default = None
         loss_func: function, optional
-            the custom loss function. It can be any loss function which 
+            The custom loss function. It can be any loss function which 
             accepts as input only the model's predictions as required arguments 
             and loss_args as optional arguments.
             If not given VICReg loss will be automatically used. Check the input
@@ -3167,7 +3167,7 @@ class VICReg(SimCLR):
     
             Default = None
         validation_dataloader: Dataloader, optional
-            the pytorch Dataloader used to get the validation batches.  It
+            The pytorch Dataloader used to get the validation batches.  It
             must return a batch as a single tensor X, thus without label tensor Y. 
             If not given, no validation loss will be calculated
     
