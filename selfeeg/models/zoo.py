@@ -31,15 +31,15 @@ class DepthwiseConv2d(nn.Conv2d):
     in_channels: int
         Number of input channels.
     depth_multiplier: int
-        The depth multiplier. Output channels will be depth_multiplier*in_channels
+        The depth multiplier. Output channels will be depth_multiplier*in_channels.
     kernel_size: int or tuple
-        Size of the convolving kernel
+        Size of the convolving kernel.
     stride: int or tuple, optional 
         Stride of the convolution. 
         
         Default = 1
     padding: int, tuple or str, optional 
-        Padding added to all four sides of the input
+        Padding added to all four sides of the input.
         
         Default = 0
     dilation: int or tuple, optional 
@@ -137,7 +137,7 @@ class SeparableConv2d(nn.Module):
         
         Default = 1
     padding: int, tuple or str, optional 
-        Padding added to all four sides of the input
+        Padding added to all four sides of the input.
         
         Default = 0
     dilation: int or tuple, optional 
@@ -154,7 +154,7 @@ class SeparableConv2d(nn.Module):
         Default = 1
     depth_max_norm: float, optional
         The maximum norm each filter can have in the depthwise block. 
-        If None no constraint will be included
+        If None no constraint will be included.
 
         Default = None
 
@@ -205,7 +205,7 @@ class ConstrainedDense(nn.Linear):
     dtype: torch dtype, optional
         layer dtype
     max_norm: float, optional
-        The maximum norm of the layer. If None no constraint will be included
+        The maximum norm of the layer. If None no constraint will be included.
 
         Default = None
 
@@ -280,13 +280,13 @@ class ConstrainedConv2d(nn.Conv2d):
     out_channels: int
         Number of output channels.
     kernel_size: int or tuple
-        Size of the convolving kernel
+        Size of the convolving kernel.
     stride: int or tuple, optional 
         Stride of the convolution. 
         
         Default = 1
     padding: int, tuple or str, optional 
-        Padding added to all four sides of the input
+        Padding added to all four sides of the input.
         
         Default = 0
     dilation: int or tuple, optional 
@@ -302,15 +302,15 @@ class ConstrainedConv2d(nn.Conv2d):
         
         Default = True
     padding_mode: str, optional 
-        any of 'zeros', 'reflect', 'replicate' or 'circular'. 
+        Any of 'zeros', 'reflect', 'replicate' or 'circular'. 
         
         Default = 'zeros'
     device: torch.device or str, optional
         The torch device.
     dtype: torch dtype, optional
-        layer dtype
+        Layer dtype.
     max_norm: float, optional
-        The maximum norm each filter can have. If None no constraint will be included
+        The maximum norm each filter can have. If None no constraint will be included.
 
         Default = None
 
@@ -345,7 +345,6 @@ class ConstrainedConv2d(nn.Conv2d):
     def scale_norm(self, eps=1e-9):
         """
         Citing the Tensorflow documentation, the implementation try to replicate this
-        
         integer, axis along which to calculate weight norms. For instance, in a Dense 
         layer the weight matrix has shape 
         (input_dim, output_dim), set axis to 0 to constrain each weight vector of length 
@@ -398,7 +397,7 @@ class EEGNetEncoder(nn.Module):
 
         Default = 64
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage in range [0,1].
 
         Default = 0.5
     F1: int, optional
@@ -410,7 +409,7 @@ class EEGNetEncoder(nn.Module):
 
         Default = 16
     dropType: str, optional
-        The type of dropout. Can be any between 'Dropout' and 'SpatialDropout2D'.
+        The type of dropout. It can be any between 'Dropout' and 'SpatialDropout2D'.
 
         Default = 'Dropout'
     ELUalpha: float, optional
@@ -418,11 +417,11 @@ class EEGNetEncoder(nn.Module):
 
         Default = 1
     pool1: int, optional
-        the first temporal average pooling kernel size.
+        The first temporal average pooling kernel size.
 
         Default = 4
     pool2: int, optional
-        the second temporal average pooling kernel size.
+        The second temporal average pooling kernel size.
 
         Default = 8
     separable_kernel: int, optional
@@ -431,7 +430,7 @@ class EEGNetEncoder(nn.Module):
         Default = 16
     depthwise_max_norm: float, optional
         The maximum norm each filter can have in the depthwise block. 
-        If None no constraint will be included
+        If None no constraint will be included.
 
         Default = None
 
@@ -439,7 +438,7 @@ class EEGNetEncoder(nn.Module):
     Note
     ----
     This implementation referres to the latest version of EEGNet which 
-    can be found in the official repository
+    can be found in the official repository.
 
     Example
     -------
@@ -522,19 +521,19 @@ class EEGNet(nn.Module):
     Parameters
     ----------
     nb_classes: int
-        The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1] in this case)
+        The number of classes. If less than 2, a binary classification problem is considered
+        (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
     Samples: int
         The sample length. It will be used to calculate the embedding size 
         (for head initialization).
     kernlength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 64
     dropRate: float, optional
-        The dropout percentage. must be in [0,1]. 
+        The dropout percentage in range [0,1]. 
 
         Default = 0.5
     F1: int, optional
@@ -546,7 +545,7 @@ class EEGNet(nn.Module):
 
         Default = 16
     dropType: str, optional
-        The type of dropout. Can be any between 'Dropout' and 'SpatialDropout2D'.
+        The type of dropout. It can be any between 'Dropout' and 'SpatialDropout2D'.
 
         Default = 'Dropout'
     ELUalpha: float, optional
@@ -554,11 +553,11 @@ class EEGNet(nn.Module):
 
         Default = 1
     pool1: int, optional
-        the first temporal average pooling kernel size.
+        The first temporal average pooling kernel size.
 
         Default = 4
     pool2: int, optional
-        the second temporal average pooling kernel size.
+        The second temporal average pooling kernel size.
 
         Default = 8
     separable_kernel: int, optional
@@ -567,7 +566,7 @@ class EEGNet(nn.Module):
         Default = 16
     depthwise_max_norm: float, optional
         The maximum norm each filter can have in the depthwise block. 
-        If None no constraint will be included
+        If None no constraint will be included.
 
         Default = None
     return_logits: bool, optional
@@ -654,7 +653,7 @@ class  DeepConvNetEncoder(nn.Module):
 
         Default = 25
     Pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 3
     stride: int, optional
@@ -675,7 +674,7 @@ class  DeepConvNetEncoder(nn.Module):
 
         Default = 1
     dropRate: float, optional
-        The dropout percentage. Must be in [0,1] 
+        The dropout percentage in range [0,1]. 
 
         Default = 0.5
 
@@ -765,8 +764,8 @@ class DeepConvNet(nn.Module):
     Parameters
     ----------
     nb_classes: int
-        The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1] in this case)
+        The number of classes. If less than 2, a binary classification problem is considered
+        (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -782,7 +781,7 @@ class DeepConvNet(nn.Module):
 
         Default = 25
     Pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 3
     stride: int, optional
@@ -791,7 +790,7 @@ class DeepConvNet(nn.Module):
         Default = 3
     max_norm: int, optional
         A max norm constraint to apply to each filter of the convolutional layer. See 
-        ``ConstrainedConv2d`` for more info
+        ``ConstrainedConv2d`` for more info.
 
         Default = 2
     batch_momentum: float, optional
@@ -803,12 +802,12 @@ class DeepConvNet(nn.Module):
 
         Default = 1
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage in range [0,1]. 
 
         Default = 0.5
     max_dense_norm: int, optional
         A max norm constraint to apply to the DenseLayer. See 
-        ``ConstrainedDense`` for more info
+        ``ConstrainedDense`` for more info.
 
         Default = 1
     return_logits: bool, optional
@@ -883,7 +882,7 @@ class EEGInceptionEncoder(nn.Module):
     F1: int, optional
         The number of filters in the first temporal convolutional layer.
         Other output filters will be calculated according to the paper
-        specification
+        specification.
 
         Default = 8
     D: int, optional
@@ -895,11 +894,11 @@ class EEGInceptionEncoder(nn.Module):
 
         Default = 64
     pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 4
     dropRate: float, optional
-        The dropout percentage. must be in [0,1]
+        The dropout percentage in range [0,1]. 
 
         Default = 0.5
     ELUalpha: float, optional
@@ -916,7 +915,7 @@ class EEGInceptionEncoder(nn.Module):
         Default = 0.9
     max_depth_norm: float, optional
         The maximum norm each filter can have in the depthwise block. 
-        If None no constraint will be included
+        If None no constraint will be included.
 
         Default = 1.
 
@@ -1040,8 +1039,8 @@ class EEGInception(nn.Module):
     Parameters
     ----------
     nb_classes: int
-        The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1] in this case)
+        The number of classes. If less than 2, a binary classification problem is considered
+        (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -1050,7 +1049,7 @@ class EEGInception(nn.Module):
     F1: int, optional
         The number of filters in the first temporal convolutional layer.
         Other output filters will be calculated according to the paper
-        specification
+        specification.
 
         Default = 8
     D: int, optional
@@ -1062,11 +1061,11 @@ class EEGInception(nn.Module):
 
         Default = 64
     pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 4
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage in range [0,1]. 
 
         Default = 0.5
     ELUalpha: float, optional
@@ -1083,7 +1082,7 @@ class EEGInception(nn.Module):
         Default = 0.9
     max_depth_norm: float, optional
         The maximum norm each filter can have in the depthwise block. 
-        If None no constraint will be included
+        If None no constraint will be included.
 
         Default = 1.
     return_logits: bool, optional
@@ -1167,11 +1166,11 @@ class  TinySleepNetEncoder(nn.Module):
 
         Default = 8
     pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 8
     dropRate: float, optional
-        The dropout percentage. Must be in [0,1]. 
+        The dropout percentage in range [0,1]. 
 
         Default = 0.5
     hidden_lstm: int, optional
@@ -1262,8 +1261,8 @@ class  TinySleepNet(nn.Module):
     Parameters
     ----------
     nb_classes: int
-        The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1] in this case)
+        The number of classes. If less than 2, a binary classification problem is considered
+        (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
     Fs: float
@@ -1277,11 +1276,11 @@ class  TinySleepNet(nn.Module):
 
         Default = 8
     pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 8
     dropRate: float, optional
-        The dropout percentage. Must be in [0,1].
+        The dropout percentage in range [0,1].
 
         Default = 0.5
     batch_momentum: float, optional
@@ -1369,7 +1368,7 @@ class StagerNetEncoder(nn.Module):
     Chans: int
         The number of EEG channels.
     kernlength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 8
     F: int, optional
@@ -1377,7 +1376,7 @@ class StagerNetEncoder(nn.Module):
 
         Default = 128
     pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 4
 
@@ -1432,15 +1431,15 @@ class StagerNet(nn.Module):
     Parameters
     ----------
     nb_classes: int
-        The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1] in this case)
+        The number of classes. If less than 2, a binary classification problem is considered
+        (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
     Samples: int
         The sample length. It will be used to calculate the embedding size 
         (for head initialization).
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage in range [0,1].
 
         Default = 0.5
     kernLength: int, optional
@@ -1452,7 +1451,7 @@ class StagerNet(nn.Module):
 
         Default = 8
     pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 16
     return_logits: bool, optional
@@ -1528,7 +1527,7 @@ class ShallowNetEncoder(nn.Module):
 
         Default = 25
     Pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 75
     p: float, optional
@@ -1540,7 +1539,7 @@ class ShallowNetEncoder(nn.Module):
     ----
     In this implementation, the number of channels is an argument. 
     However, in the original paper authors preprocess EEG data by selecting a subset of
-    only 21 channels. Since the net is very minimalist, we suggest to follow author notes
+    only 21 channels. Since the net is very minimalist, please follow the authors' notes.
 
     Example
     -------
@@ -1591,8 +1590,8 @@ class ShallowNet(nn.Module):
     Parameters
     ----------
     nb_classes: int
-        The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1] in this case)
+        The number of classes. If less than 2, a binary classification problem is considered
+        (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -1607,7 +1606,7 @@ class ShallowNet(nn.Module):
 
         Default = 25
     Pool: int, optional
-        the temporal pooling kernel size.
+        The temporal pooling kernel size.
 
         Default = 75
     p: float, optional
@@ -1624,7 +1623,7 @@ class ShallowNet(nn.Module):
     ----
     In this implementation, the number of channels is an argument. 
     However, in the original paper authors preprocess EEG data by selecting a subset of
-    only 21 channels. Since the net is very minimalist, we suggest to follow author notes
+    only 21 channels. Since the net is very minimalist, please follow the authors' notes.
     
     References
     ----------
@@ -1776,7 +1775,7 @@ class ResNet1DEncoder(nn.Module):
     
     Note
     ----
-    The compatibility between each custom nn.Module given as argument is not checked.
+    The compatibility between each custom nn.Module given as argument has not beend checked.
     Design the network carefully.
 
     Example
@@ -1910,8 +1909,8 @@ class ResNet1D(nn.Module):
     Parameters
     ----------
     nb_classes: int
-        The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1] in this case)
+        The number of classes. If less than 2, a binary classification problem is considered
+        (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -1975,7 +1974,7 @@ class ResNet1D(nn.Module):
     
     Note
     ----
-    The compatibility between each custom nn.Module given as argument is not checked.
+    The compatibility between each custom nn.Module given as argument has not been checked.
     Design the network carefully.
 
     References
@@ -2074,7 +2073,7 @@ class  STNetEncoder(nn.Module):
     (Batch x Samples x Grid_width x Grid_width), i.e. the classical 2d matrix
     with rows as channels and columns as samples is rearranged in a 3d tensor where
     the first is the Sample dimension and the last 2 dimensions are the channel dim rearrange
-    in a 2d grid. Check the original paper for a better understanding of the input
+    in a 2d grid. Check the original paper for a better understanding of the input.
 
     Parameters
     ----------
@@ -2089,7 +2088,7 @@ class  STNetEncoder(nn.Module):
 
         Default = 5
     dropRate: float, optional
-        The dropout percentage. Must be in [0,1] 
+        The dropout percentage in range [0,1].
 
         Default = 0.5
     bias: bool, optional 
@@ -2163,7 +2162,7 @@ class  STNet(nn.Module):
     (Batch x Samples x Grid_width x Grid_width), i.e. the classical 2d matrix
     with rows as channels and columns as samples is rearranged in a 3d tensor where
     the first is the Sample dimension and the last 2 dimensions are the channel dim rearrange
-    in a 2d grid. Check the original paper for a better understanding of the input
+    in a 2d grid. Check the original paper for a better understanding of the input.
 
     Parameters
     ----------
@@ -2185,7 +2184,7 @@ class  STNet(nn.Module):
 
         Default = 5
     dropRate: float, optional
-        The dropout percentage. Must be in [0,1].
+        The dropout percentage in range [0,1].
 
         Default = 0.5
     bias: bool, optional 
@@ -2399,8 +2398,8 @@ class  EEGSymEncoder(nn.Module):
         The sampling frequency. 
     scales_time: tuple of 3 float, optional
         The portion of EEG (in milliseconds) the short, medium and long temporal convolutional
-        layers must cover. kernel size will be automatically calculated based on the given 
-        sampling rate
+        layers must cover. Kernel size will be automatically calculated based on the given 
+        sampling rate.
         
         Default = (500,250,125)
     lateral_chans: int, optional
@@ -2415,7 +2414,7 @@ class  EEGSymEncoder(nn.Module):
         Default = True
     F: int, optional
         The output filters of each branch of the first inception block. 
-        Other output will be automatically calculated
+        Other output will be automatically calculated.
 
         Default = 8
     pool: int, optional
@@ -2423,7 +2422,7 @@ class  EEGSymEncoder(nn.Module):
 
         Default = 2
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage in range [0,1].
 
         Default = 0.5
     bias: bool, optional 
@@ -2432,7 +2431,7 @@ class  EEGSymEncoder(nn.Module):
         Default = True
     residual: bool, optional
         Whether to add a residual block after the inception block. 
-        Currently not implemented, will be added in future releases
+        Currently not implemented, will be added in future releases.
         
         Default = True
 
@@ -2604,8 +2603,8 @@ class EEGSym(nn.Module):
     Parameters
     ----------
     nb_classes: int
-        The number of classes. If less than 2, a binary classification problem is considered.
-        (output dimensions will be [batch, 1] in this case)
+        The number of classes. If less than 2, a binary classification problem is considered
+        (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
     Samples: int
@@ -2639,7 +2638,7 @@ class EEGSym(nn.Module):
 
         Default = 2
     dropRate: float, optional
-        The dropout percentage. 
+        The dropout percentage in range [0,1].
 
         Default = 0.5
     bias: bool, optional 
@@ -2648,7 +2647,7 @@ class EEGSym(nn.Module):
         Default = True
     residual: bool, optional
         Whether to add a residual block after the inception block. 
-        Currently not implemented
+        Currently not implemented, will be added in future releases.
         
         Default = True
     return_logits: bool, optional
