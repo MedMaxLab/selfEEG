@@ -2147,8 +2147,8 @@ def permutation_signal(x: ArrayLike,
     ``permutation_signal`` permute some portions of the input `ArrayLike` object **x**
     along its last dimension.
     
-    Given an input x where last two dimensions must refer to the EEG recording (Channels x Samples),
-	``permutation_signal`` divides the elements of the last 
+    Given an input x where last two dimensions must refer to the EEG recording 
+    (Channels x Samples), ``permutation_signal`` divides the elements of the last 
     dimension of x into N segments, then chooses M<=N segments and shuffle them. 
     Permutations are equally performed along each Channel of the same EEG. 
     
@@ -2190,6 +2190,7 @@ def permutation_signal(x: ArrayLike,
     ...                         torch.tensor([0.5]), rtol=1e-8,atol=1e-8) ) # should return True
     >>> a = xaug[0,0]==0
     >>> print( (a[:-1].ne(a[1:])).sum()==6) # should return True
+
     
     """
     

@@ -12,9 +12,7 @@ RandomAug
    .. autosummary::
 
       ~RandomAug.PerformAugmentation
-      ~RandomAug.__call__
 
    .. rubric:: Methods Documentation
 
    .. automethod:: PerformAugmentation
-   .. automethod:: __call__

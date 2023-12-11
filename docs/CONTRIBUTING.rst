@@ -4,7 +4,7 @@ Contributing
 Thank you for considering contributing to our project! We highly
 appreciate your effort towards enhancing our project.
 
-SelfEEG is designed to help building self-supervised learning (SSL)
+SelfEEG is designed to help buil Self-Supervised Learning (SSL)
 experiments on electroencephalography (EEG) data, hoping that various
 teams working on this or related areas will find this project useful for
 their research purposes.
@@ -45,8 +45,8 @@ recommend you do the following before start working on the code:
 How to contribute
 -----------------
 
-You can contribute to this library by reporting and/or solving issues,
-or by proposing and/or implementing novel features. Both contributions
+You can contribute to this library by reporting and solving issues,
+or by proposing and implementing novel features. Both contributions
 are very welcome.
 
 Reporting issues
@@ -118,7 +118,7 @@ using the project main directory as the working directory:
    pip install -e .
 
 this will install all the selfeeg main dependencies. As reported in the
-`README.md <README.md>`__ file, we suggest to also add jupyter-lab,
+`README.md <https://github.com/MedMaxLab/selfEEG/blob/main/README.md>`__ file, we suggest to also add jupyter-lab,
 matplotib, and scikit-learn, which can facilitate the development and
 testing of novel features.
 
@@ -126,10 +126,10 @@ testing
 -------
 
 It is important to ensure that all the implemented changes will not
-break any existing library functionality. The `test </test>`__ folder
+break any existing library functionality. The `test <https://github.com/MedMaxLab/selfEEG/tree/main/test>`__ folder
 provides an automatic way to check all the library functionalities.
 Tests can be performed with unittest by simply running the following
-command using the main repository directory as the working directory:
+command using the repository's main directory as the working directory:
 
 ::
 
@@ -137,7 +137,7 @@ command using the main repository directory as the working directory:
 
 Remember to add test functionalities if you are working on novel
 features. More detail about tests can be found in the readme file in the
-test folder.
+test folder. For further info on what assertion you must include, take a look at the test's folder `readme <https://github.com/MedMaxLab/selfEEG/blob/main/test/README.md>`__
 
 Submitting Pull Requests
 ------------------------
@@ -169,4 +169,4 @@ License
 -------
 
 By contributing to this project, you agree that your contributions will
-be licensed under the project’s `license <LICENSE.md>`__ (MIT License).
+be licensed under the project’s `license <https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md>`__ (MIT License).

@@ -46,19 +46,19 @@
 What is selfEEG?
 ================
 
-selfEEG is a pytorch-based library designed to facilitate self-supervised learning (SSL) on EEG data. In selfEEG, you can find different functions and classes which helps you build an SSL pipeline, from the creation of the dataloaders, to the model's fine-tuning, passing by the definitions of custom data augmenters, models, and pretraining strategies.
-SelfEEG comprises of the following modules:
+selfEEG is a PyTorch-based library designed to support Self-Supervised Learning (SSL) on EEG data. In selfEEG, you can find different functions and classes which help you build an SSL pipeline, from the creation of the dataloaders, to the model's fine-tuning, passing through the design of custom data augmenters, models, and pretraining strategies.
+SelfEEG comprises the following modules:
 
-1. **dataloading**, where you can find custom pytorch Dataset and Sampler classes as well as functions to split your dataset.
-2. **augmentation**, where you can find lots of already implemented data augmentation with fully support on GPU, as well as other classes designed to combine them
-3. **models**, where you can find lots of already implemented models widely used in the EEG analysis (e.g. DeepConvNet, EEGNet, ResNet, TinySleepNet, STNet, etc.)
-4. **ssl**, where you can find already implemented self-supervised algorhitms (e.g. SimCLR, SimSiam, MoCo, BYOL, etc) with a highly customizable fit method as well as a custom earlyStopper and a function for fine-tuning.
+1. **dataloading**, where you can find a collection of functions and classes designed to support data splitting and the construction of efficient PyTorch dataloaders.
+2. **augmentation**, where you can find lots of already implemented data augmentations with full GPU support, as well asother classes designed to combine them in more complex patterns
+3. **models**, where you can find lots of already implemented models widely used in EEG analysis (DeepConvNet, EEGNet, ResNet, TinySleepNet, STNet, etc. )
+4. **ssl**, where you can find already implemented self-supervised learning algorhitms (e.g. SimCLR, SimSiam, MoCo, BYOL, etc) with a highly customizable fit method as well as a function for fine-tuning.
 5. **losses**, where you can find the implementation of the SSL losses.
-6. **utils**, where you can other useful functions (torch port of a pchip interpolator, a GPU compatible normalizer, etc)
+6. **utils**, where you can find a collection of utility functions and classes for various purposes, such as a PyTorch compatible EEG sampler and scaler.
 
-What makes selfEEG good? We have designed some modules keeping in mind EEG applications, but lots of functionalities can be easily exported on other types of signal data!
+What makes selfEEG good? We have designed some modules keeping in mind EEG applications, but lots of functionalities can be easily exported on other types of signal data often coupled with EEG data!
 
-However, in selfEEG you will not find functions to effectively preprocess EEG data (although filtering and resampling can be performed with some of our functions).
+What you will not (currently) find in selfEEG? In selfEEG you will not find functions to effectively preprocess EEG data (although filtering and resampling can be performed with some of our functions).
 If you want to preprocess EEG data in a really good way, take a look at:
 
 - **MNE** (python based)
@@ -71,7 +71,7 @@ Getting Started
 
 About Self-Supervised Learning
 ------------------------------
-If you are new to the concept of self-supervised learning, we suggest taking a look at the following content, which provided a brief intro to Self-Supervised Learning paradigm and the family of Contrastive Learning pretext task.
+If you are new to the concept of self-supervised learning, we suggest taking a look at the following content, which provided a brief introduction to the **self-supervised learning** paradigm and the family of **contrastive learning** pretext task.
 
 :doc:`SelfSupervisedLearning`
 
@@ -107,6 +107,7 @@ Optional packages which we suggest to include in your environment are listed as 
 - jupyterlab
 - scikit-learn
 - seaborn (or simply matplotlib)
+- MNE
 
 
 Tutorial Notebooks
@@ -115,13 +116,13 @@ Tutorial Notebooks
 The following notebook-style pages include a detailed guide on how to use some library functionalities that we believe require further explanation in addition to the examples provided in the documentation API.
 
 :doc:`Dataload_guide`
-   learn how to use the dataloading module for creating Pytorch dataloaders 
+   learn how to use the dataloading module for creating PyTorch dataloaders 
 
 :doc:`Augmentation_guide`
-   learn how to combine different data augmentations to construct custom augmenter
+   learn how to combine different data augmentations to construct custom augmenters
 
 :doc:`SSL_guide`
-   learn how to build a self-supervised learning pipeline, from the dataloader creation to the model pretraining and finetuning
+   learn how to build a self-supervised learning pipeline.
 
 
 
@@ -138,7 +139,7 @@ API
      - - Split data according to the experimental setting
        - Create custom Datasets and Samplers to give to the Dataloader
    * - :doc:`augmentation <selfeeg.augmentation>`
-     - - Implementations of several data augmentations
+     - - Implementation of several data augmentations
        - Combine different data augmentations
    * - :doc:`models <selfeeg.models>`
      - - Implementation of several Deep Learning Models
@@ -160,7 +161,7 @@ If you'd like to **contribute** to selfEEG, please take a look at our contributi
 
 :doc:`CONTRIBUTING`
 
-If you also have suggestions regarding novel features to add, or simply want some **support** or **suggestions** on how to exploit this library in your SSL experiments, please consider writing to our research team.
+If you also have **suggestions** regarding novel features to add, or simply want some **support** on how to exploit this library in your SSL experiments, please consider writing to our research team.
 
 `MedMax Team <mailto:manfredo.atzori@unipd.it,federico.delpup@studenti.unipd.it,andrea.zanola@studenti.unipd.it,louisfabrice.tshimanga@unipd.it>`_
 
