@@ -93,7 +93,6 @@ def shift_vertical(x: ArrayLike,
     >>> print(torch.equal(x+4,xaug)) # should return True
 
     """
-    # To do: batch equal and random shift from +- 10 uV random number
     x_shift = torch.clone(x) if isinstance(x, torch.Tensor) else np.copy(x)
     x_shift = x + value
     return x_shift
@@ -607,7 +606,7 @@ def add_band_noise(x: ArrayLike,
     x: ArrayLike
         The input Tensor or Array. 
     bandwidth: list
-        The frequency components which the noise must have. Must be a LIST with the following 
+        The frequency components which the noise must have. Must be a *list* with the following 
         values:    
         
             - strings: add noise to specific EEG components. Can be any of "delta", "theta", "alpha", "beta", "gamma", "gamma_low", "gamma_high".
@@ -1161,7 +1160,7 @@ def get_filter_coeff(Fs: float,
         
         Default = None
     Fs: float, optional
-        The sampling frequency. It must be given if eeg_band is also given.
+        The sampling frequency in Hz. It must be given if eeg_band is also given.
         
         Default = None
 
@@ -1874,8 +1873,7 @@ def get_channel_map_and_networks(channel_map: list=None,
 
     Note
     ----
-    This function is internally called by ``permute_channels``. You will not probably 
-    use it directly. However it is useful to know what it does.
+    This function is internally called by ``permute_channels``.
     
     """
     
@@ -1891,7 +1889,6 @@ def get_channel_map_and_networks(channel_map: list=None,
     elif isinstance(channel_map, list):
         channel_map = np.array(channel_map, dtype='<U4')
     
-    # define networks (according to rojas et al. 2018)
     DMN= np.array(['AF4', 'AF7', 'AF8', 'AFZ', 'CP3', 'CP4', 'CP5', 'F1', 'F2', 
                    'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'FC1', 'FC3', 'FC4', 'FC5', 
                    'FP1', 'FP2', 'FPZ', 'FT10', 'FT8', 'FT9',
@@ -2550,9 +2547,7 @@ def change_ref(x: ArrayLike,
                 Ref = x[[i for i in range(x.shape[0]) if i not in exclude_from_ref+[reference]]].mean(0)
         elif mode==0:
             Ref= x[reference]
-        x_new_ref= x-Ref
-        #if mode==0:
-        #    x_new_ref[reference]= -Ref     
+        x_new_ref= x-Ref    
     else:
         x_new_ref= np.empty_like(x) if isinstance(x, np.ndarray) else torch.empty_like(x)
         for i in range(x.shape[0]):
@@ -2582,9 +2577,7 @@ def masking(x: ArrayLike,
     mask_number: int, optional
         The number of masking blocks, i.e., how many portions of the signal the function must mask. 
         It must be a positive integer. Note that the created portions will have random length, but the 
-        overall masked ratio will be the one given as input. For example, given a masked ratio of 0.50 
-        and mask_number = 3, the number of samples put to 0 will be half the signal length with 3 distinct
-        blocks of consecutive zeros of random length.
+        overall masked ratio will be the one given as input.
         
         Default = 1
     masked_ratio: float, optional
@@ -2601,6 +2594,12 @@ def masking(x: ArrayLike,
     -------
     x: ArrayLike
         the augmented version of the input Tensor or Array.
+
+    Note
+    ----
+    `mask_number` and `mask_ratio` should be used to tuned the number and width of masked blocks. 
+    For example, given masked_ratio = 0.50 and mask_number = 3, the number of samples put to 0 will be in total half 
+    the signal length with 3 distinct blocks of consecutive zeros of random length.
 
     Example
     -------

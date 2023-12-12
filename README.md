@@ -42,11 +42,12 @@ selfEEG requires the following packages to correctly work. If you want to use se
 
 - pandas >=1.5.3
 - scipy >=1.10.1
+- torch >= 2.0.0
 - torchaudio >=2.0.2
 - torchvision >=0.15.2
 - tqdm
 
-The following list was extracted via ``pipdeptree`` ([github repo](https://github.com/tox-dev/pipdeptree/tree/main)). Packages like ``numpy`` or ``torch`` doesn't appear because they are dependencies of other listed packages.
+The following list was extracted via ``pipdeptree`` ([github repo](https://github.com/tox-dev/pipdeptree/tree/main)). Packages like ``numpy`` doesn't appear because they are dependencies of other listed packages.
 
 Optional packages which we suggest to include in your environment are:
 

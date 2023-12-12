@@ -24,7 +24,7 @@ __all__ = ['GetEEGPartitionNumber',
 def GetEEGPartitionNumber(EEGpath: str, 
                           freq: int or float=250, 
                           window: int or float=2, 
-                          overlap: int or float=0.10,
+                          overlap: float=0.10,
                           includePartial: bool=True,
                           file_format: str or list[str]='*',
                           load_function: 'function'=None,
@@ -1370,6 +1370,12 @@ class EEGDataset(Dataset):
     >>>  print(len(TrainSet))
     >>>  print(TrainSet.__getitem__(10).shape) # will return torch.Size([8, 256])
     >>>  print(TrainSet.file_path) # will return 'Simulated_EEG/1_11_3_1.pickle'
+
+
+    This image summarizes how to set up the main arguments of the EEGDataset class:
+
+    .. image:: ../../Images/DatasetClassScheme.jpeg
+        :align: center
             
     """ 
     def __init__(self, 

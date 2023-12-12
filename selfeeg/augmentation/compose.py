@@ -148,10 +148,12 @@ class DynamicSingleAug():
         The dict must have:
         
             - keys as string with the name of one of the optional arguments
-            - walues as lists of elements to be randomly chosen. 
+            - values as lists of elements to be randomly chosen. 
               Single elements are allowed if a specific value for an argument needs to be set. 
               In this case it is not mandatory to give it as list, as automatic conversion will 
-              be performed internally.
+              be performed internally. In other words, a key-value pair given as 
+              ``{"arg": value}`` is allowed, since the conversion to ``{"arg": [value]}`` is 
+              automatically performed
             
         Default = None
     range_arg: dict, optional

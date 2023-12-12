@@ -1,7 +1,7 @@
 selfeeg.dataloading
 ===================
 
-loading module
+The dataloading module offers functionalities for data splitting with various desired settings, and for efficiently build PyTorch Dataloaders.
 
 dataloading.load module
 -----------------------

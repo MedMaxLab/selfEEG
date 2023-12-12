@@ -354,12 +354,7 @@ def Barlow_loss(z1: torch.Tensor,
     z1_norm = (z1-z1.mean(0))/z1.std(0)
     z2_norm = (z2-z2.mean(0))/z2.std(0)
 
-    c_mat = (z1_norm.T @ z2_norm) / N
-    #c_mat_diff = (c_mat - torch.eye(D, device=c_mat.device)).pow(2)
-    #lambda_mat = torch.full( (D,D), lambda_coeff, device=z1.device)
-    #lambda_mat[range(D), range(D)]=1
-    #loss = (c_mat_diff*lambda_mat).sum()
-    
+    c_mat = (z1_norm.T @ z2_norm) / N    
     c_mat2 = c_mat.pow(2)
     
     loss = D - 2*torch.trace(c_mat) + lambda_coeff*torch.sum(c_mat**2) + (1-lambda_coeff)*torch.trace(c_mat**2)

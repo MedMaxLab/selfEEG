@@ -1,2 +1,6 @@
 include README.md
 include selfeeg/VERSION.txt
+include Notebooks/Augmentation_guide.ipynb
+include Notebooks/Dataload_guide.ipynb
+include Notebooks/SSL_guide.ipynb
+prune */__pycache__ 

@@ -215,7 +215,8 @@ def scale_range_soft_clip(x: ArrayLike,
         Tensors can also be placed in a GPU. Computation in this case is much faster
     Range: float, optional
         The range of values to rescale given in microVolt. It rescale linearly the 
-        values in [-range, range] to [-1, 1]. Must be a positive value.
+        values in [-range, range] to [-1, 1]. Must be a positive value. The list 
+        [-range, range] is created internally.
 
         Default = 200
     asintote: float, optional
@@ -252,7 +253,7 @@ def scale_range_soft_clip(x: ArrayLike,
     """
     
     if Range<0:
-        raise ValueError('Range cannot be lower than 0')
+        raise ValueError('Range argument cannot be lower than 0')
     if asintote is None:
         asintote = 1.0
     elif asintote<1:

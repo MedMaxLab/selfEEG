@@ -203,7 +203,7 @@ class ConstrainedDense(nn.Linear):
     device: torch.device or str, optional
         The torch device.
     dtype: torch dtype, optional
-        layer dtype
+        layer dtype, i.e., the data type of the torch.Tensor defining the layer weights.
     max_norm: float, optional
         The maximum norm of the layer. If None no constraint will be included.
 
@@ -307,8 +307,8 @@ class ConstrainedConv2d(nn.Conv2d):
         Default = 'zeros'
     device: torch.device or str, optional
         The torch device.
-    dtype: torch dtype, optional
-        Layer dtype.
+    dtype: torch.dtype, optional
+        Layer dtype, i.e., the data type of the torch.Tensor defining the layer weights.
     max_norm: float, optional
         The maximum norm each filter can have. If None no constraint will be included.
 
@@ -1531,7 +1531,7 @@ class ShallowNetEncoder(nn.Module):
 
         Default = 75
     p: float, optional
-        Dropout probability
+        Dropout probability. Must be in [0,1)
 
         Default= 0.2
     
@@ -1610,7 +1610,7 @@ class ShallowNet(nn.Module):
 
         Default = 75
     p: float, optional
-        The dropout probability. Must be in [0,1]
+        The dropout probability. Must be in [0,1)
 
         Default= 0.2
     return_logits: bool, optional

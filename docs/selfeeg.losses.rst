@@ -1,6 +1,9 @@
 selfeeg.losses
 ==============
 
+This module collects all the losses implemented for the contrastive learning 
+algorithms of the ssl module.
+
 losses.losses module
 --------------------
 
