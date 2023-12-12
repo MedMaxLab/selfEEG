@@ -16,7 +16,7 @@ munkres==1.1.4
 myst-parser @ file:///home/conda/feedstock_root/build_artifacts/myst-parser_1664303069489/work
 nbsphinx @ file:///home/conda/feedstock_root/build_artifacts/nbsphinx_1693136550006/work
 numexpr @ file:///croot/numexpr_1683221822650/work
-pip==23.2.1
+pip==23.3
 pipdeptree @ file:///home/conda/feedstock_root/build_artifacts/pipdeptree_1686940472558/work
 pkgutil_resolve_name @ file:///home/conda/feedstock_root/build_artifacts/pkgutil-resolve-name_1633981968097/work
 pooch @ file:///tmp/build/80754af9/pooch_1623324770023/work
