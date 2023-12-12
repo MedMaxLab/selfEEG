@@ -54,18 +54,16 @@ Additionally, these functionalities can be employed for the analysis of other bi
 These features make selfEEG a versatile deep learning tool for biomedical applications and a useful resource in SSL, one of the currently most active fields of Artificial Intelligence.
 
 
-# Statement of need 
-SelfEEG answers to the lack of a Self-Supervised Learning (SSL) framework for EEG data.
+# Statement of need
+SelfEEG answers to the lack of Self-Supervised Learning (SSL) frameworks for the analysis of EEG data. 
 
-Despite recent contributions in relation to this topic, there are currently no frameworks or common standards for developing EEG-based SSL pipelines, contrary to other fields like computer vision (see [LightlySSL](https://github.com/lightly-ai/lightly) or [ViSSL](https://github.com/facebookresearch/vissl)). 
-The absence of a framework dedicated to EEG data is a limit for the development of novel strategies and the progress of the field.
+In fact, despite the recent high number of publications (more than 20 journal papers in the last 4 years [@DelPup2023]), there are currently no frameworks or common standards for developing EEG-based SSL pipelines, contrary to other fields such as computer vision (see [LightlySSL](https://github.com/lightly-ai/lightly) or [ViSSL](https://github.com/facebookresearch/vissl)).
 
-By using SelfEEG, researchers can easily build an SSL pipeline, speeding up the experimental design and improving results' reproducibility, a key feature for enhancing the comparison between different strategies and supporting the creation of valuable benchmarks.
+In the field of EEG data analysis, where it has been demonstrated that SSL can improve models’ accuracy and mitigate overfitting [@eegrafiei] [@banville], the absence of a self-supervised learning framework dedicated to EEG signals limits the development of novel strategies, reproducibility of results, and the progress of the field.
 
-Self-supervised learning is an unsupervised learning approach that learns representations from unlabeled data, exploiting their intrinsic structure to provide supervision [@banville].
-In the past 5 years, over 20 works applied SSL to EEG data analysis [@DelPup2023], demonstrating how this strategy can improve model’s accuracy and mitigate overfitting, especially when there is a limited amount of labeled data [@eegrafiei].
+Thanks to selfEEG, researchers can instead easily build SSL pipelines, speeding up experimental design and improving the reproducibility of results. Reproducibility is a key factor in this area, as it enhances the comparison of different strategies and supports the creation of useful benchmarks.
 
-SelfEEG was developed by considering the needs of deep learning researchers, for whom this library is mainly designed. For this reason, the library still retains a high but easily manageable level of customizability.
+SelfEEG was also developed considering the needs of deep learning researchers, for whom this library has been primarily designed. For this reason, selfEEG aims to preserve a high but easily manageable level of customization.
 
 
 # Library Overview
