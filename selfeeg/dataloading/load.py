@@ -54,7 +54,7 @@ def GetEEGPartitionNumber(EEGpath: str,
         
         Default = 250
     window : int or float, optional
-        The window length give in seconds.
+        The window length given in seconds.
         
         Default = 2
     overlap : float, optional 
@@ -111,7 +111,7 @@ def GetEEGPartitionNumber(EEGpath: str,
 
         Default = True
     save : bool, optional
-        Whether to save the resulted DataFrame as a .csv file.
+        Whether to save the resulting DataFrame as a .csv file.
 
         Default = False
     save_path: str, optional
@@ -123,7 +123,7 @@ def GetEEGPartitionNumber(EEGpath: str,
         
         Default = None
     verbose: bool, optional
-        whether to print or not some information during function excecution. 
+        whether to print some information during function excecution. 
         Useful to keep track of the calculation process. Might be useful for large
         datasets.
                 
@@ -145,7 +145,7 @@ def GetEEGPartitionNumber(EEGpath: str,
     dimension will be used to calculate the number of partitions, then the number will be 
     multiplied by the product of the shape of all dimensions from the first to the second to
     last (the last two dimensions are supposed to be the Channel and Sample dimension of a
-    single EEG file.
+    single EEG file).
 
     Example
     -------
@@ -260,7 +260,7 @@ def GetEEGPartitionNumber(EEGpath: str,
             # check for extra dimension (file with multiple trials)
             if M>2:
                 warnings.warn(('Loaded a file with multiple EEGs ('+ str(M)+'-D array).'
-                               ' Found number of sample will be multiplied by the size of each '
+                               ' Found number of samples will be multiplied by the size of each '
                                'extra dimension. Note that this may create problems to the '
                                '__getitem()__ method in the custom EEGDataset class'), Warning)
                 N_EEG*= np.prod(EEG.shape[0:-2])
@@ -329,7 +329,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
                     ) -> pd.DataFrame:
 
     """   
-    ``GetEEGSplitTable`` create a table defining the files to use for train, 
+    ``GetEEGSplitTable`` creates a table defining the files to use for train, 
     validation and test of the models.
     
     Split is done in the following way:
@@ -394,16 +394,16 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         
         Note that to work, the function must be able to identify the dataset or subject IDs 
         from the file name in order to check if they are in the given list or dict. 
-        Custom extraction function can be given as arguments; however, if nothing is given, 
+        Custom extraction functions can be given as arguments; however, if nothing is given, 
         the function will try to extract IDs considering that file names are in the format 
         a_b_c_d.extension (the typical output of the BIDSAlign library), 
         where "a" is an integer with the dataset ID and "b" an integer with the subject ID. 
-        If this fail, all files will be considered from the same datasets (id=0), 
+        If this fails, all files will be considered from the same datasets (id=0), 
         and each file from a different subject (id from 0 to N-1).
         
         Also note that if the input argument is not a list or a dict, it will be 
         automatically converted to a list. No checks about what is converted to a list will
-        be performad although.
+        be performed.
         
         Default = None
     test_data_id: list or dict, optional 
@@ -449,7 +449,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
     split_tolerance: float, optional
         Argument for ``get_subarray_closest_sum`` function. 
         Set the maximum accepted tolerance between the given split ratio
-        and the one got with the obtained subset. Must be a number in [0,1].
+        and the one obtained with the resulting subset. Must be a number in [0,1].
         
         Default = 0.01
     perseverance: int, optional
@@ -459,7 +459,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
         
         Default = 1000
     save : bool, optional
-        Whether to save the resulted DataFrame as a .csv file or not.
+        Whether to save the resulting DataFrame as a .csv file or not.
         
         Default = False
     save_path: str, optional
@@ -476,7 +476,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
     -------
     EEGSplit : DataFrame
         Two columns Pandas DataFrame. The first column has the EEG file name, 
-        the second define the split. 
+        the second defines the split. 
         The split will assign the following labels to a file:
 
            1. -1 : the file is excluded 
@@ -822,7 +822,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
                           seed: int = None
                          ) -> pd.DataFrame:
     """   
-    ``GetEEGSplitTableKfold`` create a table with multiple splits for cross-validation.
+    ``GetEEGSplitTableKfold`` creates a table with multiple splits for cross-validation.
     Test split, if calculated, is kept equal in every CV split.
     Split is done in the following way:
 
@@ -881,7 +881,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
         
         Note that to work, the function must be able to identify the dataset or subject IDs 
         from the file name in order to check if they are in the given list or dict. 
-        Custom extraction function can be given as arguments; however, if nothing is given, 
+        Custom extraction functions can be given as arguments; however, if nothing is given, 
         the function will try to extract IDs considering that file names are in the format 
         a_b_c_d.extension (the output of the BIDSalign library), 
         where "a" is an integer with the dataset ID and "b" an integer with the subject ID. 
@@ -890,7 +890,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
         
         Also note that if the input argument is not a list or a dict, it will be 
         automatically converted to a list. No checks about what is converted to a list will
-        be performad although.
+        be performed.
         
         Default = None
     test_data_id: list or dict, optional 
@@ -952,7 +952,7 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     Returns
     -------
     EEGSplitKfold : pd.DataFrame
-       Panda's DataFrame where the first column has the EEG file names, while the
+       Pandas DataFrame where the first column has the EEG file names, while the
        others will have the assigned split for each CV split. Each split is included 
        in a column with the name "split_k" with k from 1 to the given Kfold argument.
        Each split will assign the following labels to a file:
@@ -1073,8 +1073,8 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
 
 def getsplit(split_table: pd.DataFrame, split: int) -> pd.DataFrame:
     """
-    ``getsplit`` extract a split from the output of the ``GetEEGSplitTableKfold`` .
-    It also change column names in order to make them equals to the output DataFrame
+    ``getsplit`` extracts a split from the output of the ``GetEEGSplitTableKfold`` .
+    It also changes column names in order to make them equals to the output DataFrame
     of the ``GetEEGSplitTable`` function. 
 
     Parameters
@@ -1153,7 +1153,7 @@ def check_split(EEGlen: pd.DataFrame,
     Returns
     -------
     ratios: dict, optional
-        A dictionary with the calculates ratios. If labels were given, a numpy array
+        A dictionary with the calculated ratios. If labels were given, a numpy array
 
     Example
     -------
@@ -1245,7 +1245,7 @@ class EEGDataset(Dataset):
     """
     ``EEGDataset`` is a custom pytorch.Dataset class designed to manage different
     loading configuration, both for pretraining and fine tuning.
-    Its main functionalities resides in the ability to accepts different ways to 
+    Its main functionalities reside in the ability to accepts different ways to 
     load, transform and extract optional labels from the data without preallocate
     the entire dataset, which is especially useful in SSL experiments, where multiple 
     and large datasets are used.
@@ -1285,8 +1285,8 @@ class EEGDataset(Dataset):
         load_function(fullpath, optional_arguments) )
 
         The function can output one or two arguments where the first must be the EEG file 
-        and the second its (if there is one) label.
-        Note that the assumed number of output is based on the parameter label_on_load. 
+        and the second (if there is one) is its label.
+        Note that the assumed number of outputs is based on the parameter label_on_load. 
         So if the function will return only the EEG remember to set label_on_load on False.
         Note also that this function must load the EEGs in the same way as during 
         ``GetEEGPartitionNumber`` call.
@@ -1340,8 +1340,8 @@ class EEGDataset(Dataset):
         
         Default = True
     label_key: str or list of str, optional
-        A single or set of dictionary keys given as list of strings to use to get access 
-        to a specific label if multiple were loaded. Might be useful if the loading function
+        A single or set of dictionary keys given as list of strings, used to access 
+        a specific label if multiple were loaded. Might be useful if the loading function
         will return a dictionary of labels associated to the file, 
         for example when you have a set of patient info but you want to use only a 
         specific one.
@@ -1610,9 +1610,9 @@ class EEGsampler(Sampler):
         Default = 1
     Keep_only_ratio: float, optional
         Whether to preserve only a given ratio of samples for each files in the given EEGdataset.
-        It can be used to reduce the training time of each epoch while being sure to fed at
+        It can be used to reduce the training time of each epoch while being sure to feed at
         least a portion of each EEG file in your dataset. If not given, all samples of the
-        given dataset will be used. Note that the sample indeces will be chosen after the 
+        given dataset will be used. Note that the sample indices will be chosen after the 
         intra-file level shuffle so to avoid selecting the same initial portions of the EEG
         record.
 

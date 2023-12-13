@@ -15,7 +15,7 @@ def SimCLR_loss(projections: torch.Tensor,
                 temperature: float=0.15,
                )-> torch.Tensor:
     """
-    ``SimCLR_loss`` compute the normalized temperature-scaled cross entropy loss [NTXent]_ , 
+    ``SimCLR_loss`` computes the normalized temperature-scaled cross entropy loss [NTXent]_ , 
     which is used in many contrastive learning algorithm. It is basically a simple 
     implementation of the InfoNCE_loss provided in the official simCLR repository 
     [simgit]_ using only torch functions.
@@ -43,7 +43,7 @@ def SimCLR_loss(projections: torch.Tensor,
     ----
     Looking at some implementations (e.g. the one in lightlyAI), 
     the returned loss seems to be double. 
-    However the function add_contrastive_loss in the original repo return the same value as this 
+    However the function add_contrastive_loss in the original repo returns the same value as this 
     implementation.
 
     References
@@ -157,9 +157,9 @@ def Moco_loss(q: torch.Tensor,
               temperature: float=0.07)-> torch.Tensor:
     
     """
-    Simple implementation of the Moco loss function [moco2]_. 
+    Simple implementation of the MoCo loss function [moco2]_. 
     It is the InfoNCE loss with dot product as similarity and memory bank as negative samples. 
-    If no queue related to the memory bank is given, Moco v3 [moco3]_ loss calculation 
+    If no queue related to the memory bank is given, MoCo v3 [moco3]_ loss calculation 
     is performed. Note that the real MoCo v3 loss is calculated by calling the function 2 times
     (with different q and k tensors) and summing up the results.
 
@@ -174,7 +174,7 @@ def Moco_loss(q: torch.Tensor,
         N = batch size , C = number of features.
     queue:  torch.Tensor, optional
         2D (CxK) Tensor with the memory bank, i.e. a collection of previous augmented batch 
-        projection_head outputs which acts as negative samples. 
+        projection_head outputs which act as negative samples. 
         C = number of features, K = memory bank size.
 
         Default = None
@@ -317,7 +317,7 @@ def Barlow_loss(z1: torch.Tensor,
         2D tensor with projections of one augmented version of the batch.
     z2: torch.tensor, optional
         2D projections of the other augmented version of the batch. Can be none if 
-        z1 and z2 are cat together. In this case internal split is done.
+        z1 and z2 are concatenated. In this case internal split is done.
 
         Default = None
     lambda_coeff: float, optional

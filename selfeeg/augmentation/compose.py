@@ -13,7 +13,7 @@ class StaticSingleAug():
     where the optional arguments are previously set and given during initialization. 
     No random choice of the arguments is performed. The class accepts multiple set of 
     optional arguments. In this case they are called individually at each class
-    call, in a sequential and cyclic manner. This means that the first call use the first set of 
+    call, in a sequential and cyclic manner. This means that the first call uses the first set of 
     arguments, the second will use the second set of arguments, and so on. 
     When the last set of arguments is used, the class will restart from the
     first set of arguments.
@@ -40,7 +40,7 @@ class StaticSingleAug():
             4. a list of dicts or lists. This is a particular case where multiple combinations 
             of arguments are given. Each element of the list must be a list or a dict 
             with the specific argument combination. Every time ``PerformAugmentation`` is called, 
-            one of the given combination is used to perform the data augmentation. The list
+            one of the given combinations is used to perform the data augmentation. The list
             is followed sequentially with repetition, meaning that the first call uses the first 
             set of arguments of the list, the second call uses the second set of arguments, and so on. 
             When the last element of the list is used, the function will restart scrolling
@@ -132,7 +132,7 @@ class StaticSingleAug():
 class DynamicSingleAug():
     """
     ``DynamicSingleAug`` performs a single data augmentation 
-    where the optional arguments are chosen at random from a given discrete or a continuous range
+    where the optional arguments are chosen at random from a given discrete or continuous range
     of values. Random choice of the arguments is performed at each call.
 
     To perform an augmentation, simply call the instantiated class 
@@ -173,7 +173,7 @@ class DynamicSingleAug():
             
             1. if range_type is a **dict**:
             
-                - keys must be the ones in range_arg
+                - keys must be those in range_arg
                 - values must be single element specifying if the argument must be an integer. 
                   In this case, use a **boolean True** or a **string 'int'** to specify if the argument
                   must be converted to an integer.
@@ -197,7 +197,7 @@ class DynamicSingleAug():
     Note
     ----
     At least one of **discrete_arg** or **range_arg** arguments must be given, 
-    the class simply suggest to use ``StaticSingleAug``.
+    the class simply suggests to use ``StaticSingleAug``.
 
     Example
     -------
@@ -331,9 +331,9 @@ class DynamicSingleAug():
     
 class SequentialAug():
     """
-    ``SequentialAug`` apply a sequence of augmentations in a specified order.
-    No random choices between the given list of augmentation is performed, just
-    pure call of all the augmentation in the specified order.
+    ``SequentialAug`` applies a sequence of augmentations in a specified order.
+    No random choice between the given list of augmentation is performed, just
+    pure call of all the augmentations in the specified order.
 
     To perform an augmentation, simply call the instantiated class 
     (see provided example or check the introductory notebook)
@@ -406,7 +406,7 @@ class SequentialAug():
 
 class RandomAug():
     """
-    ``RandomAug`` apply an augmentations selected randomly from a given set.
+    ``RandomAug`` applies an augmentations selected randomly from a given set.
 
     To perform an augmentation, simply call the instantiated class 
     (see provided example or check the introductory notebook)
@@ -420,8 +420,8 @@ class RandomAug():
         It is suggested to give a set of ``StaticSingleAug`` or ``DynamicSingleAug`` instantiations.
     p: 1-D array-like, optional
         A 1-D array or list with the weights associated to each augmentation 
-        (higher the weight, higher the frequency of an augmentation in a list is chosen).
-        elements of p must be in the same order as the given augmentations.
+        (higher the weight, higher the frequency of choosing an augmentation of the list).
+        Elements of p must be in the same order as the given augmentations.
         If given, p will be scaled so to have sum 1 (so you can give any value). 
         If not given, all augmentations will be chosen with equal probability.
         

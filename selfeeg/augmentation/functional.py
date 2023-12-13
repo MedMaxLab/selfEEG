@@ -43,7 +43,7 @@ __all__ = ['add_band_noise', 'add_eeg_artifact', 'add_gaussian_noise', 'add_nois
 # ----- SHIFTS AND FLIPS -------
 def identity(x: ArrayLike) -> ArrayLike:
     """
-    ``identity`` return the same array or tensor as it was given.
+    ``identity`` returns the same array or tensor it was given.
     It can be used during augmentation composition to randomly avoid some augmentations
 
     Parameters
@@ -70,7 +70,7 @@ def identity(x: ArrayLike) -> ArrayLike:
 def shift_vertical(x: ArrayLike, 
                    value: float) -> ArrayLike:
     """
-    ``shift_vertical`` add a scalar value to the `ArrayLike` object x.
+    ``shift_vertical`` adds a scalar value to the `ArrayLike` object x.
     
     Parameters
     ----------
@@ -104,7 +104,7 @@ def shift_horizontal(x: ArrayLike,
                      random_shift: bool=False,
                      batch_equal: bool=True
                     ) -> ArrayLike:
-    """``shift_horizontal`` shift temporally the elements of the `ArrayLike` object x 
+    """``shift_horizontal`` shifts temporally the elements of the `ArrayLike` object x 
     along the the last dimension.
     The empty elements at beginning or the ending part after shift are set to zero.
     
@@ -188,7 +188,7 @@ def shift_horizontal(x: ArrayLike,
 
 def _UnitStep(x):
     """
-    ``_UnitStep`` create a numpy array or pytorch tensor with shape equal to x 
+    ``_UnitStep`` creates a numpy array or pytorch tensor with shape equal to x 
     and with the last dimension filled with the step function values used in the Hilbert Transform.
     This is used to speed up the computation of shift_frequency when batch_equal is set to False.
     In short, it avoids initializing the same h multiple times. 
@@ -397,7 +397,7 @@ def shift_frequency(x: ArrayLike,
 
 def flip_vertical(x: ArrayLike) -> ArrayLike:
     """
-    ``flip_vertical`` change the sign of all the elements of the input.
+    ``flip_vertical`` changes the sign of all the elements of the input.
     `ArrayLike` object **x**.
     
     Parameters
@@ -424,7 +424,7 @@ def flip_vertical(x: ArrayLike) -> ArrayLike:
 
 
 def flip_horizontal(x: ArrayLike) -> ArrayLike:
-    """flip_horizontal flip the elements of the input `ArrayLike` object **x** along 
+    """flip_horizontal flips the elements of the input `ArrayLike` object **x** along 
     its last dimension.
     
     Parameters
@@ -460,7 +460,7 @@ def add_gaussian_noise(x: ArrayLike,
                        mean: float=0.,
                        get_noise: bool=False
                       ) -> tuple[ArrayLike, Optional[ArrayLike]]:
-    """``add_gaussian_noise`` add gaussian noise with the desired standard deviation.
+    """``add_gaussian_noise`` adds gaussian noise with the desired standard deviation.
     It is also possible to add a vertical shift (mean on the noise). Note that in this case 
     the noise will not have 0 mean anymore and it cannot be concretely considered white noise anymore.
     
@@ -519,7 +519,7 @@ def add_noise_SNR(x: ArrayLike,
     ``add_noise_SNR`` add noise to the input `ArrayLike` object **x** such that its 
     SNR (Signal to Noise Ratio) will be the one desired. Since the signal is supposed 
     to be already noisy, it makes more sense to say that this 
-    function scale the SNR by a factor equal to 1/P_noise_new, where P_noise_new is the power 
+    function scales the SNR by a factor equal to 1/P_noise_new, where P_noise_new is the power 
     of the new added noise. Check [snr1]_ for more info.
     
     Parameters
@@ -592,10 +592,10 @@ def add_band_noise(x: ArrayLike,
                    get_noise: bool=False
                   ) -> tuple[ArrayLike, Optional[ArrayLike]]:
     
-    """``add_band noise`` add random noise filtered at specific bandwidths.
+    """``add_band noise`` adds random noise filtered at specific bandwidths.
     
-    Given a set of bandwidths or a set of specific frequency, `add_band_noise` 
-    create a noise whose spectrum is bigger than zero only on the specified bands. 
+    Given a set of bandwidths or a set of specific frequencies, `add_band_noise` 
+    creates a noise whose spectrum is bigger than zero only on the specified bands. 
     It can be used to alter only specific frequency components of the original signal. 
     By default, the noise generated will have the same standard deviation as x, but 
     it can be rescaled so to be within a specific range of values or to have a specific 
@@ -610,7 +610,7 @@ def add_band_noise(x: ArrayLike,
         values:    
         
             - strings: add noise to specific EEG components. Can be any of "delta", "theta", "alpha", "beta", "gamma", "gamma_low", "gamma_high".
-            - scalar: add noise to a specifi component.
+            - scalar: add noise to a specific component.
             - tuple with 2 scalar: add noise to a specific band set with the tuple (start_component,end_component).
     
     samplerate: float, optional
@@ -762,7 +762,7 @@ def scaling(x: ArrayLike,
             value: float=None,
             batch_equal: bool=True
            ) -> ArrayLike:
-    """``scaling`` rescale the to the input `ArrayLike` object **x** by a given amplitude.
+    """``scaling`` rescales the to the input `ArrayLike` object **x** by a given amplitude.
     
     Parameters
     ----------
@@ -816,7 +816,7 @@ def random_slope_scale(x: ArrayLike,
                        keep_memory: bool=False
                       ) -> ArrayLike:
     """
-    ``random_slope_scale`` randomly scale the first derivative of x
+    ``random_slope_scale`` randomly scales the first derivative of x
     
     Given the input `ArrayLike` object **x** where the last two dimensions refers to the 
     EEG channels and samples (1D tensor are also accepted), random_slope_scale calculates 
@@ -824,7 +824,7 @@ def random_slope_scale(x: ArrayLike,
     two consecutive values of the last dimension, and rescale each of them with
     a random factor selected from a uniform distribution between min_scale and max_scale. 
     This transformation is similar to adding a random noise, but with the constraint that the 
-    first derivatise must keep the same sign of the original EEG (e.g. if a value is bigger 
+    first derivatives must keep the same sign of the original EEG (e.g. if a value is bigger 
     than the previous one, then this is also true in the transformed data).
     
     Parameters
@@ -856,7 +856,7 @@ def random_slope_scale(x: ArrayLike,
             ``x_hat(n)= x_hat(n-1) + scaling*( x(n)-x(n-1) )``
         
         Keep in mind that this may completely change the range of values, 
-        as consecutive increase in the slopes may cause a strong vertical shift of the signal. 
+        as consecutive increases in the slopes may cause a strong vertical shift of the signal. 
         If set to True, it is suggested to set the scaling factor in the range [0.8, 1.2]
         
         Default: False
@@ -946,7 +946,7 @@ def random_FT_phase(x: ArrayLike,
                     batch_equal: bool=True
                    ) -> ArrayLike:
     """
-    ``random_FT_phase`` randomize the phase of all signals in 
+    ``random_FT_phase`` randomizes the phase of all signals in 
     the input `ArrayLike` object **x** as proposed in [ftphase1]_.
 
     Parameters
@@ -1023,8 +1023,8 @@ def moving_avg(x: ArrayLike,
                order: int=5
               ) -> ArrayLike:
     """
-    ``moving_avg`` apply a moving average filter to the input `ArrayLike` object **x** 
-    along its last dimension. The filter order and can be given as function argument.
+    ``moving_avg`` applies a moving average filter to the input `ArrayLike` object **x** 
+    along its last dimension. The filter order can be given as function argument.
     
     Parameters
     ----------
@@ -1108,7 +1108,7 @@ def get_filter_coeff(Fs: float,
     """
     ``get_filter_coeff`` returns the filter coefficients a and b [coeff1]_ needed to call 
     the scipy's [coeff2]_ or torchaudio's [coeff3]_ filtfilt function.
-    This function is internally called by other filtering function when a and b 
+    This function is internally called by other filtering functions when a and b 
     coefficients are not given as input argument. 
     It works following this priority pipeline:
     
@@ -1240,7 +1240,6 @@ def get_filter_coeff(Fs: float,
     return b, a
 
 
-# SISTEMA WP E WS (METTI FS PER CAPIRE SE NORMALIZZARE O MENO)
 def filter_lowpass(x: ArrayLike,
                    Fs: float,
                    Wp: float=50,
@@ -1258,7 +1257,7 @@ def filter_lowpass(x: ArrayLike,
     ``filter_lowpass`` applies a lowpass filter on the last dimension of the given 
     input `ArrayLike` object **x**. If a and b coefficient are not 
     given, internally calls ``get_filter_coeff`` with the other arguments to get them. 
-    The filter dedign follow this hierarchy order:
+    The filter design follows this hierarchical order:
     
         `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
     
@@ -1332,7 +1331,7 @@ def filter_lowpass(x: ArrayLike,
     Note
     ----
     Pytorch filtfilt works differently on edges and is pretty unstable 
-    with high order filters, so avoid restrictive condition which can increase the order 
+    with high order filters, so avoid restrictive conditions that can increase the order 
     of the filter.
 
     Example
@@ -1391,7 +1390,7 @@ def filter_highpass(x: ArrayLike,
     ``filter_highpass`` applies an highpass filter on the last dimension of the given 
     input `ArrayLike` object **x**. If a and b coefficient are not 
     given, internally calls ``get_filter_coeff`` with the other arguments to get them. 
-    The filter dedign follow this hierarchy order:
+    The filter design follows this hierarchical order:
     
         `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
     
@@ -1436,7 +1435,7 @@ def filter_highpass(x: ArrayLike,
         
         Default = None
     b: ArrayLike, optional
-        The numerator coefficients of the filer.
+        The numerator coefficients of the filter.
         
         Default = None
     return_filter_coeff: bool, optional
@@ -1463,7 +1462,7 @@ def filter_highpass(x: ArrayLike,
     Note
     ----
     Pytorch filtfilt works differently on edges and is pretty unstable 
-    with high order filters, so avoid restrictive condition which can increase the order 
+    with high order filters, so avoid restrictive conditions that can increase the order 
     of the filter.
 
     Example
@@ -1519,10 +1518,10 @@ def filter_bandpass(x: ArrayLike,
                     return_filter_coeff: bool=False
                    ) -> tuple[ArrayLike, Optional[tuple[ArrayLike,ArrayLike]]]:
     """
-    ``filter_bandpass`` apply a bandpass filter on the last dimension of the given 
+    ``filter_bandpass`` applies a bandpass filter on the last dimension of the given 
     input `ArrayLike` object **x**. If a and b coefficient are not 
     given, internally calls ``get_filter_coeff`` with the other arguments to get them. 
-    The filter dedign follow this hierarchy order:
+    The filter design follows this hierarchical order:
     
         `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
     
@@ -1530,7 +1529,7 @@ def filter_bandpass(x: ArrayLike,
     the filter coefficient.
     
     If ``eeg_band`` is given, (Wp,Ws,rp,rs) are bypassed and instantiated according 
-    to the eeg band specified. The priority order remain, so if (Wn,order) or (a,b) are given, 
+    to the eeg band specified. The priority order remains, so if (Wn,order) or (a,b) are given, 
     the filter will be created according to such argument.
     
     Parameters
@@ -1605,7 +1604,7 @@ def filter_bandpass(x: ArrayLike,
     Note
     ----
     Pytorch filtfilt works differently on edges and is pretty unstable 
-    with high order filters, so avoid restrictive condition which can increase the order 
+    with high order filters, so avoid restrictive conditions that can increase the order 
     of the filter.
 
     Example
@@ -1665,7 +1664,7 @@ def filter_bandstop(x: ArrayLike,
     ``filter_bandstop`` apply a bandstop filter on the last dimension of the given 
     input `ArrayLike` object **x**. If a and b coefficient are not 
     given, internally calls ``get_filter_coeff`` with the other arguments to get them. 
-    The filter dedign follow this hierarchy order:
+    The filter design follows this hierarchical order:
     
         `(Wp,Ws,rp,rs) --> (Wn, order) --> (a,b)`
     
@@ -1749,8 +1748,7 @@ def filter_bandstop(x: ArrayLike,
     Note
     ----
     Pytorch filtfilt works differently on edges and is pretty unstable 
-    with high order filters, so avoid restrictive condition which can increase the order 
-    of the filter.
+    with high order filters, so avoid restrictive conditions that can increase the order 
 
     Example
     -------
@@ -1845,7 +1843,7 @@ def get_channel_map_and_networks(channel_map: list=None,
     Parameters
     ----------
     channel_map: list, optional
-        A list with all the EEG channel names, given as strings with upper case letters
+        A list with all the EEG channel names, given as strings in upper case
         (e.g. "FP1", "CZ", "C1"). Channel names must refer to the 10-10 international system.
         If left to None, the following 61 channel map will be initialized:
 
@@ -1950,10 +1948,10 @@ def permute_channels(x: ArrayLike,
                      batch_equal: bool=False
                     ) -> ArrayLike:
     """
-    ``permutation_channels`` permute the input `ArrayLike` object **x** along the 
+    ``permutation_channels`` permutes the input `ArrayLike` object **x** along the 
     channel dimension (second to last).
     
-    Given an input x where the last two dimension must be 
+    Given an input x where the last two dimensions must be 
     (EEG_channels x EEG_samples), permutation_channels shuffles all or a subset of the EEG's 
     channels. Shuffles can be done randomly or using specific
     networks (based on resting state functional connectivity networks).
@@ -1970,7 +1968,7 @@ def permute_channels(x: ArrayLike,
         
         Default = -1
     mode: str, optional
-        How to permute the channels. Can be any of:
+        How to permute the channels. Can be:
         
             - 'random': shuffle channels at random
             - 'network': shuffle channels which belongs to the same network. 
@@ -1980,7 +1978,7 @@ def permute_channels(x: ArrayLike,
         
         Default = "random"
     channel_map: list[str], optional
-        The EEG channel map. Must be a list of string 
+        The EEG channel map. Must be a list of strings 
         or a numpy array of dtype='<U4' with channel names as elements. 
         Channel name must be defined with capital letters (e.g. 'P04', 'FC5').
         If None is left the following 61 channel map is initialized:
@@ -2014,13 +2012,13 @@ def permute_channels(x: ArrayLike,
 
     Warnings
     --------
-    Using **chan2shuf = -1** and **mode = 'network'** can results in a lower number 
-    of channels permutated compared to the whole list of channels included in the networks.
+    Using **chan2shuf = -1** and **mode = 'network'** can result in a lower number 
+    of channels permuted compared to the whole list of channels included in the networks.
     This is due to the implementation of the permutation block in network mode, which 
     iteratively applies the channel permutation at each single network, sequentially
-    excluding channels already permutated in previous steps (networks are not mutually 
+    excluding channels already permuted in previous steps (networks are not mutually 
     exclusive, there are overlapping channels). At some point a network may remain with only one
-    channel to permutate, which cannot be permutated since it is alone. This apply only in context
+    channel to permute, which cannot be permuted since it is alone. This applies only in contexts
     where the number of channel is near the number of the selected ones.
 
     See Also
@@ -2036,7 +2034,7 @@ def permute_channels(x: ArrayLike,
     >>> x = torch.zeros(61,4) + torch.arange(61).reshape(61,1)
     >>> xaug = aug.permute_channels(x,10)
     >>> print( (x[:,0]!=xaug[:,0]).sum()) # should output 10
-    >>> #Try with network mode and check if channels not in the selected networks were permutated
+    >>> #Try with network mode and check if channels not in the selected networks were permuted
     >>> eeg1010, chan_net = aug.get_channel_map_and_networks(chan_net=["DMN","VFN"])
     >>> chan2per = np.union1d(chan_net[0], chan_net[1])
     >>> a=np.intersect1d(eeg1010, chan2per, return_indices=True)[1]
@@ -2141,7 +2139,7 @@ def permutation_signal(x: ArrayLike,
                        batch_equal: bool=False
                       ) -> ArrayLike:
     """
-    ``permutation_signal`` permute some portions of the input `ArrayLike` object **x**
+    ``permutation_signal`` permutes some portions of the input `ArrayLike` object **x**
     along its last dimension.
     
     Given an input x where last two dimensions must refer to the EEG recording 
@@ -2248,14 +2246,14 @@ def warp_signal(x: ArrayLike,
                ) -> ArrayLike:
     
     """
-    ``warp_signal`` stretch and squeeze portions of the input `ArrayLike` object **x**
+    ``warp_signal`` stretches and squeezes portions of the input `ArrayLike` object **x**
     along its last dimension. To do that warp_signal:
     
-        1. divide the last dimension of x into N segments
-        2. select at random a subset segments
-        3. stretch those segments according to stretch_strength
-        4. squeeze other segments according to squeeze_strength
-        5. resample x to the original dimension. For this part pchip interpolation with a uniform virtual grid is used
+        1. divides the last dimension of x into N segments
+        2. selects at random a subset segments
+        3. stretches those segments according to stretch_strength
+        4. squeezes other segments according to squeeze_strength
+        5. resamples x to the original dimension. For this part pchip interpolation with a uniform virtual grid is used
     
     Parameters
     ----------
@@ -2356,15 +2354,15 @@ def crop_and_resize(x: ArrayLike,
                     batch_equal: bool=False,
                    ) -> ArrayLike:
     """
-    ``crop_and_resize`` crop some segments of the input `ArrayLike` object **x**
-    along its last dimension and resize it to its original dimension. To do that, 
+    ``crop_and_resize`` crops some segments of the input `ArrayLike` object **x**
+    along its last dimension and resizes it to its original dimension. To do that, 
     crop_and_resize:
     
-        1. divide the last dimension of x into N segments
-        2. select at random a subset segments
-        3. remove the selected segments from x
-        4. create a new cropped version of x
-        5. resample the new cropped version to the original dimension. For this part pchip interpolation with a uniform virtual grid is used.
+        1. divides the last dimension of x into N segments
+        2. selects at random a subset segments
+        3. removes the selected segments from x
+        4. creates a new cropped version of x
+        5. resamples the new cropped version to the original dimension. For this part pchip interpolation with a uniform virtual grid is used.
     
     Parameters
     ----------
@@ -2442,12 +2440,12 @@ def change_ref(x: ArrayLike,
                exclude_from_ref: int or list[int]=None,
               ) -> ArrayLike:
     """
-    ``change_ref`` change the reference of all EEG record in the input 
+    ``change_ref`` changes the reference of all EEG record in the input 
     `ArrayLike` object **x**. Currently, reference can be changed to:
     
         1. Channel reference (e.g. Cz). Each record of a channel is subtracted to the record of the Cz channel. 
            Cz(t) becomes 0 for all t
-        2. Common Average Reference (CAR). Each record is subtracted with the average of all electrodes. 
+        2. Common Average Reference (CAR). Each record is subtracted of the average of all electrodes. 
            Currently, it does not cover all particular cases which can be managed by major libraries like EEGlab or 
            MNE as this implementation is minimalist.
     
@@ -2563,7 +2561,7 @@ def masking(x: ArrayLike,
             batch_equal: bool=False
            ) -> ArrayLike:
     """
-    ``masking`` put to zero random portions of the input the input `ArrayLike` object **x** 
+    ``masking`` puts to zero random portions of the input the input `ArrayLike` object **x** 
     along its last dimension. The function will apply the same masking operation to all
     Channels of the same EEG. The number of portions to mask and the overall masked ratio can 
     be set as input.
@@ -2597,9 +2595,9 @@ def masking(x: ArrayLike,
 
     Note
     ----
-    `mask_number` and `mask_ratio` should be used to tuned the number and width of masked blocks. 
+    `mask_number` and `mask_ratio` should be used to tune the number and width of masked blocks. 
     For example, given masked_ratio = 0.50 and mask_number = 3, the number of samples put to 0 will be in total half 
-    the signal length with 3 distinct blocks of consecutive zeros of random length.
+    the signal length with 3 distinct blocks of consecutive zeroes of random length.
 
     Example
     -------
@@ -2661,7 +2659,7 @@ def channel_dropout(x: ArrayLike,
                     batch_equal: bool=True
                    ) -> ArrayLike:
     """
-    ``channel_dropout`` put to 0 a given (or random) amount of channels of the 
+    ``channel_dropout`` puts to 0 a given (or random) amount of channels of the 
     input `ArrayLike` object **x**. Channels are selected randomly.
     
     Parameters
