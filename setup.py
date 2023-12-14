@@ -3,9 +3,9 @@
 import os
 import setuptools
 
-
 requirements = ['pandas>=1.5.3',
                 'scipy>=1.10.1',
+                'torch>=2.0.0',
                 'torchaudio>=2.0.2',
                 'torchvision>=0.15.2',
                 'tqdm'
@@ -13,11 +13,13 @@ requirements = ['pandas>=1.5.3',
 
 extra_require = {'interactive':['jupyterlab',
                                 'scikit-learn',
-                                'seaborn'
+                                'seaborn',
+                                'mne'
                                ]
                 }
 
-PACKAGES = setuptools.find_packages(exclude=['test*','Notebooks*','docs*'])
+PACKAGES = setuptools.find_packages(exclude=['test*','Notebooks*',
+                                             'docs*','dist*','dist_conda*'])
 
 version_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), 'selfeeg',
@@ -66,7 +68,7 @@ setuptools.setup(
     project_urls={
         "Bug Tracker": "https://github.com/MedMaxLab/selfEEG/issues",
         "Source Code": "https://github.com/MedMaxLab/selfEEG",
-        "Documentation": "https://github.com/MedMaxLab/selfEEG",
+        "Documentation": "https://selfeeg.readthedocs.io/en/latest/index.html",
     },
     install_requires=requirements,
     include_package_data=True,
