@@ -84,7 +84,7 @@ class DepthwiseConv2d(nn.Conv2d):
     @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
-        Citing the Tensorflow documentation, the implementation try to replicate this
+        Citing the Tensorflow documentation, the implementation tries to replicate this
         
         integer, axis along which to calculate weight norms. 
         For instance, in a Dense layer the weight 
@@ -97,7 +97,7 @@ class DepthwiseConv2d(nn.Conv2d):
 
         :meta private:
         """
-        # calcuate the norm of each filter of size (row, cols, input_depth), here (1, kernel_size)
+        # calculate the norm of each filter of size (row, cols, input_depth), here (1, kernel_size)
         if self.kernel_size[1]>1:
             norm= self.weight.norm(dim=2, keepdim=True).norm(dim=3,keepdim=True)
         else:
@@ -121,7 +121,7 @@ class SeparableConv2d(nn.Module):
     """
     Pytorch implementation of the Separable Convolutional layer with the possibility of 
     adding a norm constraint on the depthwise filters (feature) dimension.
-    The layer apply first a depthwise conv2d, then a pointwise conv2d (kernel size = 1)
+    The layer applies first a depthwise conv2d, then a pointwise conv2d (kernel size = 1)
     Most of the parameters are the same as described in pytorch conv2D help.
 
     Parameters
@@ -235,7 +235,7 @@ class ConstrainedDense(nn.Linear):
     @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
-        Citing the Tensorflow documentation, the implementation try to replicate this
+        Citing the Tensorflow documentation, the implementation tries to replicate this
         
         integer, axis along which to calculate weight norms. For instance, in a Dense 
         layer the weight matrix has shape 
@@ -248,7 +248,7 @@ class ConstrainedDense(nn.Linear):
         
         :meta private:
         """
-        # calcuate the norm of each filter of size (row, cols, input_depth), 
+        # calculate the norm of each filter of size (row, cols, input_depth), 
         # here (1, kernel_size)
         norm = self.weight.norm(dim=1, keepdim=True)
 
@@ -344,7 +344,7 @@ class ConstrainedConv2d(nn.Conv2d):
     @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
-        Citing the Tensorflow documentation, the implementation try to replicate this
+        Citing the Tensorflow documentation, the implementation tries to replicate this
         integer, axis along which to calculate weight norms. For instance, in a Dense 
         layer the weight matrix has shape 
         (input_dim, output_dim), set axis to 0 to constrain each weight vector of length 
@@ -356,7 +356,7 @@ class ConstrainedConv2d(nn.Conv2d):
         
         :meta private:
         """
-        # calcuate the norm of each filter of size 
+        # calculate the norm of each filter of size 
         # (row, cols, input_depth), here (1, kernel_size)
         if self.kernel_size[1]>1:
             norm= self.weight.norm(dim=2, keepdim=True).norm(dim=3,keepdim=True)
@@ -393,7 +393,7 @@ class EEGNetEncoder(nn.Module):
     Chans: int
         The number of EEG channels.
     kernlength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 64
     dropRate: float, optional
@@ -437,7 +437,7 @@ class EEGNetEncoder(nn.Module):
     
     Note
     ----
-    This implementation referres to the latest version of EEGNet which 
+    This implementation refers to the latest version of EEGNet which 
     can be found in the official repository.
 
     Example
@@ -513,7 +513,7 @@ class EEGNetEncoder(nn.Module):
 class EEGNet(nn.Module):
     """
     For more information see the following paper [EEGnet]_ .
-    Keras implementation of the full EEGnet (updated version) with more info 
+    Keras implementation of the full EEGnet (updated version), more info 
     can be found here [eegnetgit]_ .
 
     The expected **input** is a **3D tensor** with size (Batch x Channels x Samples).
@@ -545,7 +545,7 @@ class EEGNet(nn.Module):
 
         Default = 16
     dropType: str, optional
-        The type of dropout. It can be any between 'Dropout' and 'SpatialDropout2D'.
+        The type of dropout. It can be either 'Dropout' or 'SpatialDropout2D'.
 
         Default = 'Dropout'
     ELUalpha: float, optional
@@ -572,13 +572,13 @@ class EEGNet(nn.Module):
     return_logits: bool, optional
         Whether to return the output as logit or probability. 
         It is suggested to not use False as the pytorch crossentropy loss function 
-        apply the softmax internally.
+        applies the softmax internally.
 
         Default = True
 
     Note
     ----
-    This implementation referres to the latest version of EEGNet which 
+    This implementation refers to the latest version of EEGNet which 
     can be found in the official repository (see references).
     
     References
@@ -644,7 +644,7 @@ class  DeepConvNetEncoder(nn.Module):
     Chans: int
         The number of EEG channels.
     kernlength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 64
     F: int, optional
@@ -772,7 +772,7 @@ class DeepConvNet(nn.Module):
         The sample length. It will be used to calculate the embedding size 
         (for head initialization).
     kernlength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 64
     F: int, optional
@@ -812,7 +812,7 @@ class DeepConvNet(nn.Module):
         Default = 1
     return_logits: bool, optional
         Whether to return the output as logit or probability. It is suggested to not use False as 
-        the pytorch crossentropy apply the softmax internally.
+        the pytorch crossentropy applies the softmax internally.
 
         Default = True
 
@@ -1088,7 +1088,7 @@ class EEGInception(nn.Module):
     return_logits: bool, optional
         Whether to return the output as logit or probability. 
         It is suggested to not use False as 
-        the pytorch crossentropy apply the softmax internally.
+        the pytorch crossentropy applies the softmax internally.
 
         Default = True
 
@@ -1162,7 +1162,7 @@ class  TinySleepNetEncoder(nn.Module):
 
         Default = 128
     kernlength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 8
     pool: int, optional
@@ -1272,7 +1272,7 @@ class  TinySleepNet(nn.Module):
 
         Default = 128
     kernlength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 8
     pool: int, optional
@@ -1298,7 +1298,7 @@ class  TinySleepNet(nn.Module):
         Default = 128
     return_logits: bool, optional
         Whether to return the output as logit or probability. It is suggested 
-        to not use False as the pytorch crossentropy apply the softmax internally.
+        to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
 
@@ -1443,7 +1443,7 @@ class StagerNet(nn.Module):
 
         Default = 0.5
     kernLength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 64
     F: int, optional
@@ -1456,7 +1456,7 @@ class StagerNet(nn.Module):
         Default = 16
     return_logits: bool, optional
         Whether to return the output as logit or probability.  It is suggested 
-        to not use False as the pytorch crossentropy apply the softmax internally.
+        to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
 
@@ -1539,7 +1539,7 @@ class ShallowNetEncoder(nn.Module):
     ----
     In this implementation, the number of channels is an argument. 
     However, in the original paper authors preprocess EEG data by selecting a subset of
-    only 21 channels. Since the net is very minimalist, please follow the authors' notes.
+    only 21 channels. Since the net is very minimalistic, please follow the authors' notes.
 
     Example
     -------
@@ -1602,7 +1602,7 @@ class ShallowNet(nn.Module):
 
         Default = 8
     K1: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 25
     Pool: int, optional
@@ -1615,7 +1615,7 @@ class ShallowNet(nn.Module):
         Default= 0.2
     return_logits: bool, optional
         Whether to return the output as logit or probability.  It is suggested 
-        to not use False as the pytorch crossentropy apply the softmax internally.
+        to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
     
@@ -1734,14 +1734,13 @@ class ResNet1DEncoder(nn.Module):
     block: nn.Module, optional
         An nn.Module defining the resnet block.
     Layers: list of 4 int, optional
-        A list of integers indicating the number of times a resnet is block 
-        before doubling the number of filters.
+        A list of integers indicating the number of times the resnet block is repeated .
 
         Default = [2,2,2,2]
     inplane: int, optional
         The number of output filters.
     kernLength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 25
     addConnection: bool, optional
@@ -1921,8 +1920,7 @@ class ResNet1D(nn.Module):
 
         Default: selfeeg.models.BasicBlock1
     Layers: list of 4 int, optional
-        A list of integers indicating the number of times a resnet is block 
-        before doubling the number of filters.
+        A list of integers indicating the number of times the resnet block is repeated.
 
         Default = [2,2,2,2]
     inplane: int, optional
@@ -1930,7 +1928,7 @@ class ResNet1D(nn.Module):
 
         Default = 16
     kernLength: int, optional
-        The length of the temporal concolutional layer.
+        The length of the temporal convolutional layer.
 
         Default = 7
     addConnection: bool, optional
@@ -1968,7 +1966,7 @@ class ResNet1D(nn.Module):
         Default = None
     return_logits: bool, optional
         Whether to return the output as logit or probability.  It is suggested 
-        to not use False as the pytorch crossentropy apply the softmax internally.
+        to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
     
@@ -2084,7 +2082,7 @@ class  STNetEncoder(nn.Module):
 
         Default = 8
     kernLength: int, optional
-        The length of the concolutional layer.
+        The length of the convolutional layer.
 
         Default = 5
     dropRate: float, optional
@@ -2161,7 +2159,7 @@ class  STNet(nn.Module):
     The expected **input** is a **4D tensor** with size 
     (Batch x Samples x Grid_width x Grid_width), i.e. the classical 2d matrix
     with rows as channels and columns as samples is rearranged in a 3d tensor where
-    the first is the Sample dimension and the last 2 dimensions are the channel dim rearrange
+    the first is the Sample dimension and the last 2 dimensions are the channel dim rearranged
     in a 2d grid. Check the original paper for a better understanding of the input.
 
     Parameters
@@ -2180,7 +2178,7 @@ class  STNet(nn.Module):
 
         Default = 256
     kernLength: int, optional
-        The length of the concolutional layer.
+        The length of the convolutional layer.
 
         Default = 5
     dropRate: float, optional
@@ -2197,7 +2195,7 @@ class  STNet(nn.Module):
         Default = 1024
     return_logits: bool, optional
         Whether to return the output as logit or probability.  It is suggested 
-        to not use False as the pytorch crossentropy apply the softmax internally.
+        to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
 
@@ -2652,7 +2650,7 @@ class EEGSym(nn.Module):
         Default = True
     return_logits: bool, optional
         Whether to return the output as logit or probability.  It is suggested 
-        to not use False as the pytorch crossentropy apply the softmax internally.
+        to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
 

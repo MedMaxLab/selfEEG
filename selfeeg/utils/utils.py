@@ -27,11 +27,11 @@ def subarray_closest_sum(arr: list,
     
     This function is taken from geeksforgeeks at the following link [link1]_
     
-    It is important to note that this function return a subarray and not a subset of the array.
+    It is important to note that this function returns a subarray and not a subset of the array.
     A subset is a collection of elements in the array taken from any index, a subarray here is 
     a slice of the array (arr[start:end]). If you are looking for a subset with closest sum,
     which is more accurate but more computationally and memory demanding, 
-    search for another function.
+    use another function.
     
     Parameters
     ----------
@@ -111,7 +111,7 @@ def get_subarray_closest_sum(arr: Sequence[int],
     ``subarray_closest_sum`` function until the subarray has the sum within 
     [target*(1-tolerance), target*(1+tolerance)].
     At each try the array is shuffled in order to get a different solution. Keep in mind that 
-    the solution is not always the optimal, but is the first which satisfy the requirements 
+    the solution is not always the optimal, but is the first which satisfies the requirements 
     given.
     
     Parameters
@@ -204,7 +204,7 @@ def scale_range_soft_clip(x: ArrayLike,
            preserved and horizontal asintote (the saturating point) given by the user.
 
     To provide faster computation, this function can also approximate its behaviour with a 
-    sigmoid function which scale the given input using the specified range and asintote.
+    sigmoid function which scales the given input using the specified range and asintote.
     To check the difference in those functions see the geogebra file provided in the extra 
     folder of the github repository.
 
@@ -315,7 +315,7 @@ class RangeScaler():
            preserved and horizontal asintote (the saturating point) given by the user.
 
     To provide faster computation, this function can also approximate its behaviour with a 
-    sigmoid function which scale the given input using the specified range and asintote. 
+    sigmoid function which scales the given input using the specified range and asintote. 
     To check the difference in those functions see the geogebra file provided in the extra folder of 
     the github repository.
 
@@ -406,7 +406,7 @@ def torch_pchip(x: "1D Tensor",
     xv: 1D Tensor
         Tensor with the new virtual grid, i.e. the time points where to interpolate
     save_memory: bool, optional
-        Whether to perform the interpolation on subsets of the y tensor by recursively function 
+        Whether to perform the interpolation on subsets of the y tensor by recursive function 
         calls or not. Does not apply if y is a 1-D tensor. If set to False memory usage can 
         greatly increase (for example with a 128 MB tensor, the memory usage of the 
         function is 1.2 GB), but it can speed up the process. 
@@ -416,7 +416,7 @@ def torch_pchip(x: "1D Tensor",
     new_y_max_numel: int, optional
         The number of elements which the tensor needs to surpass in order to make the function 
         start doing recursive calls. It can be considered as an indicator of the maximum 
-        allowed memory usage since lower the number, lower the memory used. 
+        allowed memory usage since the lower the number, the lower the memory used. 
         
         Default = 256*1024*16 (approximately 16s of recording of a 256 Channel 
         EEG sampled at 1024 Hz).

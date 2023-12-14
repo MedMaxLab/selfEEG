@@ -26,7 +26,7 @@ __all__ = ['Barlow_Twins',
 
 def Default_augmentation(x):
     """
-    simple default augmentation used when non data augmenter is given in SSL 
+    simple default augmentation used when no data augmenter is given in SSL 
     fit methods. It's just a programming choice to avoid putting the augmenter 
     as non optional parameter. No justification 
     for the choice of random flip + random noise. 
@@ -138,14 +138,14 @@ def fine_tune(model: nn.Module,
         Default = 1
     optimizer: torch Optimizer, optional
         The optimizer used for weight's update. It can be any optimizer
-        provided in the torch.optim module. If not given Adam with default
+        provided in the torch.optim module. If not given, Adam with default
         parameters will be instantiated.
 
         Default = None
     augmenter: function, optional
         Any function (or callable object) used to perform data augmentation
         on the batch. It is highly suggested to resort to the augmentation
-        module, which implements different data augmentation function and 
+        module, which implements different data augmentation functions and 
         classes to combine them. Note that data augmentation is not performed
         on the validation set, since its goal is to increase the size of the 
         training set and to get more different samples.
@@ -189,7 +189,7 @@ def fine_tune(model: nn.Module,
 
         Default = None
     device: torch.device or str, optional
-        The devide to use for fine-tuning. If given as a string it will
+        The device to use for fine-tuning. If given as a string it will
         be converted in a torch.device instance. If not given, 'cpu' device
         will be used.
         
@@ -203,7 +203,7 @@ def fine_tune(model: nn.Module,
     Returns
     -------
     loss_info: dict, optional
-        A dictionary with keys the epoch number (as integer) and values
+        A dictionary with keys being the epoch number (as integer) and values
         a two element list with the average epoch's training and validation
         loss.
         
@@ -273,7 +273,7 @@ def fine_tune(model: nn.Module,
     if EarlyStopper is not None:
         if EarlyStopper.monitored=='validation' and not(perform_validation):
             print('Early stopper monitoring is set to validation loss'
-                  ', but not validation data are given. '
+                  ', but no validation data are given. '
                   'Internally changing monitoring to training loss')
             EarlyStopper.monitored = 'train'
 
@@ -510,8 +510,8 @@ class EarlyStopping:
         loss: float
             The calculated loss.
         count_add: int, optional
-            The number to add to the counter. It can be useful if early stopping
-            checks will not be performed after each epoch.
+            The number to add to the counter. It can be useful when early stopping
+            checks are not performed after each epoch.
         
         """
         
@@ -884,7 +884,7 @@ class SimCLR(SSL_Base):
             Any function (or callable object) used to perform data augmentation
             on the batch. It is highly suggested to resort to the augmentation
             module, which implements different data augmentation functions and 
-            classes to combine them. If none is given a default augmentation with 
+            classes to combine them. If none is given, a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case, contrary to fully supervised approaches, 
             data augmentation is also performed on the validation set, 
@@ -925,7 +925,7 @@ class SimCLR(SSL_Base):
     
             Default = None
         device: torch.device or str, optional
-            The devide to use for fine-tuning. If given as a string it will
+            The device to use for fine-tuning. If given as a string it will
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
             
@@ -944,7 +944,7 @@ class SimCLR(SSL_Base):
         Returns
         -------
         loss_info: dict, optional
-            A dictionary with keys the epoch number (as integer) and values
+            A dictionary with keys being the epoch number (as integer) and values
             a two element list with the average epoch's training and validation
             loss.
             
@@ -955,7 +955,7 @@ class SimCLR(SSL_Base):
         loss will be automatically set to training loss.
         
         """
-        # Various check on input parameters. 
+        # Various checks on input parameters. 
         # If some arguments weren't given they will be automatically set
         if device is None:
             # If device is None cannot assume if the model is on gpu and so if to send the batch
@@ -1000,7 +1000,7 @@ class SimCLR(SSL_Base):
         if EarlyStopper is not None:
             if EarlyStopper.monitored=='validation' and not(perform_validation):
                 print('Early stopper monitoring is set to validation loss'
-                      ', but not validation data are given. '
+                      ', but no validation data are given. '
                       'Internally changing monitoring to training loss')
                 EarlyStopper.monitored = 'train'
 
@@ -1359,7 +1359,7 @@ class SimSiam(SSL_Base):
             Any function (or callable object) used to perform data augmentation
             on the batch. It is highly suggested to resort to the augmentation
             module, which implements different data augmentation functions and 
-            classes to combine them. If none is given a default augmentation with 
+            classes to combine them. If none is given, a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
             is also performed on the validation set, since it is part of the 
@@ -1399,7 +1399,7 @@ class SimSiam(SSL_Base):
     
             Default = None
         device: torch.device or str, optional
-            The devide to use for fine-tuning. If given as a string it will
+            The device to use for fine-tuning. If given as a string it will
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
             
@@ -1413,7 +1413,7 @@ class SimSiam(SSL_Base):
         Returns
         -------
         loss_info: dict, optional
-            A dictionary with keys the epoch number (as integer) and values
+            A dictionary with keys being the epoch number (as integer) and values
             a two element list with the average epoch's training and validation
             loss.
             
@@ -1460,7 +1460,7 @@ class SimSiam(SSL_Base):
         perform_validation=False
         if validation_dataloader!=None:
             if not( isinstance(validation_dataloader, torch.utils.data.DataLoader)):
-                raise ValueError('Current implementation accept only validation data as'
+                raise ValueError('Current implementation accepts only validation data as'
                                  ' a pytorch DataLoader')
             else:
                 perform_validation=True
@@ -1468,7 +1468,7 @@ class SimSiam(SSL_Base):
         if EarlyStopper is not None:
             if EarlyStopper.monitored=='validation' and not(perform_validation):
                 print('Early stopper monitoring is set to validation loss'
-                      ', but not validation data are given. '
+                      ', but no validation data are given. '
                       'Internally changing monitoring to training loss')
                 EarlyStopper.monitored = 'train'
     
@@ -1600,7 +1600,7 @@ class SimSiam(SSL_Base):
              device: str=None
             ):
         """
-        aAmethod to evaluate the loss on a test dataloader.
+        A method to evaluate the loss on a test dataloader.
         Parameters are the same as described in the fit method, aside for 
         those related to model training which are removed.
         
@@ -1707,7 +1707,7 @@ class MoCo(SSL_Base):
     feat_size: int, optional
         The size of the feature vector (projector's output last dim shape).
         It will be used to initialize the queue for MoCo v2. If not given
-        the last element of the projection_head list is used. Of course, it 
+        the last element of the projection_head list is used. It 
         must be given if a custom projection head is used.
 
         Default = -1
@@ -1950,7 +1950,7 @@ class MoCo(SSL_Base):
             Any function (or callable object) used to perform data augmentation
             on the batch. It is highly suggested to resort to the augmentation
             module, which implements different data augmentation functions and 
-            classes to combine them. If none is given a default augmentation with 
+            classes to combine them. If none is given, a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
             is also performed on the validation set, since it is part of the 
@@ -1977,7 +1977,7 @@ class MoCo(SSL_Base):
             Default = None
         lr_scheduler: torch Scheduler
             A pytorch learning rate scheduler used to update the learning rate 
-            during the fine-tuning.
+            during fine-tuning.
     
             Default = None
         EarlyStopper: EarlyStopping, optional
@@ -1995,7 +1995,7 @@ class MoCo(SSL_Base):
     
             Default = None
         device: torch.device or str, optional
-            The devide to use for fine-tuning. If given as a string it will
+            The device to use for fine-tuning. If given as a string it will
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
             
@@ -2009,7 +2009,7 @@ class MoCo(SSL_Base):
         Returns
         -------
         loss_info: dict, optional
-            A dictionary with keys the epoch number (as integer) and values
+            A dictionary with keys being the epoch number (as integer) and values
             a two element list with the average epoch's training and validation
             loss.
             
@@ -2059,7 +2059,7 @@ class MoCo(SSL_Base):
         perform_validation=False
         if validation_dataloader!=None:
             if not( isinstance(validation_dataloader, torch.utils.data.DataLoader)):
-                raise ValueError('Current implementation accept only validation data as'
+                raise ValueError('Current implementation accepts only validation data as'
                                  ' a pytorch DataLoader')
             else:
                 perform_validation=True
@@ -2067,7 +2067,7 @@ class MoCo(SSL_Base):
         if EarlyStopper is not None:
             if EarlyStopper.monitored=='validation' and not(perform_validation):
                 print('Early stopper monitoring is set to validation loss'
-                      ', but not validation data are given. '
+                      ', but no validation data are given. '
                       'Internally changing monitoring to training loss')
                 EarlyStopper.monitored = 'train'
     
@@ -2504,7 +2504,7 @@ class BYOL(SSL_Base):
             Any function (or callable object) used to perform data augmentation
             on the batch. It is highly suggested to resort to the augmentation
             module, which implements different data augmentation functions and 
-            classes to combine them. If none is given a default augmentation with 
+            classes to combine them. If none is given, a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
             is also performed on the validation set, since it is part of the 
@@ -2544,7 +2544,7 @@ class BYOL(SSL_Base):
     
             Default = None
         device: torch.device or str, optional
-            The devide to use for fine-tuning. If given as a string it will
+            The device to use for fine-tuning. If given as a string it will
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
             
@@ -2558,7 +2558,7 @@ class BYOL(SSL_Base):
         Returns
         -------
         loss_info: dict, optional
-            A dictionary with keys the epoch number (as integer) and values
+            A dictionary with keys being the epoch number (as integer) and values
             a two element list with the average epoch's training and validation
             loss.
             
@@ -2605,7 +2605,7 @@ class BYOL(SSL_Base):
         perform_validation=False
         if validation_dataloader!=None:
             if not( isinstance(validation_dataloader, torch.utils.data.DataLoader)):
-                raise ValueError('Current implementation accept only validation data as'
+                raise ValueError('Current implementation accepts only validation data as'
                                  ' a pytorch DataLoader')
             else:
                 perform_validation=True
@@ -2613,7 +2613,7 @@ class BYOL(SSL_Base):
         if EarlyStopper is not None:
             if EarlyStopper.monitored=='validation' and not(perform_validation):
                 print('Early stopper monitoring is set to validation loss'
-                      ', but not validation data are given. '
+                      ', but no validation data are given. '
                       'Internally changing monitoring to training loss')
                 EarlyStopper.monitored = 'train'
     
@@ -2930,7 +2930,7 @@ class Barlow_Twins(SimCLR):
             Any function (or callable object) used to perform data augmentation
             on the batch. It is highly suggested to resort to the augmentation
             module, which implements different data augmentation functions and 
-            classes to combine them. If none is given a default augmentation with 
+            classes to combine them. If none is given, a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
             is also performed on the validation set, since it's part of the 
@@ -2971,7 +2971,7 @@ class Barlow_Twins(SimCLR):
     
             Default = None
         device: torch.device or str, optional
-            The devide to use for fine-tuning. If given as a string it will
+            The device to use for fine-tuning. If given as a string it will
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
             
@@ -2990,7 +2990,7 @@ class Barlow_Twins(SimCLR):
         Returns
         -------
         loss_info: dict, optional
-            A dictionary with keys the epoch number (as integer) and values
+            A dictionary with keys being the epoch number (as integer) and values
             a two element list with the average epoch's training and validation
             loss.
             
@@ -3136,7 +3136,7 @@ class VICReg(SimCLR):
             Any function (or callable object) used to perform data augmentation
             on the batch. It is highly suggested to resort to the augmentation
             module, which implements different data augmentation functions and 
-            classes to combine them. If none is given a default augmentation with 
+            classes to combine them. If none is given, a default augmentation with 
             random vertical flip + random noise is applied.
             Note that in this case data augmentation 
             is also performed on the validation set, since it is part of the 
@@ -3177,7 +3177,7 @@ class VICReg(SimCLR):
     
             Default = None
         device: torch.device or str, optional
-            The devide to use for fine-tuning. If given as a string it will
+            The device to use for fine-tuning. If given as a string it will
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
             
@@ -3196,7 +3196,7 @@ class VICReg(SimCLR):
         Returns
         -------
         loss_info: dict, optional
-            A dictionary with keys the epoch number (as integer) and values
+            A dictionary with keys being the epoch number (as integer) and values
             a two element list with the average epoch's training and validation
             loss.
             
