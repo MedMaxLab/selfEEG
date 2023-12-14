@@ -2,4 +2,11 @@ sphinx_rtd_theme
 sphinx_automodapi
 nbsphinx
 myst_parser
+selfeeg
 numpy
+pandas
+torch
+torchaudio
+torchvision
+matplotlib
+scikit-learn
