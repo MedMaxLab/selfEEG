@@ -28,7 +28,7 @@ If you want to preprocess EEG data in a really good way, we suggest to take a lo
 
 
 ## installation
-SelfEEG may be installed both via pip:
+SelfEEG may be installed via pip:
 ```
 pip install selfeeg
 ```
