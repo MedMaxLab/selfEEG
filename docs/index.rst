@@ -88,6 +88,23 @@ Additionally, optional but useful packages which we suggest to include in your e
     
     pip install selfeeg[interactive]
 
+
+SelfEEG can be also installed via conda by running the following command::   
+
+    conda install -c pup_fede_cnd -c pytorch selfeeg
+
+
+**Good practice**
+
+Although the dependency list is pretty short, it is strongly suggested to install selfEEG in a fresh environment. The following links provide a guide for creating a new Python virtual environment or a new conda environment:
+
+1. `new virtual environment <https://docs.python.org/3/library/venv.html>`_
+2. `new conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`_
+
+In addition, if PyTorch, Torchvision and Torchaudio are not present in your environment, the previous commands will install the CPU_only versions of such packages. 
+If you have CUDA installed on your system, we strongly encourage you to first install PyTorch, Torchvision and Torchaudio by choosing the 
+right configuration, which varies depending on your OS and CUDA versions; then install selfEEG. The official PyTorch documentation provides an installation command selector, which is available at the following `link <https://pytorch.org/get-started/locally/>`_. 
+
 Dependencies
 ------------
 selfEEG requires the following packages to correctly work. If you want to use selfEEG by forking and cloning the project, be sure to install them:
