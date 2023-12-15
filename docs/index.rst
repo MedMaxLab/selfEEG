@@ -84,7 +84,7 @@ SelfEEG can be installed via pip::
     
     pip install selfeeg
 
-Additionally, optinal but useful packages which we suggest to include in your environment, especially if you plan to work with jupyter, can be automatically installed with the following pip command::
+Additionally, optional but useful packages which we suggest to include in your environment, especially if you plan to work with jupyter, can be automatically installed with the following pip command::
     
     pip install selfeeg[interactive]
 
