@@ -80,7 +80,8 @@ this will install all the selfeeg main dependencies. As reported in the [README.
 
 ## testing
 
-It is important to ensure that all the implemented changes will not break any existing library functionality. The [test](/test) folder provides an automatic way to check all the library functionalities. Tests can be performed with unittest by simply running the following command using the main repository directory as the working directory:
+It is important to ensure that all the implemented changes will not break any existing library functionality. The [test](/test) folder provides an automatic way to check all the library functionalities. Tests will be performed automatically via GitHub Actions whenever changes to the test, selfeeg, or . github/workflows folders are pushed to the remote repository. However, these tests are performed only on a CPU device. For this reason, it is strongly suggested to perform tests locally before any push in order to evaluate the functionalities of selfEEG also on a GPU device. 
+Local tests can be performed with unittest by simply running the following command using the main repository directory as the working directory:
 
 ```
 python3 -m unittest discover test "*_test.py"

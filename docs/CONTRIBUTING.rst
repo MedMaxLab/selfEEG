@@ -128,8 +128,11 @@ testing
 It is important to ensure that all the implemented changes will not
 break any existing library functionality. The `test <https://github.com/MedMaxLab/selfEEG/tree/main/test>`__ folder
 provides an automatic way to check all the library functionalities.
-Tests can be performed with unittest by simply running the following
-command using the repository's main directory as the working directory:
+Tests will be performed automatically via GitHub Actions whenever changes to the test, selfeeg, or .github/workflows folders 
+are pushed to the remote repository. However, these tests are performed only on the CPU device. 
+For these reasons, it is strongly suggested to perform tests locally before any push, in order to evaluate the 
+selfEEG functionalities also on a GPU device. 
+Local tests can be performed with unittest by simply running the following command using the main repository directory as the working directory:
 
 ::
 
