@@ -2,7 +2,7 @@ sphinx_rtd_theme
 sphinx_automodapi
 nbsphinx
 myst_parser
-IPhyton
+iphyton
 selfeeg
 numpy
 pandas
