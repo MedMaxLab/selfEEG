@@ -19,6 +19,7 @@ from ..utils.utils import subarray_closest_sum, get_subarray_closest_sum
 
 __all__ = ['GetEEGPartitionNumber', 
            'GetEEGSplitTable', 'GetEEGSplitTableKfold',
+           'check_split','getsplit',
            'EEGDataset', 'EEGsampler']
 
 def GetEEGPartitionNumber(EEGpath: str, 
