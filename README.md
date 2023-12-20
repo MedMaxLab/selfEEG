@@ -96,12 +96,15 @@ If you have some requests or you have noticed some bugs, use the [GitHub issues]
 We have worked really hard to develop this library. If you use selfEEG during your research, please cite our work. It will help us to continue doing our research. We are working on a research paper to submit to a journal. Until then, you can cite the following work.
 
 ```bibtex
-@article{del2023applications,
-    title={Applications of Self-Supervised Learning to Biomedical Signals: where are we now},
-    author={Del Pup, Federico and Atzori, Manfredo},
-    year={2023},
-    publisher={TechRxiv}
-}
+@article{delpup2023,
+  author={Del Pup, Federico and Atzori, Manfredo},
+  journal={IEEE Access}, 
+  title={Applications of Self-Supervised Learning to Biomedical Signals: a Survey}, 
+  year={2023},
+  volume={},
+  number={},
+  pages={1-1},
+  doi={10.1109/ACCESS.2023.3344531}}
 ```
 
 Contributors:
