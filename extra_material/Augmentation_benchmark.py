@@ -432,7 +432,7 @@ bench_dict['random_FT_phase'][0] = timeit.timeit(s_false, sup_np, number=n)
 bench_dict['random_FT_phase'][1] = timeit.timeit(s_true, sup_np, number=n)
 bench_dict['random_FT_phase'][2] = timeit.timeit(s_false, sup_torch, number=n)
 bench_dict['random_FT_phase'][3] = timeit.timeit(s_true, sup_torch, number=n)
-if device.type != 'cpu':
+if device.type == 'cuda':
     bench_dict['random_FT_phase'][4] = timeit.timeit(s_false, sup_torch_gpu, number=n)
     bench_dict['random_FT_phase'][5] = timeit.timeit(s_true, sup_torch_gpu, number=n)
 
@@ -495,7 +495,7 @@ bench_dict['shift_frequency'][0] = timeit.timeit(s_false, sup_np, number=n)
 bench_dict['shift_frequency'][1] = timeit.timeit(s_true, sup_np, number=n)
 bench_dict['shift_frequency'][2] = timeit.timeit(s_false, sup_torch, number=n)
 bench_dict['shift_frequency'][3] = timeit.timeit(s_true, sup_torch, number=n)
-if device.type != 'cpu':
+if device.type == 'cuda':
     bench_dict['shift_frequency'][4] = timeit.timeit(s_false, sup_torch_gpu, number=n)
     bench_dict['shift_frequency'][5] = timeit.timeit(s_true, sup_torch_gpu, number=n)
 
