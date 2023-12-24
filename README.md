@@ -1,9 +1,51 @@
 <img src="Images/LibraryLogo.png" 
         alt="Picture" 
-        width="200" 
+        width="300" 
         style="display: block; margin: 0 auto" />
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<table>
+<tr>
+  <td>Latest Release</td>
+  <td>
+    <a href="https://pypi.org/project/selfeeg/">
+    <img src="https://img.shields.io/pypi/v/selfeeg" alt="latest release" />
+    </a>
+    <a href="https://anaconda.org/pup_fede_cnd/selfeeg">
+    <img src="https://anaconda.org/pup_fede_cnd/selfeeg/badges/version.svg" />
+    </a>
+    <a href="https://anaconda.org/pup_fede_cnd/selfeeg">
+    <img src="https://anaconda.org/pup_fede_cnd/selfeeg/badges/latest_release_date.svg" />
+    </a>
+</tr>
+<tr>
+  <td>Build Status</td>
+  <td>
+    <a href="https://img.shields.io/readthedocs/selfeeg">
+    <img src="https://img.shields.io/readthedocs/selfeeg" alt="documentation build status" />
+    </a>
+    <a href="https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml">
+      <img src="https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml/badge.svg" alt="GitHub Actions Testing Status" />
+    </a>
+  </td>
+</tr>
+<tr>
+  <td>License</td>
+  <td>
+    <a href="https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" 
+        alt="license" />
+    </a>
+</td>
+</tr>
+<tr>
+  <td>Publications</td>
+  <td>
+    <a href="https://joss.theoj.org/papers/ab7eaf53973996e7c8d49dada734de78">
+        <img src="https://joss.theoj.org/papers/ab7eaf53973996e7c8d49dada734de78/status.svg">
+    </a>
+  </td>
+</tr>
+</table>
 
 
 # What is selfEEG?
