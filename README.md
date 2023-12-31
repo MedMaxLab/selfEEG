@@ -143,9 +143,9 @@ We have worked really hard to develop this library. If you use selfEEG during yo
   journal={IEEE Access}, 
   title={Applications of Self-Supervised Learning to Biomedical Signals: a Survey}, 
   year={2023},
-  volume={},
+  volume={11},
   number={},
-  pages={1-1},
+  pages={144180-144203},
   doi={10.1109/ACCESS.2023.3344531}}
 ```
 
