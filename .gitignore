@@ -37,6 +37,7 @@ __pycache__/
 *.egg-info/
 .installed.cfg
 *.egg
+build/
 
 # sphinx build folder
 _build
