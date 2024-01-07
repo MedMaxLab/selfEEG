@@ -301,9 +301,9 @@ def GetEEGPartitionNumber(EEGpath: str,
         w,o,s,d = 'window', 'overlap', 'sampling rate', 'dataset length'
         NN= EEGlen['N_samples'].sum()
         print('\nConcluded extraction of repository length with the following specific: \n')
-        print(f'{w:15} ==> {window:5d} s')
+        print(f'{w:15} ==> {window:5.0f} s')
         print(f'{o:15} ==> {overlap*100:5.0f} %')
-        print(f'{s:15} ==> {freq:5d} Hz')
+        print(f'{s:15} ==> {freq:5.0f} Hz')
         print('-----------------------------')
         print(f'{d:15} ==> {NN:8d}')             
     return EEGlen
@@ -1397,6 +1397,20 @@ class EEGDataset(Dataset):
                 ):               
         # Instantiate parent class
         super().__init__()
+
+
+        # Check Partition specs
+        self.freq = EEGpartition_spec[0]
+        self.window = EEGpartition_spec[1]
+        self.overlap = EEGpartition_spec[2]
+        if (self.overlap<0) or (self.overlap>=1):
+            raise ValueError("overlap must be a number in the interval [0,1)")
+        if self.freq<=0:
+            raise ValueError("the EEG sampling rate cannot be negative")
+        if self.window<=0:
+            raise ValueError("the time window cannot be negative")
+        if (self.freq*self.window) != int(self.freq*self.window):
+            raise ValueError("freq*window must give an integer number ")
         
         # Store all Input arguments
         self.default_dtype = default_dtype
@@ -1434,10 +1448,7 @@ class EEGDataset(Dataset):
         self.DatasetSize = self.EEGlenTrain['N_samples'].sum()
         
         # initialize other attributes for __getItem__
-        self.freq = EEGpartition_spec[0]
-        self.window = EEGpartition_spec[1]
-        self.overlap = EEGpartition_spec[2]
-        self.Nsample= EEGpartition_spec[0]*EEGpartition_spec[1]
+        self.Nsample= int(EEGpartition_spec[0]*EEGpartition_spec[1])
         self.EEGcumlen = np.cumsum(self.EEGlenTrain['N_samples'].values)
         
         
