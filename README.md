@@ -53,11 +53,11 @@ selfEEG is a pytorch-based library designed to facilitate self-supervised learni
 In particular, selfEEG comprises of the following modules:
 
 1. **dataloading** - collection of custom pytorch Dataset and Sampler classes as well as functions to split your dataset.
-2. **augmentation** - collection of data augmentation with fully support on GPU as well as other classes designed to combine them
+2. **augmentation** - collection of data augmentation with fully support on GPU as well as other classes designed to combine them.
 3. **models** - collection of deep neural models widely used in the EEG analysis (e.g. DeepConvNet, EEGNet, ResNet, TinySleepNet, STNet, etc)
 4. **ssl** - collection of self-supervised algorithms (e.g. SimCLR, SimSiam, MoCo, BYOL, etc) with a highly customizable fit method as well as a custom earlyStopper and a function for fine-tuning.
 5. **losses** - collection of self-supervised learning losses.
-6. **utils** - other useful functions to manage EEG data
+6. **utils** - other useful functions to manage EEG data.
 
 What makes selfEEG good? We have designed some modules keeping in mind EEG applications, but lots of functionalities can be easily exported on other types of signal as well!
 
