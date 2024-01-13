@@ -23,7 +23,7 @@ build:
           exit 183;
         fi
       - |
-        if git diff --quiet origin/main -- docs/ selfeeg/ .readthedocs.yaml;
+        if [ "$(git diff --quiet origin/main -- docs/ selfeeg/ .readthedocs.yaml; echo $?)" -eq 0 ];
         then
           exit 183;
         fi
