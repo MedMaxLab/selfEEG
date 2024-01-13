@@ -19,9 +19,9 @@ build:
       # see (https://docs.readthedocs.io/en/stable/build-customization.html#cancel-build-based-on-a-condition)
       - |
         if [ "$READTHEDOCS_VERSION_TYPE" = "external" ] && git diff --quiet origin/main -- docs/ selfeeg/ .readthedocs.yaml;
-	then
+        then
           exit 183;
-	fi
+        fi
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
