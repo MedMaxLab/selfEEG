@@ -58,8 +58,8 @@ Its primary objective is to offer a user-friendly but highly customizable enviro
 SelfEEG covers all the stages of a typical SSL pipeline, ranging from data import to model design and training. 
 It includes modules specifically designed to: split data at various granularity levels (e.g., session-, subject-, or dataset-based splits); effectively manage data stored with different configurations (e.g., file extensions, data types) during mini-batch construction; provide a wide range of standard deep learning models, data augmentations and SSL baseline methods applied to EEG data.
 
-Most of the functionalities offered by selfEEG can be executed both on GPUs and CPUs, expanding its usability beyond the self-supervised learning area. 
-Additionally, these functionalities can be employed for the analysis of other biomedical signals often coupled with EEGs, such as electromyography or electrocardiography data.
+Most of the functionality offered by selfEEG can be executed both on GPUs and CPUs, expanding its usability beyond the self-supervised learning area.
+Additionally, selfEEG can be employed for the analysis of other biomedical signals often coupled with EEGs, such as electromyography or electrocardiography data.
 
 These features make selfEEG a versatile deep learning tool for biomedical applications and a useful resource in SSL, one of the currently most active fields of Artificial Intelligence.
 
@@ -77,7 +77,7 @@ SelfEEG was also developed considering the needs of deep learning researchers, f
 
 
 # Library Overview
-SelfEEG is a comprehensive library for SSL applications to EEG data. It is built on top of PyTorch [@pytorch] and it includes several modules targeting all the steps required for developing EEG-based SSL pipelines.
+SelfEEG is a comprehensive library for SSL applications to EEG data. It is built on top of PyTorch [@pytorch] and includes several modules targeting all the steps required for developing EEG-based SSL pipelines.
 In particular, selfEEG comprises the following modules:
 
 - **dataloading**: a collection of functions and classes designed to support data splitting and the construction of efficient PyTorch dataloaders in the EEG context.
@@ -89,14 +89,14 @@ In particular, selfEEG comprises the following modules:
 
 
 # Related open-source projects
-Despite several deep learning frameworks were developed for the analysis of EEG data, a library focused on the construction of self-supervised learning pipelines on EEG data is still not available to the best of our knowledge, hindering the advancement of the scientific knowledge and the progress in the field.
+Despite several deep learning frameworks having been developed for the analysis of EEG data, a library focused on the construction of self-supervised learning pipelines on EEG data is still not available to the best of our knowledge, hindering the advancement of the scientific knowledge and the progress in the field.
 A comprehensive review of open-source projects related to neuroscientific data analysis is provided in [@app13095472]. 
 Few examples are EEG-DL [@eegdl] and [torchEEG](https://github.com/torcheeg/torcheeg), which characterized for their completeness and spread among the neuroscientific community. 
 
 
 # Future development
 Considering how rapidly self-supervised learning is evolving, this library is expected to be constantly updated by the authors and the open-source community, especially by adding novel SSL algorithms, deep learning models, and functionalities that can enhance the comparison between different developed strategies. 
-In particular, the authors plan to continue working on SelfEEG during the next years via several ongoing European and national projects.
+In particular, the authors plan to continue working on selfEEG during the next years via several ongoing European and national projects.
 
 
 # CRediT Authorship Statement
