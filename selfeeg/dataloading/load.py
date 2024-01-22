@@ -1559,9 +1559,9 @@ class EEGDataset(Dataset):
             start=(self.Nsample-round(self.Nsample*self.overlap))*(partition - cumidx)
             end=start+self.Nsample
             if end>self.currEEG.shape[-1]: # in case of partial ending samples
-                sample=self.currEEG[*first_dims_idx,:,-self.Nsample:]
+                sample=self.currEEG[(*first_dims_idx,slice(None),slice(-self.Nsample))]
             else:
-                sample=self.currEEG[*first_dims_idx,:,start:end]    
+                sample=self.currEEG[(*first_dims_idx,slice(None),slice(start, end))]
         else:
             start=(self.Nsample-round(self.Nsample*self.overlap))*(partition)
             end=start+self.Nsample
