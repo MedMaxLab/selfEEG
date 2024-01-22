@@ -301,9 +301,9 @@ def GetEEGPartitionNumber(EEGpath: str,
         w,o,s,d = 'window', 'overlap', 'sampling rate', 'dataset length'
         NN= EEGlen['N_samples'].sum()
         print('\nConcluded extraction of repository length with the following specific: \n')
-        print(f'{w:15} ==> {window:5.0f} s')
-        print(f'{o:15} ==> {overlap*100:5.0f} %')
-        print(f'{s:15} ==> {freq:5.0f} Hz')
+        print(f'{w:15} ==> {window:5.2f} s')
+        print(f'{o:15} ==> {overlap*100:5.2f} %')
+        print(f'{s:15} ==> {freq:5.2f} Hz')
         print('-----------------------------')
         print(f'{d:15} ==> {NN:8d}')             
     return EEGlen
