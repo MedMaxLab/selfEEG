@@ -33,9 +33,9 @@ Before you start
 If you are new to selfEEG or self-supervised learning in general, we
 recommend you do the following before start working on the code:
 
--  Read the `Code of Conduct <https://github.com/MedMaxLab/selfEEG>`__
+-  Read the `Code of Conduct <https://github.com/MedMaxLab/selfEEG/blob/main/CODE_OF_CONDUCT.md>`__
 -  Familiarize yourself with the library. Introductory notebooks in the
-   `Notebooks <https://github.com/MedMaxLab/selfEEG/Notebooks>`__ folder
+   `Notebooks <https://github.com/MedMaxLab/selfEEG/blob/main/Notebooks>`__ folder
    are a good starting point.
 -  Read about the self-supervised learning paradigm. The literature
    offers many review papers about this topic. Our recent
