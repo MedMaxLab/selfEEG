@@ -61,8 +61,8 @@ What makes selfEEG good? We have designed some modules keeping in mind EEG appli
 What you will not (currently) find in selfEEG? In selfEEG you will not find functions to effectively preprocess EEG data (although filtering and resampling can be performed with some of our functions).
 If you want to preprocess EEG data in a really good way, take a look at:
 
-- **MNE** (python based)
-- **EEGLAB** (matlab based)
+- `MNE <https://mne.tools>`_ (python based)
+- `EEGLAB <https://sccn.ucsd.edu/eeglab>`_ (matlab based)
 - **BIDSAlign** (an EEGLab extension provided by our team)
 
 
@@ -71,7 +71,7 @@ Getting Started
 
 About Self-Supervised Learning
 ------------------------------
-If you are new to the concept of self-supervised learning, we suggest taking a look at the following content, which provided a brief introduction to the **self-supervised learning** paradigm and the family of **contrastive learning** pretext task.
+If you are new to the concept of self-supervised learning, we suggest taking a look at the following content, which provides a brief introduction to the **self-supervised learning** paradigm and the family of **contrastive learning** pretext tasks.
 
 :doc:`SelfSupervisedLearning`
 
