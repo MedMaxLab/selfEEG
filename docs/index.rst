@@ -91,7 +91,7 @@ Additionally, optional but useful packages which we suggest to include in your e
 
 SelfEEG can be also installed via conda by running the following command::   
 
-    conda install -c pup_fede_cnd -c pytorch selfeeg
+    conda install -c Pup_Fede_Cnd -c pytorch selfeeg
 
 
 **Good practice**

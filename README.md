@@ -53,11 +53,11 @@ selfEEG is a pytorch-based library designed to facilitate self-supervised learni
 In particular, selfEEG comprises of the following modules:
 
 1. **dataloading** - collection of custom pytorch Dataset and Sampler classes as well as functions to split your dataset.
-2. **augmentation** - collection of data augmentation with fully support on GPU as well as other classes designed to combine them
+2. **augmentation** - collection of data augmentation with fully support on GPU as well as other classes designed to combine them.
 3. **models** - collection of deep neural models widely used in the EEG analysis (e.g. DeepConvNet, EEGNet, ResNet, TinySleepNet, STNet, etc)
 4. **ssl** - collection of self-supervised algorithms (e.g. SimCLR, SimSiam, MoCo, BYOL, etc) with a highly customizable fit method as well as a custom earlyStopper and a function for fine-tuning.
 5. **losses** - collection of self-supervised learning losses.
-6. **utils** - other useful functions to manage EEG data
+6. **utils** - other useful functions to manage EEG data.
 
 What makes selfEEG good? We have designed some modules keeping in mind EEG applications, but lots of functionalities can be easily exported on other types of signal as well!
 
@@ -70,7 +70,7 @@ If you want to preprocess EEG data in a really good way, we suggest to take a lo
 
 
 ## installation
-SelfEEG may be installed both via pip (recommended):
+SelfEEG may be installed via pip (recommended):
 ```
 pip install selfeeg
 ```
@@ -81,7 +81,7 @@ pip install selfeeg[interactive]
 
 SelfEEG can be also installed via conda by running the following command:   
 ```
-conda install -c pup_fede_cnd -c pytorch selfeeg
+conda install -c Pup_Fede_Cnd -c pytorch selfeeg
 ```
 
 **Good practice**
@@ -114,10 +114,11 @@ Optional packages which we suggest to include in your environment are:
 - jupyterlab
 - scikit-learn
 - seaborn (or simply matplotlib)
+- MNE-Python
 
 
 ## Usage
-in the Notebooks folder, you can find some notebooks which will explain how to properly use some modules. These notebooks are also included in the **official documentation**.
+in the Notebooks folder, you can find some notebooks which will explain how to properly use some modules. These notebooks are also included in the [official documentation](https://selfeeg.readthedocs.io/en/latest/index.html).
 
 
 ## Contribution Guidelines
@@ -135,7 +136,20 @@ If you have some requests or you have noticed some bugs, use the [GitHub issues]
 
 
 ## Authors and Citation
-We have worked really hard to develop this library. If you use selfEEG during your research, please cite our work. It will help us to continue doing our research. We are working on a research paper to submit to a journal. Until then, you can cite the following work.
+We have worked really hard to develop this library. If you use selfEEG during your research, please cite our work. It will help us to continue doing our research. We are working on a research paper to submit to the Journal of Open Source Software. Until then, you can cite the following [ArXiv preprint](https://arxiv.org/abs/2401.05405):
+
+```bibtex
+@misc{delpup2023selfeeg,
+      title={SelfEEG: A Python library for Self-Supervised Learning in Electroencephalography}, 
+      author={Federico Del Pup and Andrea Zanola and Louis Fabrice Tshimanga and Paolo Emilio Mazzon and Manfredo Atzori},
+      year={2023},
+      eprint={2401.05405},
+      archivePrefix={arXiv},
+      primaryClass={eess.SP}
+}
+```
+
+Alternatively, you can cite the following [IEEE article](https://ieeexplore.ieee.org/document/10365170):
 
 ```bibtex
 @article{delpup2023,

@@ -10,21 +10,31 @@ tags:
   - Electroencephalography (EEG)
   - Biomedical signals
 authors:
-  - name: Federico Del Pup
+  - name: 
+      given-names: Federico 
+      surname: Del Pup
     orcid: 0009-0004-0698-962X
     corresponding: true
     affiliation: "1, 2, 3"
-  - name: Andrea Zanola
+  - name: 
+      given-names: Andrea 
+      surname: Zanola
     orcid: 0000-0001-6973-8634
     equal-contrib: true
     affiliation: 3
-  - name: Louis Fabrice Tshimanga
+  - name: 
+      given-names: Louis Fabrice
+      surname: Tshimanga
     orcid: 0009-0002-1240-4830
     equal-contrib: true
     affiliation: "2, 3"
-  - name: Paolo Emilio Mazzon
+  - name: 
+      given-names: Paolo Emilio
+      surname: Mazzon
     affiliation: 3
-  - name: Manfredo Atzori
+  - name: 
+      given-names: Manfredo
+      surname: Atzori
     orcid: 0000-0001-5397-2063
     affiliation: "2, 3, 4"
 affiliations:
