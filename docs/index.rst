@@ -15,6 +15,7 @@
    Dataload_guide
    Augmentation_guide
    SSL_guide
+   SSL_guide_BCI
 
 
 .. toctree::
