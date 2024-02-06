@@ -2,18 +2,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ = ['Barlow_loss',
-           'BYOL_loss',
-           'Moco_loss',
-           'SimCLR_loss',
-           'SimSiam_loss',
-           'VICReg_loss'
-          ]
+__all__ = ["Barlow_loss", "BYOL_loss", "Moco_loss", "SimCLR_loss", "SimSiam_loss", "VICReg_loss"]
 
-def SimCLR_loss(projections: torch.Tensor,
-                projections_norm: bool=True,
-                temperature: float=0.15,
-               )-> torch.Tensor:
+
+def SimCLR_loss(
+    projections: torch.Tensor,
+    projections_norm: bool = True,
+    temperature: float = 0.15,
+) -> torch.Tensor:
     """
     ``SimCLR_loss`` computes the normalized temperature-scaled cross entropy loss [NTXent]_ ,
     which is used in many contrastive learning algorithm. It is basically a simple
@@ -65,13 +61,12 @@ def SimCLR_loss(projections: torch.Tensor,
 
     """
     if projections_norm:
-        projections =  F.normalize(projections, p=2.0, dim=1) #L2 norm along first dimension
+        projections = F.normalize(projections, p=2.0, dim=1)  # L2 norm along first dimension
 
-
-    proj1, proj2= torch.split(projections ,int(projections.shape[0]/2))
-    N=proj1.shape[0]
-    labels= torch.eye(N, N * 2).to(device=projections.device)
-    masks= torch.eye(N).to(device=projections.device)
+    proj1, proj2 = torch.split(projections, int(projections.shape[0] / 2))
+    N = proj1.shape[0]
+    labels = torch.eye(N, N * 2).to(device=projections.device)
+    masks = torch.eye(N).to(device=projections.device)
 
     nn = torch.matmul(proj1, torch.transpose(proj1, 0, 1)) / temperature
     nn = nn - (masks * 1e9)
@@ -80,19 +75,20 @@ def SimCLR_loss(projections: torch.Tensor,
     nm = torch.matmul(proj1, torch.transpose(proj2, 0, 1)) / temperature
     mn = torch.matmul(proj2, torch.transpose(proj1, 0, 1)) / temperature
 
-    loss_1 = F.cross_entropy(torch.cat([nm, nn], 1), labels, reduction='mean')
-    loss_2 = F.cross_entropy(torch.cat([mn, mm], 1), labels, reduction='mean')
+    loss_1 = F.cross_entropy(torch.cat([nm, nn], 1), labels, reduction="mean")
+    loss_2 = F.cross_entropy(torch.cat([mn, mm], 1), labels, reduction="mean")
     loss = loss_1 + loss_2
 
     return loss
 
 
-def SimSiam_loss(p1: torch.Tensor,
-                 z1: torch.Tensor,
-                 p2: torch.Tensor,
-                 z2: torch.Tensor,
-                 projections_norm: bool=True,
-                )-> torch.Tensor:
+def SimSiam_loss(
+    p1: torch.Tensor,
+    z1: torch.Tensor,
+    p2: torch.Tensor,
+    z2: torch.Tensor,
+    projections_norm: bool = True,
+) -> torch.Tensor:
     """
     Simple implementation of the SimSiam [simsiam]_ loss function with
     the possibility to not normalize tensors. Official repo can be found here
@@ -139,23 +135,24 @@ def SimSiam_loss(p1: torch.Tensor,
     """
 
     if projections_norm:
-        p1= F.normalize(p1, p=2.0, dim=1)
-        z1= F.normalize(z1.detach(), p=2.0, dim=1)
-        p2= F.normalize(p2, p=2.0, dim=1)
-        z2= F.normalize(z2.detach(), p=2.0, dim=1)
+        p1 = F.normalize(p1, p=2.0, dim=1)
+        z1 = F.normalize(z1.detach(), p=2.0, dim=1)
+        p2 = F.normalize(p2, p=2.0, dim=1)
+        z2 = F.normalize(z2.detach(), p=2.0, dim=1)
 
-    D1= -(p1*z2).sum(dim=1).mean()
-    D2= -(p2*z1).sum(dim=1).mean()
-    loss= 0.5*D1 + 0.5*D2
+    D1 = -(p1 * z2).sum(dim=1).mean()
+    D2 = -(p2 * z1).sum(dim=1).mean()
+    loss = 0.5 * D1 + 0.5 * D2
     return loss
 
 
-def Moco_loss(q: torch.Tensor,
-              k: torch.Tensor,
-              queue: torch.Tensor=None,
-              projections_norm: bool=True,
-              temperature: float=0.07)-> torch.Tensor:
-
+def Moco_loss(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    queue: torch.Tensor = None,
+    projections_norm: bool = True,
+    temperature: float = 0.07,
+) -> torch.Tensor:
     """
     Simple implementation of the MoCo loss function [moco2]_.
     It is the InfoNCE loss with dot product as similarity and memory bank as negative samples.
@@ -215,7 +212,7 @@ def Moco_loss(q: torch.Tensor,
 
     """
 
-    N, C =q.shape
+    N, C = q.shape
     # normalize
     if projections_norm:
         q = nn.functional.normalize(q, dim=1)
@@ -223,14 +220,14 @@ def Moco_loss(q: torch.Tensor,
 
     # if no queue is given, run MoCo v3 loss
     # (note that MoCo v3 is MoCo_loss(q1,k2) + MoCo_loss(q2,k1)
-    if queue==None:
-        logits = torch.einsum('nc,mc->nm', [q, k]) / temperature
+    if queue == None:
+        logits = torch.einsum("nc,mc->nm", [q, k]) / temperature
         N = logits.shape[0]  # batch size per GPU
         labels = torch.arange(N, dtype=torch.long, device=logits.device)
         return nn.CrossEntropyLoss()(logits, labels) * (2 * temperature)
 
     # positive logits: Nx1
-    l_pos = torch.bmm(q.view(N,1,C), k.view(N,C,1)).squeeze(-1)
+    l_pos = torch.bmm(q.view(N, 1, C), k.view(N, C, 1)).squeeze(-1)
     # negative logits: NxK
     l_neg = torch.matmul(q, queue.detach())
     # logits: Nx(1+K)
@@ -239,16 +236,17 @@ def Moco_loss(q: torch.Tensor,
     logits /= temperature
     # labels: positive key indicators
     labels = torch.zeros(logits.shape[0], dtype=torch.long, device=logits.device)
-    loss= F.cross_entropy(logits, labels, reduction='mean')
+    loss = F.cross_entropy(logits, labels, reduction="mean")
     return loss
 
 
-def BYOL_loss(p1: torch.Tensor,
-              z1: torch.Tensor,
-              p2: torch.Tensor,
-              z2: torch.Tensor,
-              projections_norm: bool=True,
-             )-> torch.Tensor:
+def BYOL_loss(
+    p1: torch.Tensor,
+    z1: torch.Tensor,
+    p2: torch.Tensor,
+    z2: torch.Tensor,
+    projections_norm: bool = True,
+) -> torch.Tensor:
     """
     Simple pytorch implementation of the BYOL loss function presented in [BYOL]_ .
 
@@ -294,20 +292,22 @@ def BYOL_loss(p1: torch.Tensor,
     """
 
     if projections_norm:
-        p1= F.normalize(p1, p=2.0, dim=1)
-        z1= F.normalize(z1.detach(), p=2.0, dim=1)
-        p2= F.normalize(p2, p=2.0, dim=1)
-        z2= F.normalize(z2.detach(), p=2.0, dim=1)
+        p1 = F.normalize(p1, p=2.0, dim=1)
+        z1 = F.normalize(z1.detach(), p=2.0, dim=1)
+        p2 = F.normalize(p2, p=2.0, dim=1)
+        z2 = F.normalize(z2.detach(), p=2.0, dim=1)
 
     loss1 = 2 - 2 * (p1 * z2).sum(dim=-1)
     loss2 = 2 - 2 * (p2 * z1).sum(dim=-1)
     loss = loss1 + loss2
     return loss.mean()
 
-def Barlow_loss(z1: torch.Tensor,
-                z2: torch.Tensor=None,
-                lambda_coeff: float=5e-3,
-               ) -> torch.Tensor:
+
+def Barlow_loss(
+    z1: torch.Tensor,
+    z2: torch.Tensor = None,
+    lambda_coeff: float = 5e-3,
+) -> torch.Tensor:
     """
     Pytorch implementation of the Barlow Twins loss function as presented in [barlow]_ .
 
@@ -347,27 +347,33 @@ def Barlow_loss(z1: torch.Tensor,
     >>> print(loss) # will return 31.6141
 
     """
-    if z2==None:
-        z1, z2= torch.split(z1 ,int(z1.shape[0]/2))
+    if z2 == None:
+        z1, z2 = torch.split(z1, int(z1.shape[0] / 2))
 
     N, D = z1.shape
-    z1_norm = (z1-z1.mean(0))/z1.std(0)
-    z2_norm = (z2-z2.mean(0))/z2.std(0)
+    z1_norm = (z1 - z1.mean(0)) / z1.std(0)
+    z2_norm = (z2 - z2.mean(0)) / z2.std(0)
 
     c_mat = (z1_norm.T @ z2_norm) / N
     c_mat2 = c_mat.pow(2)
 
-    loss = D - 2*torch.trace(c_mat) + lambda_coeff*torch.sum(c_mat**2) + (1-lambda_coeff)*torch.trace(c_mat**2)
+    loss = (
+        D
+        - 2 * torch.trace(c_mat)
+        + lambda_coeff * torch.sum(c_mat**2)
+        + (1 - lambda_coeff) * torch.trace(c_mat**2)
+    )
     return loss
 
 
-def VICReg_loss(z1: torch.Tensor,
-                z2: torch.Tensor=None,
-                Lambda: float=25,
-                Mu: float=25,
-                Nu: float=1,
-                epsilon: float=1e-4
-               )-> torch.Tensor:
+def VICReg_loss(
+    z1: torch.Tensor,
+    z2: torch.Tensor = None,
+    Lambda: float = 25,
+    Mu: float = 25,
+    Nu: float = 1,
+    epsilon: float = 1e-4,
+) -> torch.Tensor:
     """
     Pytorch implementation of the VICReg loss function [VIC]_ .
 
@@ -419,8 +425,8 @@ def VICReg_loss(z1: torch.Tensor,
     >>> print(loss) # will return 53.0773
 
     """
-    if z2==None:
-        z1, z2= torch.split(z1 ,int(z1.shape[0]/2))
+    if z2 == None:
+        z1, z2 = torch.split(z1, int(z1.shape[0] / 2))
 
     N, D = z1.shape
     z1 = z1 - z1.mean(dim=0)
@@ -432,13 +438,13 @@ def VICReg_loss(z1: torch.Tensor,
     # variance loss
     std_z1 = torch.sqrt(z1.var(dim=0) + epsilon)
     std_z2 = torch.sqrt(z2.var(dim=0) + epsilon)
-    std_loss = (torch.mean(F.relu(1 - std_z1)) + torch.mean(F.relu(1 - std_z2)))/2
+    std_loss = (torch.mean(F.relu(1 - std_z1)) + torch.mean(F.relu(1 - std_z2))) / 2
 
     # covariance loss
     cov_z1 = (z1.T @ z1) / (N - 1)
-    cov_z1[range(D),range(D)]=0.
+    cov_z1[range(D), range(D)] = 0.0
     cov_z2 = (z2.T @ z2) / (N - 1)
-    cov_z2[range(D),range(D)]=0.
+    cov_z2[range(D), range(D)] = 0.0
     cov_loss = cov_z1.pow_(2).sum() / D + cov_z2.pow_(2).sum() / D
     loss = Lambda * sim_loss + Mu * std_loss + Nu * cov_loss
     return loss

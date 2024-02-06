@@ -17,26 +17,33 @@ from torch.utils.data import Dataset, Sampler
 from ..utils.utils import subarray_closest_sum, get_subarray_closest_sum
 
 
-__all__ = ['GetEEGPartitionNumber',
-           'GetEEGSplitTable', 'GetEEGSplitTableKfold',
-           'check_split','getsplit',
-           'EEGDataset', 'EEGsampler']
+__all__ = [
+    "GetEEGPartitionNumber",
+    "GetEEGSplitTable",
+    "GetEEGSplitTableKfold",
+    "check_split",
+    "getsplit",
+    "EEGDataset",
+    "EEGsampler",
+]
 
-def GetEEGPartitionNumber(EEGpath: str,
-                          freq: int or float=250,
-                          window: int or float=2,
-                          overlap: float=0.10,
-                          includePartial: bool=True,
-                          file_format: str or list[str]='*',
-                          load_function: 'function'=None,
-                          optional_load_fun_args: list or dict=None,
-                          transform_function: 'function'=None,
-                          optional_transform_fun_args: list or dict=None,
-                          keep_zero_sample: bool=True,
-                          save: bool=False,
-                          save_path: str=None,
-                          verbose: bool=False
-                         ) -> pd.DataFrame :
+
+def GetEEGPartitionNumber(
+    EEGpath: str,
+    freq: int or float = 250,
+    window: int or float = 2,
+    overlap: float = 0.10,
+    includePartial: bool = True,
+    file_format: str or list[str] = "*",
+    load_function: "function" = None,
+    optional_load_fun_args: list or dict = None,
+    transform_function: "function" = None,
+    optional_transform_fun_args: list or dict = None,
+    keep_zero_sample: bool = True,
+    save: bool = False,
+    save_path: str = None,
+    verbose: bool = False,
+) -> pd.DataFrame:
     """
     ``GetEEGPartitionNumber`` finds the number of unique partitions from the EEG signals
     stored inside a given input directory. Some default parameters are designed to work with
@@ -170,46 +177,51 @@ def GetEEGPartitionNumber(EEGpath: str,
 
     """
     # Check Inputs
-    if (overlap<0) or (overlap>=1):
+    if (overlap < 0) or (overlap >= 1):
         raise ValueError("overlap must be a number in the interval [0,1)")
-    if freq<=0:
+    if freq <= 0:
         raise ValueError("the EEG sampling rate cannot be negative")
-    if window<=0:
+    if window <= 0:
         raise ValueError("the time window cannot be negative")
-    if (freq*window) != int(freq*window):
+    if (freq * window) != int(freq * window):
         raise ValueError("freq*window must give an integer number ")
 
     # Extract all files from directory
     if isinstance(file_format, str):
-        if EEGpath[-1]==os.sep:
-            EEGfiles=glob.glob(EEGpath + file_format)
+        if EEGpath[-1] == os.sep:
+            EEGfiles = glob.glob(EEGpath + file_format)
         else:
-            EEGfiles=glob.glob(EEGpath + os.sep + file_format )
+            EEGfiles = glob.glob(EEGpath + os.sep + file_format)
     else:
         try:
-            if EEGpath[-1]==os.sep:
+            if EEGpath[-1] == os.sep:
                 EEGfiles = [glob.glob(eegpath + i) for i in file_format]
             else:
                 EEGfiles = [glob.glob(eegpath + os.sep + i) for i in file_format]
             EEGfiles = [item for sublist in EEGfiles for item in sublist]
         except:
-            print('file_format must be a string or an iterable (e.g. list) of strings')
+            print("file_format must be a string or an iterable (e.g. list) of strings")
             return None
 
-    if len(EEGfiles)==0:
-        print('didn\'t found any with the given format')
+    if len(EEGfiles) == 0:
+        print("didn't found any with the given format")
         return None
 
-    EEGfiles=sorted(EEGfiles)
-    NumFiles= len(EEGfiles)
+    EEGfiles = sorted(EEGfiles)
+    NumFiles = len(EEGfiles)
 
     # Create Table
-    EEGlen=[]
-    WindSample=freq*window
-    overlapInt=round(WindSample*overlap)
+    EEGlen = []
+    WindSample = freq * window
+    overlapInt = round(WindSample * overlap)
 
-    with tqdm.tqdm(total=len(EEGfiles), disable=not(verbose),
-                   desc='extracting EEG samples', unit=' files',file=sys.stdout) as pbar:
+    with tqdm.tqdm(
+        total=len(EEGfiles),
+        disable=not (verbose),
+        desc="extracting EEG samples",
+        unit=" files",
+        file=sys.stdout,
+    ) as pbar:
         for i, ii in enumerate(EEGfiles):
 
             if verbose:
@@ -218,7 +230,7 @@ def GetEEGPartitionNumber(EEGpath: str,
             # load file, if custom function is provided use it to load data according
             # to possible optional arguments
             if load_function is None:
-                EEG=loadmat(ii, simplify_cells=True)['DATA_STRUCT']['data']
+                EEG = loadmat(ii, simplify_cells=True)["DATA_STRUCT"]["data"]
             else:
                 if isinstance(optional_load_fun_args, list):
                     EEG = load_function(ii, *optional_load_fun_args)
@@ -235,46 +247,51 @@ def GetEEGPartitionNumber(EEGpath: str,
                 elif isinstance(optional_transform_fun_args, dict):
                     EEG = transform_function(EEG, **optional_transform_fun_args)
                 else:
-                    EEG= transform_function(EEG)
+                    EEG = transform_function(EEG)
 
             # calculate number of samples based on the
             # overlap and includepartial arguments
-            M=len(EEG.shape)
-            if overlap==0:
+            M = len(EEG.shape)
+            if overlap == 0:
                 if includePartial:
-                    N_Partial=EEG.shape[-1]/(WindSample)
+                    N_Partial = EEG.shape[-1] / (WindSample)
                 else:
-                    N = EEG.shape[-1]//(WindSample)
+                    N = EEG.shape[-1] // (WindSample)
             else:
-                L=EEG.shape[-1]
-                N=(L-overlapInt)//(WindSample-overlapInt)
-                #R=L-WindSample*N+overlapInt*(N-1)
-                #N_Partial=N+(R+overlapInt)/WindSample
-                R=(overlapInt-WindSample)*N
-                N_Partial=N+(L+R)/WindSample
+                L = EEG.shape[-1]
+                N = (L - overlapInt) // (WindSample - overlapInt)
+                # R=L-WindSample*N+overlapInt*(N-1)
+                # N_Partial=N+(R+overlapInt)/WindSample
+                R = (overlapInt - WindSample) * N
+                N_Partial = N + (L + R) / WindSample
 
             if includePartial:
-                N_EEG=round(N_Partial) if N_Partial>=1 else 0
+                N_EEG = round(N_Partial) if N_Partial >= 1 else 0
             else:
-                N_EEG=N
+                N_EEG = N
 
             # check for extra dimension (file with multiple trials)
-            if M>2:
-                warnings.warn(('Loaded a file with multiple EEGs ('+ str(M)+'-D array).'
-                               ' Found number of samples will be multiplied by the size of each '
-                               'extra dimension. Note that this may create problems to the '
-                               '__getitem()__ method in the custom EEGDataset class'), Warning)
-                N_EEG*= np.prod(EEG.shape[0:-2])
+            if M > 2:
+                warnings.warn(
+                    (
+                        "Loaded a file with multiple EEGs (" + str(M) + "-D array)."
+                        " Found number of samples will be multiplied by the size of each "
+                        "extra dimension. Note that this may create problems to the "
+                        "__getitem()__ method in the custom EEGDataset class"
+                    ),
+                    Warning,
+                )
+                N_EEG *= np.prod(EEG.shape[0:-2])
 
-            EEGlen.append([ii, ii.split(os.sep)[-1],N_EEG])
+            EEGlen.append([ii, ii.split(os.sep)[-1], N_EEG])
 
     del EEG
 
     # create dataframe and check if 0 length files must be kept
-    EEGlen=pd.DataFrame(EEGlen,columns=['full_path','file_name','N_samples'])
-    if not(keep_zero_sample):
+    EEGlen = pd.DataFrame(EEGlen, columns=["full_path", "file_name", "N_samples"])
+    if not (keep_zero_sample):
         EEGlen = EEGlen.drop(EEGlen[EEGlen.N_samples == 0].index).reset_index()
-        EEGlen = EEGlen.drop(columns= 'index')
+        EEGlen = EEGlen.drop(columns="index")
 
     # save block
     try:
@@ -282,53 +299,53 @@ def GetEEGPartitionNumber(EEGpath: str,
             if save_path is not None:
                 EEGlen.to_csv(save_path)
             else:
-                condition=True
-                cnt=-1
+                condition = True
+                cnt = -1
                 while condition:
-                    cnt +=1
-                    if cnt==0:
-                        filename='EEGPartitionNumber.csv'
-                        condition=os.path.isfile(filename)
+                    cnt += 1
+                    if cnt == 0:
+                        filename = "EEGPartitionNumber.csv"
+                        condition = os.path.isfile(filename)
                     else:
-                        filename='EEGPartitionNumber_'+str(cnt)+'.csv'
-                        condition=os.path.isfile(filename)
+                        filename = "EEGPartitionNumber_" + str(cnt) + ".csv"
+                        condition = os.path.isfile(filename)
                 EEGlen.to_csv(filename)
     except:
-        print('failed to save file. Function output will be returned but not saved.')
+        print("failed to save file. Function output will be returned but not saved.")
 
     # generate summary to print
     if verbose:
-        w,o,s,d = 'window', 'overlap', 'sampling rate', 'dataset length'
-        NN= EEGlen['N_samples'].sum()
-        print('\nConcluded extraction of repository length with the following specific: \n')
-        print(f'{w:15} ==> {window:5.2f} s')
-        print(f'{o:15} ==> {overlap*100:5.2f} %')
-        print(f'{s:15} ==> {freq:5.2f} Hz')
-        print('-----------------------------')
-        print(f'{d:15} ==> {NN:8d}')
+        w, o, s, d = "window", "overlap", "sampling rate", "dataset length"
+        NN = EEGlen["N_samples"].sum()
+        print("\nConcluded extraction of repository length with the following specific: \n")
+        print(f"{w:15} ==> {window:5.2f} s")
+        print(f"{o:15} ==> {overlap*100:5.2f} %")
+        print(f"{s:15} ==> {freq:5.2f} Hz")
+        print("-----------------------------")
+        print(f"{d:15} ==> {NN:8d}")
     return EEGlen
 
 
-def GetEEGSplitTable(partition_table: pd.DataFrame,
-                     test_ratio: float= 0.2,
-                     val_ratio: float= 0.2,
-                     test_split_mode: str or int =2,
-                     val_split_mode: str or int= 2,
-                     exclude_data_id: list or dict =None,
-                     test_data_id: list or dict=None,
-                     val_data_id: list or dict =None,
-                     val_ratio_on_all_data: bool=True,
-                     stratified: bool=False,
-                     labels: ArrayLike=None,
-                     dataset_id_extractor: 'function'=None,
-                     subject_id_extractor: 'function'=None,
-                     split_tolerance=0.01,
-                     perseverance=1000,
-                     save: bool=False,
-                     save_path: str=None,
-                     seed: int= None
-                    ) -> pd.DataFrame:
-
+def GetEEGSplitTable(
+    partition_table: pd.DataFrame,
+    test_ratio: float = 0.2,
+    val_ratio: float = 0.2,
+    test_split_mode: str or int = 2,
+    val_split_mode: str or int = 2,
+    exclude_data_id: list or dict = None,
+    test_data_id: list or dict = None,
+    val_data_id: list or dict = None,
+    val_ratio_on_all_data: bool = True,
+    stratified: bool = False,
+    labels: ArrayLike = None,
+    dataset_id_extractor: "function" = None,
+    subject_id_extractor: "function" = None,
+    split_tolerance=0.01,
+    perseverance=1000,
+    save: bool = False,
+    save_path: str = None,
+    seed: int = None,
+) -> pd.DataFrame:
     """
     ``GetEEGSplitTable`` creates a table defining the files to use for train,
     validation and test of the models.
@@ -507,50 +524,51 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
     # VARIOUS CHECKS ON INPUTS
     # check given ratios
     if test_ratio != None:
-        if (test_ratio<0) or (test_ratio>=1):
-            raise ValueError('test_ratio must be in [0,1)')
+        if (test_ratio < 0) or (test_ratio >= 1):
+            raise ValueError("test_ratio must be in [0,1)")
     if val_ratio != None:
-        if (val_ratio<0) or (val_ratio>=1):
-            raise ValueError('val_ratio must be in [0,1)')
+        if (val_ratio < 0) or (val_ratio >= 1):
+            raise ValueError("val_ratio must be in [0,1)")
     if (test_ratio != None) and (val_ratio != None):
-        if val_ratio_on_all_data and ((val_ratio+test_ratio)>=1):
-            raise ValueError('if val_ratio_on_all_data is set to true,'
-                             ' val_ratio+test_ratio must be in [0,1) ')
+        if val_ratio_on_all_data and ((val_ratio + test_ratio) >= 1):
+            raise ValueError(
+                "if val_ratio_on_all_data is set to true," " val_ratio+test_ratio must be in [0,1) "
+            )
 
     # check if given data ids are list or dict
-    if exclude_data_id!=None:
-        if not( isinstance(exclude_data_id,list) or isinstance(exclude_data_id,dict) ):
-            exclude_data_id=[exclude_data_id]
-    if test_data_id!=None:
-        if not( isinstance(test_data_id,list) or isinstance(test_data_id,dict) ):
-            test_data_id=[test_data_id]
-    if val_data_id!=None:
-        if not( isinstance(val_data_id,list) or isinstance(val_data_id,dict) ):
-            val_data_id=[val_data_id]
+    if exclude_data_id != None:
+        if not (isinstance(exclude_data_id, list) or isinstance(exclude_data_id, dict)):
+            exclude_data_id = [exclude_data_id]
+    if test_data_id != None:
+        if not (isinstance(test_data_id, list) or isinstance(test_data_id, dict)):
+            test_data_id = [test_data_id]
+    if val_data_id != None:
+        if not (isinstance(val_data_id, list) or isinstance(val_data_id, dict)):
+            val_data_id = [val_data_id]
 
     # align split modes to integer
-    if isinstance(val_split_mode,str):
+    if isinstance(val_split_mode, str):
         val_split_mode = val_split_mode.lower()
-    if isinstance(test_split_mode,str):
+    if isinstance(test_split_mode, str):
         test_split_mode = test_split_mode.lower()
 
-    if val_split_mode in [1, 's', 'subj', 'subject']:
-        val_split_mode= 1
-    elif val_split_mode in [0, 'd', 'set', 'dataset']:
-        val_split_mode= 0
-    elif val_split_mode in [2, 'file', 'record']:
-        val_split_mode= 2
+    if val_split_mode in [1, "s", "subj", "subject"]:
+        val_split_mode = 1
+    elif val_split_mode in [0, "d", "set", "dataset"]:
+        val_split_mode = 0
+    elif val_split_mode in [2, "file", "record"]:
+        val_split_mode = 2
     else:
-        raise ValueError('validation split mode not supported')
+        raise ValueError("validation split mode not supported")
 
-    if test_split_mode in [1, 's', 'subj', 'subject']:
-        test_split_mode= 1
-    elif test_split_mode in [0, 'd', 'set', 'dataset']:
-        test_split_mode= 0
-    elif test_split_mode in [2, 'file', 'record']:
-        test_split_mode= 2
+    if test_split_mode in [1, "s", "subj", "subject"]:
+        test_split_mode = 1
+    elif test_split_mode in [0, "d", "set", "dataset"]:
+        test_split_mode = 0
+    elif test_split_mode in [2, "file", "record"]:
+        test_split_mode = 2
     else:
-        raise ValueError('test split mode not supported')
+        raise ValueError("test split mode not supported")
 
     if seed is not None:
         random.seed(seed)
@@ -560,227 +578,251 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
     # multiple times using the same ratio but only files having the same label
     # single results will be then concatenated and sorted to preserve index positioning
     if stratified:
-        if (test_ratio==None) and (val_ratio==None):
-            print('STRATIFICATION can be applied only if at least one split ratio is given.')
+        if (test_ratio == None) and (val_ratio == None):
+            print("STRATIFICATION can be applied only if at least one split ratio is given.")
         else:
             N_classes = np.unique(labels)
-            classSplit = [None]*len(N_classes)
+            classSplit = [None] * len(N_classes)
             # Call the split for each class
             for i, n in enumerate(N_classes):
-                classIdx = [ index_i for index_i, label_i in enumerate(labels) if label_i==n]
+                classIdx = [index_i for index_i, label_i in enumerate(labels) if label_i == n]
                 subClassTable = partition_table.iloc[classIdx]
-                classSplit[i] = GetEEGSplitTable(partition_table = subClassTable,
-                                                 test_ratio = test_ratio,
-                                                 val_ratio = val_ratio,
-                                                 test_split_mode = test_split_mode,
-                                                 val_split_mode = val_split_mode,
-                                                 exclude_data_id = exclude_data_id,
-                                                 test_data_id = test_data_id,
-                                                 val_data_id = val_data_id,
-                                                 val_ratio_on_all_data = val_ratio_on_all_data,
-                                                 stratified = False,
-                                                 labels = None,
-                                                 dataset_id_extractor = dataset_id_extractor,
-                                                 subject_id_extractor = subject_id_extractor,
-                                                 split_tolerance = split_tolerance,
-                                                 perseverance = perseverance,
-                                                 save = False,
-                                                )
+                classSplit[i] = GetEEGSplitTable(
+                    partition_table=subClassTable,
+                    test_ratio=test_ratio,
+                    val_ratio=val_ratio,
+                    test_split_mode=test_split_mode,
+                    val_split_mode=val_split_mode,
+                    exclude_data_id=exclude_data_id,
+                    test_data_id=test_data_id,
+                    val_data_id=val_data_id,
+                    val_ratio_on_all_data=val_ratio_on_all_data,
+                    stratified=False,
+                    labels=None,
+                    dataset_id_extractor=dataset_id_extractor,
+                    subject_id_extractor=subject_id_extractor,
+                    split_tolerance=split_tolerance,
+                    perseverance=perseverance,
+                    save=False,
+                )
 
             # merge subclass tables and check for mysterious duplicates
             EEGsplit = pd.concat(classSplit, axis=0, ignore_index=True)
             try:
-                EEGsplit.drop(columns='index') #useless but to be sure
+                EEGsplit.drop(columns="index")  # useless but to be sure
             except:
-                pass #nosec
-            EEGsplit= EEGsplit.drop_duplicates(ignore_index=True)
-            EEGsplit = EEGsplit.sort_values(by='file_name').reset_index().drop(columns='index')
+                pass  # nosec
+            EEGsplit = EEGsplit.drop_duplicates(ignore_index=True)
+            EEGsplit = EEGsplit.sort_values(by="file_name").reset_index().drop(columns="index")
 
     else:
 
         # boolean to check that ids are given as list or dict
-        ex_id_list=isinstance(exclude_data_id,list)
-        test_id_list=isinstance(test_data_id,list)
-        val_id_list=isinstance(val_data_id,list)
+        ex_id_list = isinstance(exclude_data_id, list)
+        test_id_list = isinstance(test_data_id, list)
+        val_id_list = isinstance(val_data_id, list)
 
         # COPY PARTITION TABLE AND ADD DATASET AND SUBJECT IDS COLUMNS
         if isinstance(partition_table, pd.DataFrame):
             partition2 = partition_table.copy()
             # NOTE: keep the list is faster for access to the data compared to iloc
             # extract dataset id
-            if dataset_id_extractor !=None:
-                dataset_ID = [ dataset_id_extractor(x) for x in partition2['file_name'] ]
+            if dataset_id_extractor != None:
+                dataset_ID = [dataset_id_extractor(x) for x in partition2["file_name"]]
             else:
                 try:
-                    dataset_ID = [ int(x.split('_')[0]) for x in partition2['file_name'] ]
+                    dataset_ID = [int(x.split("_")[0]) for x in partition2["file_name"]]
                 except:
-                    dataset_ID = [ 0 for _ in range(len(partition2['file_name'])) ]
-            partition2['dataset_ID']=dataset_ID
+                    dataset_ID = [0 for _ in range(len(partition2["file_name"]))]
+            partition2["dataset_ID"] = dataset_ID
             # extract subject id
-            if subject_id_extractor !=None:
-                subj_ID = [ subject_id_extractor(x) for x in partition2['file_name'] ]
+            if subject_id_extractor != None:
+                subj_ID = [subject_id_extractor(x) for x in partition2["file_name"]]
             else:
                 try:
-                    subj_ID = [ int(x.split('_')[1]) for x in partition2['file_name'] ]
+                    subj_ID = [int(x.split("_")[1]) for x in partition2["file_name"]]
                 except:
-                    subj_ID = [ x for x in range(len(partition2['file_name'])) ]
-            partition2['subj_ID']=subj_ID
-            EEGfiles= partition_table['file_name'].values.tolist()
+                    subj_ID = [x for x in range(len(partition2["file_name"]))]
+            partition2["subj_ID"] = subj_ID
+            EEGfiles = partition_table["file_name"].values.tolist()
 
         # It is faster to update a list than a table
-        EEGsplit=[ [filename, 0] for filename in EEGfiles]
+        EEGsplit = [[filename, 0] for filename in EEGfiles]
 
         # PRE SPLIT:  DATASET  -->  DATASET WITH ONLY CONSIDERED DATA
-        if exclude_data_id!=None:
+        if exclude_data_id != None:
             for ii in range(len(EEGfiles)):
                 DatasetID = dataset_ID[ii]
                 if ex_id_list:
                     if DatasetID in exclude_data_id:
-                        EEGsplit[ii][1]=-1
+                        EEGsplit[ii][1] = -1
                 else:
                     SubjID = subj_ID[ii]
                     if DatasetID in exclude_data_id.keys():
-                        if (exclude_data_id[DatasetID] is None) or (SubjID in exclude_data_id[DatasetID]):
-                            EEGsplit[ii][1]=-1
+                        if (exclude_data_id[DatasetID] is None) or (
+                            SubjID in exclude_data_id[DatasetID]
+                        ):
+                            EEGsplit[ii][1] = -1
 
         # calculate the sum of all remaining samples after data exclusion
         # it will be used in train test split (when test ratio is given)
         # or in train validation split (if validation_on_all_data is set to true)
-        idx_val= [i for i in range(len(EEGsplit)) if EEGsplit[i][1]!=-1]
-        arr=partition2.iloc[idx_val]['N_samples']
-        alldatasum=sum(arr)
+        idx_val = [i for i in range(len(EEGsplit)) if EEGsplit[i][1] != -1]
+        arr = partition2.iloc[idx_val]["N_samples"]
+        alldatasum = sum(arr)
 
         # FIRST SPLIT:  DATASET  -->  TRAIN/TEST
-        if test_data_id!=None:
+        if test_data_id != None:
             # if test_data_id is given, ignore test ratio and use given IDs
             for ii in range(len(EEGfiles)):
                 if EEGsplit[ii][1] != -1:
-                    DatasetID= dataset_ID[ii]
+                    DatasetID = dataset_ID[ii]
                     if test_id_list:
                         if DatasetID in test_data_id:
-                            EEGsplit[ii][1]=2
+                            EEGsplit[ii][1] = 2
                     else:
-                        SubjID=subj_ID[ii]
+                        SubjID = subj_ID[ii]
                         if DatasetID in test_data_id.keys():
-                            if (test_data_id[DatasetID] is None) or (SubjID in test_data_id[DatasetID]):
-                                EEGsplit[ii][1]=2
-        elif test_ratio>0:
+                            if (test_data_id[DatasetID] is None) or (
+                                SubjID in test_data_id[DatasetID]
+                            ):
+                                EEGsplit[ii][1] = 2
+        elif test_ratio > 0:
             # split data according to test ratio and test_split_on_subj
             # group data according to test_split_mode
             partition3 = partition2.iloc[idx_val]
-            if test_split_mode==1:
-                group1 = partition3.groupby( ['dataset_ID','subj_ID'] )['N_samples'].sum().reset_index(name='N_samples')
-            elif test_split_mode==0:
-                group1 = partition3.groupby( ['dataset_ID'] )['N_samples'].sum().reset_index(name='N_samples')
+            if test_split_mode == 1:
+                group1 = (
+                    partition3.groupby(["dataset_ID", "subj_ID"])["N_samples"]
+                    .sum()
+                    .reset_index(name="N_samples")
+                )
+            elif test_split_mode == 0:
+                group1 = (
+                    partition3.groupby(["dataset_ID"])["N_samples"]
+                    .sum()
+                    .reset_index(name="N_samples")
+                )
             else:
                 group1 = partition3
 
             # get split subarray
-            arr=group1['N_samples'].values.tolist()
-            target=test_ratio*alldatasum
-            final_idx, subarray = get_subarray_closest_sum(arr, target,
-                                                           split_tolerance, perseverance)
+            arr = group1["N_samples"].values.tolist()
+            target = test_ratio * alldatasum
+            final_idx, subarray = get_subarray_closest_sum(
+                arr, target, split_tolerance, perseverance
+            )
             final_idx.sort()
 
             # update split list according to returned subarray
             # and test split mode
-            if test_split_mode==2:
-                fileName=group1.iloc[final_idx]['file_name'].values.tolist()
+            if test_split_mode == 2:
+                fileName = group1.iloc[final_idx]["file_name"].values.tolist()
                 cntmax = len(fileName)
-                cnt=0
+                cnt = 0
                 for ii in range(len(EEGfiles)):
-                    if cnt==cntmax:
+                    if cnt == cntmax:
                         break
-                    if EEGsplit[ii][0]==fileName[cnt]:
-                        cnt +=1
+                    if EEGsplit[ii][0] == fileName[cnt]:
+                        cnt += 1
                         EEGsplit[ii][1] = 2
             else:
-                data_test_ID = set(group1['dataset_ID'].iloc[final_idx].values.tolist())
-                if test_split_mode==1:
+                data_test_ID = set(group1["dataset_ID"].iloc[final_idx].values.tolist())
+                if test_split_mode == 1:
                     subj_test_ID = {key: [] for key in data_test_ID}
                     for i in final_idx:
-                        subj_test_ID[group1['dataset_ID'].iloc[i]].append( group1['subj_ID'].iloc[i] )
+                        subj_test_ID[group1["dataset_ID"].iloc[i]].append(group1["subj_ID"].iloc[i])
 
                 for ii in range(len(EEGfiles)):
                     if EEGsplit[ii][1] != -1:
-                        DatasetID= dataset_ID[ii]
+                        DatasetID = dataset_ID[ii]
                         if DatasetID in data_test_ID:
-                            if test_split_mode==1:
-                                subjID=subj_ID[ii]
+                            if test_split_mode == 1:
+                                subjID = subj_ID[ii]
                                 if subjID in subj_test_ID[DatasetID]:
-                                    EEGsplit[ii][1]=2
+                                    EEGsplit[ii][1] = 2
                                 else:
-                                    EEGsplit[ii][1]=0
+                                    EEGsplit[ii][1] = 0
                             else:
-                                EEGsplit[ii][1]=2
+                                EEGsplit[ii][1] = 2
                         else:
-                            EEGsplit[ii][1]=0
-
+                            EEGsplit[ii][1] = 0
 
         # SECOND SPLIT:  TRAIN  -->  TRAIN/VALIDATION
         # the flow is basically the same as in the first split aside for some minor modifications
-        if val_data_id!=None:
+        if val_data_id != None:
             for ii in range(len(EEGfiles)):
                 if EEGsplit[ii][1] == 0:
-                    DatasetID= dataset_ID[ii]
+                    DatasetID = dataset_ID[ii]
                     if val_id_list:
                         if DatasetID in val_data_id:
-                            EEGsplit[ii][1]=1
+                            EEGsplit[ii][1] = 1
                     else:
-                        SubjID=subj_ID[ii]
+                        SubjID = subj_ID[ii]
                         if DatasetID in val_data_id.keys():
-                            if (val_data_id[DatasetID] is None) or (SubjID in val_data_id[DatasetID]):
-                                EEGsplit[ii][1]=1
-        elif val_ratio>0:
+                            if (val_data_id[DatasetID] is None) or (
+                                SubjID in val_data_id[DatasetID]
+                            ):
+                                EEGsplit[ii][1] = 1
+        elif val_ratio > 0:
             # split data according to test ratio and test_split_on_subj
-            idx_val= [i for i in range(len(EEGsplit)) if EEGsplit[i][1]==0]
+            idx_val = [i for i in range(len(EEGsplit)) if EEGsplit[i][1] == 0]
             partition3 = partition2.iloc[idx_val]
             if val_split_mode == 1:
-                group2 = partition3.groupby( ['dataset_ID','subj_ID'] )['N_samples'].sum().reset_index(name='N_samples')
+                group2 = (
+                    partition3.groupby(["dataset_ID", "subj_ID"])["N_samples"]
+                    .sum()
+                    .reset_index(name="N_samples")
+                )
             elif val_split_mode == 0:
-                group2 = partition3.groupby( ['dataset_ID'] )['N_samples'].sum().reset_index(name='N_samples')
+                group2 = (
+                    partition3.groupby(["dataset_ID"])["N_samples"]
+                    .sum()
+                    .reset_index(name="N_samples")
+                )
             else:
                 group2 = partition3
 
-            arr=group2['N_samples'].values.tolist()
-            target=val_ratio*alldatasum if val_ratio_on_all_data else val_ratio*sum(arr)
-            final_idx, subarray = get_subarray_closest_sum(arr, target,
-                                                           split_tolerance, perseverance)
+            arr = group2["N_samples"].values.tolist()
+            target = val_ratio * alldatasum if val_ratio_on_all_data else val_ratio * sum(arr)
+            final_idx, subarray = get_subarray_closest_sum(
+                arr, target, split_tolerance, perseverance
+            )
             final_idx.sort()
 
-            if val_split_mode==2:
-                fileName=group2.iloc[final_idx]['file_name'].values.tolist()
+            if val_split_mode == 2:
+                fileName = group2.iloc[final_idx]["file_name"].values.tolist()
                 cntmax = len(fileName)
-                cnt=0
+                cnt = 0
                 for ii in range(len(EEGfiles)):
-                    if cnt==cntmax:
+                    if cnt == cntmax:
                         break
-                    if EEGsplit[ii][0]==fileName[cnt]:
-                        cnt +=1
+                    if EEGsplit[ii][0] == fileName[cnt]:
+                        cnt += 1
                         EEGsplit[ii][1] = 1
             else:
-                data_val_ID = set(group2['dataset_ID'].iloc[final_idx].values.tolist())
+                data_val_ID = set(group2["dataset_ID"].iloc[final_idx].values.tolist())
                 if val_split_mode == 1:
                     subj_val_ID = {key: [] for key in data_val_ID}
                     for i in final_idx:
-                        subj_val_ID[group2['dataset_ID'].iloc[i]].append( group2['subj_ID'].iloc[i] )
+                        subj_val_ID[group2["dataset_ID"].iloc[i]].append(group2["subj_ID"].iloc[i])
 
                 for ii in range(len(EEGfiles)):
                     if EEGsplit[ii][1] == 0:
-                        DatasetID= dataset_ID[ii]
+                        DatasetID = dataset_ID[ii]
                         if DatasetID in data_val_ID:
-                            if val_split_mode==1:
-                                subjID= subj_ID[ii]
+                            if val_split_mode == 1:
+                                subjID = subj_ID[ii]
                                 if subjID in subj_val_ID[DatasetID]:
-                                    EEGsplit[ii][1]=1
+                                    EEGsplit[ii][1] = 1
                                 else:
-                                    EEGsplit[ii][1]=0
+                                    EEGsplit[ii][1] = 0
                             else:
-                                EEGsplit[ii][1]=1
+                                EEGsplit[ii][1] = 1
                         else:
-                            EEGsplit[ii][1]=0
+                            EEGsplit[ii][1] = 0
 
-        EEGsplit=pd.DataFrame(EEGsplit,columns=['file_name','split_set'])
+        EEGsplit = pd.DataFrame(EEGsplit, columns=["file_name", "split_set"])
 
     # save block
     try:
@@ -788,40 +830,41 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
             if save_path is not None:
                 EEGsplit.to_csv(save_path)
             else:
-                condition=True
-                cnt=-1
+                condition = True
+                cnt = -1
                 while condition:
-                    cnt +=1
-                    if cnt==0:
-                        filename='EEGTrainTestSplit.csv'
-                        condition=os.path.isfile(filename)
+                    cnt += 1
+                    if cnt == 0:
+                        filename = "EEGTrainTestSplit.csv"
+                        condition = os.path.isfile(filename)
                     else:
-                        filename='EEGTrainTestSplit_'+str(cnt)+'.csv'
-                        condition=os.path.isfile(filename)
+                        filename = "EEGTrainTestSplit_" + str(cnt) + ".csv"
+                        condition = os.path.isfile(filename)
                 EEGsplit.to_csv(filename)
     except:
-        print('failed to save file. Function output will be returned but not saved.')
+        print("failed to save file. Function output will be returned but not saved.")
 
     return EEGsplit
 
 
-def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
-                          kfold: int = 10,
-                          test_ratio: float= 0.2,
-                          test_split_mode: str or int =2,
-                          val_split_mode: str or int= 2,
-                          exclude_data_id: list or dict =None,
-                          test_data_id: list or dict=None,
-                          stratified: bool=False,
-                          labels: 'array like'=None,
-                          dataset_id_extractor: 'function'=None,
-                          subject_id_extractor: 'function'=None,
-                          split_tolerance=0.01,
-                          perseverance=1000,
-                          save: bool=False,
-                          save_path: str=None,
-                          seed: int = None
-                         ) -> pd.DataFrame:
+def GetEEGSplitTableKfold(
+    partition_table: pd.DataFrame,
+    kfold: int = 10,
+    test_ratio: float = 0.2,
+    test_split_mode: str or int = 2,
+    val_split_mode: str or int = 2,
+    exclude_data_id: list or dict = None,
+    test_data_id: list or dict = None,
+    stratified: bool = False,
+    labels: "array like" = None,
+    dataset_id_extractor: "function" = None,
+    subject_id_extractor: "function" = None,
+    split_tolerance=0.01,
+    perseverance=1000,
+    save: bool = False,
+    save_path: str = None,
+    seed: int = None,
+) -> pd.DataFrame:
     """
     ``GetEEGSplitTableKfold`` creates a table with multiple splits for cross-validation.
     Test split, if calculated, is kept equal in every CV split.
@@ -991,13 +1034,14 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     >>>  dl.check_split(EEGlen,dl.getsplit(EEGsplit,1)) # will return 0.72/0.08/0.2 ratios
 
     """
-    if kfold<2:
-        raise ValueError('kfold must be greater than or equal to 2. '
-                         'If you don\'t need multiple splits use the GetEEGSplitTable function'
-                        )
-    kfold=int(kfold)
+    if kfold < 2:
+        raise ValueError(
+            "kfold must be greater than or equal to 2. "
+            "If you don't need multiple splits use the GetEEGSplitTable function"
+        )
+    kfold = int(kfold)
     if (test_ratio is None) and (test_data_id is None):
-        test_ratio = 0.
+        test_ratio = 0.0
 
     if seed is not None:
         random.seed(seed)
@@ -1006,49 +1050,53 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
     # the result of this function call will be an initialization of the split table
     # if no data need to be excluded or placed in a test set, the split_set column will
     # simply have all zeros.
-    EEGsplit = GetEEGSplitTable(partition_table=partition_table,
-                                test_ratio= test_ratio,
-                                val_ratio= 0.0,
-                                test_split_mode=test_split_mode,
-                                val_split_mode= val_split_mode,
-                                exclude_data_id=exclude_data_id,
-                                test_data_id=test_data_id,
-                                stratified= stratified,
-                                labels = labels,
-                                dataset_id_extractor = dataset_id_extractor,
-                                subject_id_extractor = subject_id_extractor,
-                                split_tolerance=split_tolerance,
-                                perseverance=perseverance
-                               )
+    EEGsplit = GetEEGSplitTable(
+        partition_table=partition_table,
+        test_ratio=test_ratio,
+        val_ratio=0.0,
+        test_split_mode=test_split_mode,
+        val_split_mode=val_split_mode,
+        exclude_data_id=exclude_data_id,
+        test_data_id=test_data_id,
+        stratified=stratified,
+        labels=labels,
+        dataset_id_extractor=dataset_id_extractor,
+        subject_id_extractor=subject_id_extractor,
+        split_tolerance=split_tolerance,
+        perseverance=perseverance,
+    )
 
     # Find index of elements in train set
-    EEGsplit = EEGsplit.assign(**{x: EEGsplit.iloc[:, 1] for x in ['split_'+str(i+1) for i in range(kfold)]})
-    idxSplit= EEGsplit.index[(EEGsplit['split_set'] != 0)]
-    idxAll= np.arange(EEGsplit.shape[0])
+    EEGsplit = EEGsplit.assign(
+        **{x: EEGsplit.iloc[:, 1] for x in ["split_" + str(i + 1) for i in range(kfold)]}
+    )
+    idxSplit = EEGsplit.index[(EEGsplit["split_set"] != 0)]
+    idxAll = np.arange(EEGsplit.shape[0])
     idx2assign = np.setdiff1d(idxAll, idxSplit)
     # to perform CV it is necessary to perform multiple train/validation split. Each time the data already
     # included in the test or any validation set will be excluded and the val_ratio is scaled according to
     # the remaining portions of the data
-    for i in range(kfold-1):
-        EEGsplit.iloc[idx2assign,i+2]= GetEEGSplitTable(partition_table=partition_table.iloc[idx2assign],
-                                                      val_ratio= 1/(kfold-i),
-                                                      val_split_mode= val_split_mode,
-                                                      exclude_data_id=[],
-                                                      test_data_id=[],
-                                                      stratified= stratified,
-                                                      labels = labels[idx2assign] if labels is not None else labels,
-                                                      dataset_id_extractor = dataset_id_extractor,
-                                                      subject_id_extractor = subject_id_extractor,
-                                                      split_tolerance=split_tolerance,
-                                                      perseverance=perseverance
-                                                    )['split_set']
+    for i in range(kfold - 1):
+        EEGsplit.iloc[idx2assign, i + 2] = GetEEGSplitTable(
+            partition_table=partition_table.iloc[idx2assign],
+            val_ratio=1 / (kfold - i),
+            val_split_mode=val_split_mode,
+            exclude_data_id=[],
+            test_data_id=[],
+            stratified=stratified,
+            labels=labels[idx2assign] if labels is not None else labels,
+            dataset_id_extractor=dataset_id_extractor,
+            subject_id_extractor=subject_id_extractor,
+            split_tolerance=split_tolerance,
+            perseverance=perseverance,
+        )["split_set"]
         # update list of files not assigned to any validation set
-        idxSplit= EEGsplit.index[(EEGsplit['split_'+str(i+1)] ==1)]
+        idxSplit = EEGsplit.index[(EEGsplit["split_" + str(i + 1)] == 1)]
         idx2assign = np.setdiff1d(idx2assign, idxSplit)
 
     # assign last fold and delete useless initial split column
-    EEGsplit.iloc[idx2assign,-1]=1
-    EEGsplit.drop(columns='split_set', inplace=True)
+    EEGsplit.iloc[idx2assign, -1] = 1
+    EEGsplit.drop(columns="split_set", inplace=True)
 
     # save block
     try:
@@ -1056,21 +1104,22 @@ def GetEEGSplitTableKfold(partition_table: pd.DataFrame,
             if save_path is not None:
                 EEGsplit.to_csv(save_path)
             else:
-                condition=True
-                cnt=-1
+                condition = True
+                cnt = -1
                 while condition:
-                    cnt +=1
-                    if cnt==0:
-                        filename='EEGTrainTestSplitKfold.csv'
-                        condition=os.path.isfile(filename)
+                    cnt += 1
+                    if cnt == 0:
+                        filename = "EEGTrainTestSplitKfold.csv"
+                        condition = os.path.isfile(filename)
                     else:
-                        filename='EEGTrainTestSplitKfold_'+str(cnt)+'.csv'
-                        condition=os.path.isfile(filename)
+                        filename = "EEGTrainTestSplitKfold_" + str(cnt) + ".csv"
+                        condition = os.path.isfile(filename)
                 EEGsplit.to_csv(filename)
     except:
-        print('failed to save file. Function output will be returned but not saved.')
+        print("failed to save file. Function output will be returned but not saved.")
 
     return EEGsplit
+
 
 def getsplit(split_table: pd.DataFrame, split: int) -> pd.DataFrame:
     """
@@ -1114,17 +1163,19 @@ def getsplit(split_table: pd.DataFrame, split: int) -> pd.DataFrame:
     >>>  EEGsplit1.head()
 
     """
-    split_str = 'split_'+str(int(split))
-    new_table = split_table.loc[:,('file_name',split_str)]
+    split_str = "split_" + str(int(split))
+    new_table = split_table.loc[:, ("file_name", split_str)]
     new_table.rename(columns={"file_name": "file_name", split_str: "split_set"}, inplace=True)
     return new_table
 
-def check_split(EEGlen: pd.DataFrame,
-                EEGsplit: pd.DataFrame,
-                Labels=None,
-                return_ratio=False,
-                verbose = True,
-               ) -> Optional[dict]:
+
+def check_split(
+    EEGlen: pd.DataFrame,
+    EEGsplit: pd.DataFrame,
+    Labels=None,
+    return_ratio=False,
+    verbose=True,
+) -> Optional[dict]:
     """
     ``check_split`` calculate and print split ratios to check if the split
     has been performed correctly.
@@ -1177,63 +1228,79 @@ def check_split(EEGlen: pd.DataFrame,
     # Check split ratio
     # simply the ratio between the sum of all samples with a specific label set
     # and the sum of all samples with label different from -1
-    total_list=EEGsplit[EEGsplit['split_set']!=-1].index.tolist()
-    total = EEGlen.iloc[total_list]['N_samples'].sum()
-    train_list = EEGsplit[EEGsplit['split_set']==0].index.tolist()
-    train_ratio = EEGlen.iloc[train_list]['N_samples'].sum()/total
-    val_list = EEGsplit[EEGsplit['split_set']==1].index.tolist()
-    val_ratio = EEGlen.iloc[val_list]['N_samples'].sum()/total
-    test_list = EEGsplit[EEGsplit['split_set']==2].index.tolist()
-    test_ratio = EEGlen.iloc[test_list]['N_samples'].sum()/total
+    total_list = EEGsplit[EEGsplit["split_set"] != -1].index.tolist()
+    total = EEGlen.iloc[total_list]["N_samples"].sum()
+    train_list = EEGsplit[EEGsplit["split_set"] == 0].index.tolist()
+    train_ratio = EEGlen.iloc[train_list]["N_samples"].sum() / total
+    val_list = EEGsplit[EEGsplit["split_set"] == 1].index.tolist()
+    val_ratio = EEGlen.iloc[val_list]["N_samples"].sum() / total
+    test_list = EEGsplit[EEGsplit["split_set"] == 2].index.tolist()
+    test_ratio = EEGlen.iloc[test_list]["N_samples"].sum() / total
 
     if verbose:
         print(f"\ntrain ratio:      {train_ratio:.2f}")
         print(f"validation ratio: {val_ratio:.2f}")
         print(f"test ratio:       {test_ratio:.2f}")
-    ratios = {'train_ratio': train_ratio, 'val_ratio': val_ratio,
-              'test_ratio': test_ratio, 'class_ratio': None}
+    ratios = {
+        "train_ratio": train_ratio,
+        "val_ratio": val_ratio,
+        "test_ratio": test_ratio,
+        "class_ratio": None,
+    }
 
     # Check class ratio
     # similar to the previous one but the ratios are calculated with respect to
     # the subset sizes (train test validation sets)
     if Labels is not None:
         Labels = np.array(Labels)
-        if len(Labels.shape)!=1:
-            raise ValueError('Labels must be a 1d array or a list')
+        if len(Labels.shape) != 1:
+            raise ValueError("Labels must be a 1d array or a list")
         lab_unique = np.unique(Labels)
-        EEGlen2 = EEGlen.copy() # copy to avoid strange behaviours in the given dataframes
-        EEGlen2['split_set']=EEGsplit['split_set']
-        EEGlen2['Labels'] = Labels
-        tottrain = EEGlen2.iloc[train_list]['N_samples'].sum()
-        totval = EEGlen2.iloc[val_list]['N_samples'].sum()
-        tottest = EEGlen2.iloc[test_list]['N_samples'].sum()
-        class_ratio = np.zeros((3,len(lab_unique)))
+        EEGlen2 = EEGlen.copy()  # copy to avoid strange behaviours in the given dataframes
+        EEGlen2["split_set"] = EEGsplit["split_set"]
+        EEGlen2["Labels"] = Labels
+        tottrain = EEGlen2.iloc[train_list]["N_samples"].sum()
+        totval = EEGlen2.iloc[val_list]["N_samples"].sum()
+        tottest = EEGlen2.iloc[test_list]["N_samples"].sum()
+        class_ratio = np.zeros((3, len(lab_unique)))
         # iterate through train/validation/test sets
         for i in range(3):
             # iterate through each label
             for k in range(len(lab_unique)):
-                if i==0:
-                    train_k = EEGlen2.loc[ ((EEGlen2['split_set']==0) &
-                                           (EEGlen2['Labels']==lab_unique[k])),'N_samples'].sum()
-                    class_ratio[i,k] = train_k/tottrain
-                elif i==1:
-                    val_k = EEGlen2.loc[ ((EEGlen2['split_set']==1) &
-                                           (EEGlen2['Labels']==lab_unique[k])),'N_samples'].sum()
-                    class_ratio[i,k] = val_k/totval
+                if i == 0:
+                    train_k = EEGlen2.loc[
+                        ((EEGlen2["split_set"] == 0) & (EEGlen2["Labels"] == lab_unique[k])),
+                        "N_samples",
+                    ].sum()
+                    class_ratio[i, k] = train_k / tottrain
+                elif i == 1:
+                    val_k = EEGlen2.loc[
+                        ((EEGlen2["split_set"] == 1) & (EEGlen2["Labels"] == lab_unique[k])),
+                        "N_samples",
+                    ].sum()
+                    class_ratio[i, k] = val_k / totval
                 else:
-                    test_k = EEGlen2.loc[ ((EEGlen2['split_set']==2) &
-                                           (EEGlen2['Labels']==lab_unique[k])),'N_samples'].sum()
-                    class_ratio[i,k] = test_k/tottest
+                    test_k = EEGlen2.loc[
+                        ((EEGlen2["split_set"] == 2) & (EEGlen2["Labels"] == lab_unique[k])),
+                        "N_samples",
+                    ].sum()
+                    class_ratio[i, k] = test_k / tottest
         # print results
         if verbose:
-            print(f"\ntrain labels ratio:",
-                  *[f"{lab_unique[k]}={class_ratio[0,k]:.3f}, " for k in range(len(lab_unique))])
-            print(f"val   labels ratio:",
-                  *[f"{lab_unique[k]}={class_ratio[1,k]:.3f}, " for k in range(len(lab_unique))])
-            print(f"test  labels ratio:",
-                  *[f"{lab_unique[k]}={class_ratio[2,k]:.3f}, " for k in range(len(lab_unique))])
-            print('')
-        ratios['class_ratio']=class_ratio
+            print(
+                f"\ntrain labels ratio:",
+                *[f"{lab_unique[k]}={class_ratio[0,k]:.3f}, " for k in range(len(lab_unique))],
+            )
+            print(
+                f"val   labels ratio:",
+                *[f"{lab_unique[k]}={class_ratio[1,k]:.3f}, " for k in range(len(lab_unique))],
+            )
+            print(
+                f"test  labels ratio:",
+                *[f"{lab_unique[k]}={class_ratio[2,k]:.3f}, " for k in range(len(lab_unique))],
+            )
+            print("")
+        ratios["class_ratio"] = class_ratio
 
     # return calculated ratios if necessary
     if return_ratio:
@@ -1379,44 +1446,45 @@ class EEGDataset(Dataset):
         :align: center
 
     """
-    def __init__(self,
-                 EEGlen: pd.DataFrame,
-                 EEGsplit: pd.DataFrame,
-                 EEGpartition_spec: list,
-                 mode: str='train',
-                 supervised: bool=False,
-                 load_function: 'function'=None,
-                 transform_function: 'function'=None,
-                 label_function: "function"=None,
-                 optional_load_fun_args: list or dict=None,
-                 optional_transform_fun_args: list or dict=None,
-                 optional_label_fun_args: list or dict=None,
-                 label_on_load: bool=False,
-                 label_key: list=None,
-                 default_dtype=torch.float32
-                ):
+
+    def __init__(
+        self,
+        EEGlen: pd.DataFrame,
+        EEGsplit: pd.DataFrame,
+        EEGpartition_spec: list,
+        mode: str = "train",
+        supervised: bool = False,
+        load_function: "function" = None,
+        transform_function: "function" = None,
+        label_function: "function" = None,
+        optional_load_fun_args: list or dict = None,
+        optional_transform_fun_args: list or dict = None,
+        optional_label_fun_args: list or dict = None,
+        label_on_load: bool = False,
+        label_key: list = None,
+        default_dtype=torch.float32,
+    ):
         # Instantiate parent class
         super().__init__()
-
 
         # Check Partition specs
         self.freq = EEGpartition_spec[0]
         self.window = EEGpartition_spec[1]
         self.overlap = EEGpartition_spec[2]
-        if (self.overlap<0) or (self.overlap>=1):
+        if (self.overlap < 0) or (self.overlap >= 1):
             raise ValueError("overlap must be a number in the interval [0,1)")
-        if self.freq<=0:
+        if self.freq <= 0:
             raise ValueError("the EEG sampling rate cannot be negative")
-        if self.window<=0:
+        if self.window <= 0:
             raise ValueError("the time window cannot be negative")
-        if (self.freq*self.window) != int(self.freq*self.window):
+        if (self.freq * self.window) != int(self.freq * self.window):
             raise ValueError("freq*window must give an integer number ")
 
         # Store all Input arguments
         self.default_dtype = default_dtype
         self.EEGsplit = EEGsplit
         self.EEGlen = EEGlen
-        self.mode=mode
+        self.mode = mode
         self.supervised = supervised
 
         self.load_function = load_function
@@ -1427,30 +1495,29 @@ class EEGDataset(Dataset):
         self.optional_label_fun_args = optional_label_fun_args
 
         self.label_on_load = label_on_load
-        self.given_label_keys= None
+        self.given_label_keys = None
         self.curr_key = None
         if label_key is not None:
-            self.given_label_keys = label_key if isinstance(label_key,list) else [label_key]
-            self.curr_key = self.given_label_keys[0] if len(self.given_label_keys)==1 else None
+            self.given_label_keys = label_key if isinstance(label_key, list) else [label_key]
+            self.curr_key = self.given_label_keys[0] if len(self.given_label_keys) == 1 else None
 
         # Check if the dataset is for train test or validation
         # and extract relative file names
-        if mode.lower()=='train':
-            FileNames = EEGsplit.loc[EEGsplit['split_set']==0,'file_name'].values
-        elif mode.lower()=='validation':
-            FileNames = EEGsplit.loc[EEGsplit['split_set']==1,'file_name'].values
+        if mode.lower() == "train":
+            FileNames = EEGsplit.loc[EEGsplit["split_set"] == 0, "file_name"].values
+        elif mode.lower() == "validation":
+            FileNames = EEGsplit.loc[EEGsplit["split_set"] == 1, "file_name"].values
         else:
-            FileNames = EEGsplit.loc[EEGsplit['split_set']==2,'file_name'].values
+            FileNames = EEGsplit.loc[EEGsplit["split_set"] == 2, "file_name"].values
 
         # initialize attributes for __len__ and __getItem__
-        self.EEGlenTrain = EEGlen.loc[EEGlen['file_name'].isin(FileNames)].reset_index()
-        self.EEGlenTrain = self.EEGlenTrain.drop(columns='index')
-        self.DatasetSize = self.EEGlenTrain['N_samples'].sum()
+        self.EEGlenTrain = EEGlen.loc[EEGlen["file_name"].isin(FileNames)].reset_index()
+        self.EEGlenTrain = self.EEGlenTrain.drop(columns="index")
+        self.DatasetSize = self.EEGlenTrain["N_samples"].sum()
 
         # initialize other attributes for __getItem__
-        self.Nsample= int(EEGpartition_spec[0]*EEGpartition_spec[1])
-        self.EEGcumlen = np.cumsum(self.EEGlenTrain['N_samples'].values)
-
+        self.Nsample = int(EEGpartition_spec[0] * EEGpartition_spec[1])
+        self.EEGcumlen = np.cumsum(self.EEGlenTrain["N_samples"].values)
 
         # Set Current EEG loaded attributes (speed up getItem method)
         # Keep in mind that multiple workers use copy of the dataset
@@ -1459,12 +1526,11 @@ class EEGDataset(Dataset):
         self.currEEG = None
         self.dimEEG = 0
         self.dimEEGprod = None
-        self.file_path=None
+        self.file_path = None
         self.minIdx = -1
         self.maxIdx = -1
-        self.label_info=None
-        self.label_info_keys=None
-
+        self.label_info = None
+        self.label_info_keys = None
 
     def __len__(self):
         """
@@ -1473,7 +1539,7 @@ class EEGDataset(Dataset):
         """
         return self.DatasetSize
 
-    def __getitem__(self,index):
+    def __getitem__(self, index):
         """
         :meta private:
 
@@ -1482,10 +1548,10 @@ class EEGDataset(Dataset):
         # Check if a new EEG file must be loaded. If so, a new EEG file is loaded,
         # transformed (if necessary) and all loading attributes are
         # updated according to the new file
-        if ((index<self.minIdx) or (index>self.maxIdx)):
+        if (index < self.minIdx) or (index > self.maxIdx):
             # Get full path to new file to load
-            nameIdx=np.searchsorted(self.EEGcumlen, index, side='right')
-            self.file_path= self.EEGlenTrain.iloc[nameIdx].full_path
+            nameIdx = np.searchsorted(self.EEGcumlen, index, side="right")
+            self.file_path = self.EEGlenTrain.iloc[nameIdx].full_path
 
             # load file according to given setting (custom load or not)
             if self.load_function is not None:
@@ -1495,14 +1561,18 @@ class EEGDataset(Dataset):
                     EEG = self.load_function(self.file_path, **self.optional_load_fun_args)
                 else:
                     EEG = self.load_function(self.file_path)
-                if (self.label_on_load):
-                    self.currEEG=EEG[0]
+                if self.label_on_load:
+                    self.currEEG = EEG[0]
                     if self.supervised:
                         self.label_info = EEG[1]
                         if self.given_label_keys is not None:
-                            self.label_info_keys=self.label_info.keys()
-                            if (self.given_label_keys is not None) and (len(self.given_label_keys)>1):
-                                self.curr_key = list(set(self.label_info_keys).intersection(self.given_label_keys))[0]
+                            self.label_info_keys = self.label_info.keys()
+                            if (self.given_label_keys is not None) and (
+                                len(self.given_label_keys) > 1
+                            ):
+                                self.curr_key = list(
+                                    set(self.label_info_keys).intersection(self.given_label_keys)
+                                )[0]
                             self.label = self.label_info[self.curr_key]
                         else:
                             self.label = EEG[1]
@@ -1510,65 +1580,78 @@ class EEGDataset(Dataset):
                     self.currEEG = EEG
             else:
                 # load things considering files coming from the auto-BIDS library
-                EEG=loadmat(self.file_path, simplify_cells=True)
-                self.currEEG=EEG['DATA_STRUCT']['data']
+                EEG = loadmat(self.file_path, simplify_cells=True)
+                self.currEEG = EEG["DATA_STRUCT"]["data"]
                 if (self.supervised) and (self.label_on_load):
-                    self.label_info=EEG['DATA_STRUCT']['subj_info']
-                    self.label_info_keys=self.label_info.keys()
-                    if (self.given_label_keys is not None) and (len(self.given_label_keys)>1):
-                        self.curr_key = list(set(self.label_info_keys).intersection(self.given_label_keys))[0]
+                    self.label_info = EEG["DATA_STRUCT"]["subj_info"]
+                    self.label_info_keys = self.label_info.keys()
+                    if (self.given_label_keys is not None) and (len(self.given_label_keys) > 1):
+                        self.curr_key = list(
+                            set(self.label_info_keys).intersection(self.given_label_keys)
+                        )[0]
                     self.label = self.label_info[self.curr_key]
 
             # transform data if transformation function is given
             if self.transform_function is not None:
                 if isinstance(self.optional_transform_fun_args, list):
-                    self.currEEG = self.transform_function(self.currEEG, *self.optional_transform_fun_args)
+                    self.currEEG = self.transform_function(
+                        self.currEEG, *self.optional_transform_fun_args
+                    )
                 elif isinstance(self.optional_transform_fun_args, dict):
-                    self.currEEG = self.transform_function(self.currEEG, **self.optional_transform_fun_args)
+                    self.currEEG = self.transform_function(
+                        self.currEEG, **self.optional_transform_fun_args
+                    )
                 else:
                     self.currEEG = self.transform_function(self.currEEG)
 
             # convert loaded eeg to torch tensor of specific dtype
             if isinstance(self.currEEG, np.ndarray):
-                self.currEEG=torch.from_numpy(self.currEEG)
+                self.currEEG = torch.from_numpy(self.currEEG)
             if self.currEEG.dtype != self.default_dtype:
-                self.currEEG= self.currEEG.to(dtype=self.default_dtype)
+                self.currEEG = self.currEEG.to(dtype=self.default_dtype)
 
             # store dimensionality of EEG files (some datasets stored 3D tensors, unfortunately)
             # This might be helpful for partition selection of multiple EEG in a single file
             self.dimEEG = len(self.currEEG.shape)
-            if self.dimEEG>2:
-                self.dimEEGprod = (self.EEGlenTrain.iloc[nameIdx].N_samples)/np.cumprod(self.currEEG.shape[:-2])
+            if self.dimEEG > 2:
+                self.dimEEGprod = (self.EEGlenTrain.iloc[nameIdx].N_samples) / np.cumprod(
+                    self.currEEG.shape[:-2]
+                )
                 self.dimEEGprod = self.dimEEGprod.astype(int)
 
             # change minimum and maximum index according to new loaded file
-            self.minIdx=0 if nameIdx==0 else self.EEGcumlen[nameIdx-1]
-            self.maxIdx=self.EEGcumlen[nameIdx]-1
-
+            self.minIdx = 0 if nameIdx == 0 else self.EEGcumlen[nameIdx - 1]
+            self.maxIdx = self.EEGcumlen[nameIdx] - 1
 
         # Calculate start and end of the partition
         # Manage the multidimensional EEG
         # NOTE: using the if add lines but avoid making useless operation in case of 2D tensors
-        partition=index-self.minIdx
-        first_dims_idx=[0]*(self.dimEEG-2)
-        if self.dimEEG>2:
-            cumidx=0
-            for i in range(self.dimEEG-2):
-                first_dims_idx[i]=(partition-cumidx)//self.dimEEGprod[i]
-                cumidx += first_dims_idx[i]*self.dimEEGprod[i]
-            start=(self.Nsample-round(self.Nsample*self.overlap))*(partition - cumidx)
-            end=start+self.Nsample
-            if end>self.currEEG.shape[-1]: # in case of partial ending samples
-                sample= self.currEEG[(*first_dims_idx,slice(None),slice(self.currEEG.shape[-1]-Nsample, self.currEEG.shape[-1]))]
+        partition = index - self.minIdx
+        first_dims_idx = [0] * (self.dimEEG - 2)
+        if self.dimEEG > 2:
+            cumidx = 0
+            for i in range(self.dimEEG - 2):
+                first_dims_idx[i] = (partition - cumidx) // self.dimEEGprod[i]
+                cumidx += first_dims_idx[i] * self.dimEEGprod[i]
+            start = (self.Nsample - round(self.Nsample * self.overlap)) * (partition - cumidx)
+            end = start + self.Nsample
+            if end > self.currEEG.shape[-1]:  # in case of partial ending samples
+                sample = self.currEEG[
+                    (
+                        *first_dims_idx,
+                        slice(None),
+                        slice(self.currEEG.shape[-1] - Nsample, self.currEEG.shape[-1]),
+                    )
+                ]
             else:
-                sample=self.currEEG[(*first_dims_idx,slice(None),slice(start, end))]
+                sample = self.currEEG[(*first_dims_idx, slice(None), slice(start, end))]
         else:
-            start=(self.Nsample-round(self.Nsample*self.overlap))*(partition)
-            end=start+self.Nsample
-            if end>self.currEEG.shape[-1]: # in case of partial ending samples
-                sample=self.currEEG[...,-self.Nsample:]
+            start = (self.Nsample - round(self.Nsample * self.overlap)) * (partition)
+            end = start + self.Nsample
+            if end > self.currEEG.shape[-1]:  # in case of partial ending samples
+                sample = self.currEEG[..., -self.Nsample :]
             else:
-                sample=self.currEEG[...,start:end]
+                sample = self.currEEG[..., start:end]
 
         # extract label if training is supervised (fine-tuning purposes)
         if self.supervised:
@@ -1576,9 +1659,15 @@ class EEGDataset(Dataset):
                 label = self.label
             else:
                 if isinstance(self.optional_label_fun_args, list):
-                    label = self.label_function(self.file_path, [*first_dims_idx, start, end], *self.optional_label_fun_args)
+                    label = self.label_function(
+                        self.file_path, [*first_dims_idx, start, end], *self.optional_label_fun_args
+                    )
                 elif isinstance(self.optional_label_fun_args, dict):
-                    label = self.label_function(self.file_path, [*first_dims_idx, start, end], **self.optional_label_fun_args)
+                    label = self.label_function(
+                        self.file_path,
+                        [*first_dims_idx, start, end],
+                        **self.optional_label_fun_args,
+                    )
                 else:
                     label = self.label_function(self.file_path, [*first_dims_idx, start, end])
             return sample, label
@@ -1658,31 +1747,30 @@ class EEGsampler(Sampler):
 
     """
 
-
-    def __init__(self,
-                 data_source: Dataset,
-                 BatchSize: int=1,
-                 Workers: int=0,
-                 Mode: int=1,
-                 Keep_only_ratio: float=1
-                ):
+    def __init__(
+        self,
+        data_source: Dataset,
+        BatchSize: int = 1,
+        Workers: int = 0,
+        Mode: int = 1,
+        Keep_only_ratio: float = 1,
+    ):
         self.data_source = data_source
         self.SubjectSamples = np.insert(data_source.EEGcumlen, 0, 0)
-        self.Nsubject=len(self.SubjectSamples)
-        self.BatchSize=BatchSize
-        self.Workers=Workers if Workers>0 else 1
-        if Mode not in [0,1]:
-            raise ValueError('supported modes are 0 (linear sampler) '
-                             'and 1 (custom randomization)')
+        self.Nsubject = len(self.SubjectSamples)
+        self.BatchSize = BatchSize
+        self.Workers = Workers if Workers > 0 else 1
+        if Mode not in [0, 1]:
+            raise ValueError(
+                "supported modes are 0 (linear sampler) " "and 1 (custom randomization)"
+            )
         else:
-            self.Mode= Mode
-        if Keep_only_ratio>1 or Keep_only_ratio<=0:
-            raise ValueError('Keep_only_ratio must be in (0,1]')
+            self.Mode = Mode
+        if Keep_only_ratio > 1 or Keep_only_ratio <= 0:
+            raise ValueError("Keep_only_ratio must be in (0,1]")
         else:
             self.Keep_only_ratio = Keep_only_ratio
-        self.shrink_data=True if Keep_only_ratio<1 else False
-
-
+        self.shrink_data = True if Keep_only_ratio < 1 else False
 
     def __len__(self):
         """
@@ -1699,16 +1787,16 @@ class EEGsampler(Sampler):
         :meta private:
 
         """
-        iterator=[]
-        Nseed=random.randint(0,9999999)
+        iterator = []
+        Nseed = random.randint(0, 9999999)
 
-        if self.Mode==0:
+        if self.Mode == 0:
             return iter(range(len(self.data_source)))
 
         # -------------------------------------------------------------
         # 1st - create a list of shuffled subjects
         # -------------------------------------------------------------
-        SubjList=[i for i in range(self.Nsubject-1)]
+        SubjList = [i for i in range(self.Nsubject - 1)]
         random.seed(Nseed)
         random.shuffle(SubjList)
 
@@ -1717,63 +1805,63 @@ class EEGsampler(Sampler):
         # -------------------------------------------------------------
         for ii in SubjList:
             random.seed(Nseed)
-            idx = list(range(self.SubjectSamples[ii],self.SubjectSamples[ii+1]))
+            idx = list(range(self.SubjectSamples[ii], self.SubjectSamples[ii + 1]))
             random.shuffle(idx)
             if self.shrink_data:
-                iterator += idx[0: int(len(idx)*self.Keep_only_ratio)]
+                iterator += idx[0 : int(len(idx) * self.Keep_only_ratio)]
             else:
                 iterator += idx
 
         # ------------------------------------------------------------
         # 3rd - Arrange index According to batch and number of workers
         # ------------------------------------------------------------
-        batch=self.BatchSize
-        worker=self.Workers
-        Ntot=len(iterator)
+        batch = self.BatchSize
+        worker = self.Workers
+        Ntot = len(iterator)
 
-        Nbatch=math.ceil(Ntot/batch)
-        Nrow, Ncol = batch*math.ceil(Nbatch/worker) , worker
-        Npad= Nrow*Ncol-Ntot
+        Nbatch = math.ceil(Ntot / batch)
+        Nrow, Ncol = batch * math.ceil(Nbatch / worker), worker
+        Npad = Nrow * Ncol - Ntot
 
         # Matrix Initialization
-        b=np.zeros((Nrow,Ncol),order='C', dtype=int)
+        b = np.zeros((Nrow, Ncol), order="C", dtype=int)
 
         # Assign index to first block of the matrix (Rows until the last batch)
-        b[0:-batch,:].flat=iterator[:((Nrow-batch)*Ncol)]
+        b[0:-batch, :].flat = iterator[: ((Nrow - batch) * Ncol)]
 
         # Assign -1 to the bottom left part of the matrix
-        block2=(Ncol-int(Npad/batch))
-        b[-batch:,block2:]=-1
+        block2 = Ncol - int(Npad / batch)
+        b[-batch:, block2:] = -1
 
         # Assign the remaining -1
-        block3=(Npad-(Ncol-block2)*batch)
-        if block3!=0:
-            b[Nrow-block3:,block2-1]=-1
+        block3 = Npad - (Ncol - block2) * batch
+        if block3 != 0:
+            b[Nrow - block3 :, block2 - 1] = -1
 
         # Complete index matrix with the remaining index to insert
-        iterator=iterator[((Nrow-batch)*Ncol):]
+        iterator = iterator[((Nrow - batch) * Ncol) :]
         for i in range(batch):
-            if len(iterator)==0:
+            if len(iterator) == 0:
                 break
-            Nel=(b.shape[1]-np.count_nonzero(b[-batch+i]))
-            b[-batch+i,:Nel] = iterator[:Nel]
+            Nel = b.shape[1] - np.count_nonzero(b[-batch + i])
+            b[-batch + i, :Nel] = iterator[:Nel]
             iterator = iterator[Nel:]
 
         # Convert matrix to list by scrolling elements according to batchsize and workers
-        c=[None]*(Nrow*Ncol)
-        cnt=0
-        Rstart=-batch
-        Rend=0
-        for ii in range(int(Nrow/batch)):
+        c = [None] * (Nrow * Ncol)
+        cnt = 0
+        Rstart = -batch
+        Rend = 0
+        for ii in range(int(Nrow / batch)):
             Rstart += batch
             Rend += batch
             for jj in range(Ncol):
-                c[cnt:(cnt+batch)]=b[Rstart:Rend, jj].tolist()
+                c[cnt : (cnt + batch)] = b[Rstart:Rend, jj].tolist()
                 cnt += batch
 
         # Remove -1 if there are
-        if Npad==0:
-            iterator=c
+        if Npad == 0:
+            iterator = c
         else:
-            iterator=c[:-Npad]
+            iterator = c[:-Npad]
         return iter(iterator)

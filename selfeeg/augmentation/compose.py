@@ -5,9 +5,10 @@ import numpy as np
 from typing import Any, Dict
 from numpy.typing import ArrayLike
 
-__all__ = ['DynamicSingleAug','RandomAug','SequentialAug','StaticSingleAug']
+__all__ = ["DynamicSingleAug", "RandomAug", "SequentialAug", "StaticSingleAug"]
 
-class StaticSingleAug():
+
+class StaticSingleAug:
     """
     ``StaticSingleAug`` performs a single data augmentation
     where the optional arguments are previously set and given during initialization.
@@ -82,41 +83,39 @@ class StaticSingleAug():
 
     """
 
-    def __init__(self,
-                 augmentation: "function",
-                 arguments: list or dict or list[list or dict]=None):
+    def __init__(
+        self, augmentation: "function", arguments: list or dict or list[list or dict] = None
+    ):
 
-        if not(inspect.isfunction(augmentation) or inspect.isbuiltin(augmentation)):
-            raise ValueError('augmentation must be a function to call')
+        if not (inspect.isfunction(augmentation) or inspect.isbuiltin(augmentation)):
+            raise ValueError("augmentation must be a function to call")
         else:
-            self.augmentation=augmentation
+            self.augmentation = augmentation
 
-        self.arguments=arguments
-        self.counter=0
-        self.maxcounter=0
-        self.multipleStaticArguments=False
-        if arguments !=None:
-            if all(isinstance(i,list) or isinstance(i,dict) for i in arguments):
-                self.multipleStaticArguments=True
-                self.maxcounter=len(arguments)
+        self.arguments = arguments
+        self.counter = 0
+        self.maxcounter = 0
+        self.multipleStaticArguments = False
+        if arguments != None:
+            if all(isinstance(i, list) or isinstance(i, dict) for i in arguments):
+                self.multipleStaticArguments = True
+                self.maxcounter = len(arguments)
 
-    def PerformAugmentation(self,
-                            X: ArrayLike
-                           ) -> ArrayLike:
+    def PerformAugmentation(self, X: ArrayLike) -> ArrayLike:
 
         if self.multipleStaticArguments:
-            argument=self.arguments[self.counter]
+            argument = self.arguments[self.counter]
             if isinstance(argument, list):
                 Xaug = self.augmentation(X, *argument)
             else:
                 Xaug = self.augmentation(X, **argument)
 
-            self.counter +=1
+            self.counter += 1
             if self.counter == self.maxcounter:
-                self.counter=0
+                self.counter = 0
         else:
-            if self.arguments==None:
-                Xaug= self.augmentation(X)
+            if self.arguments == None:
+                Xaug = self.augmentation(X)
             elif isinstance(self.arguments, list):
                 Xaug = self.augmentation(X, *self.arguments)
             else:
@@ -128,8 +127,7 @@ class StaticSingleAug():
         return self.PerformAugmentation(X)
 
 
-
-class DynamicSingleAug():
+class DynamicSingleAug:
     """
     ``DynamicSingleAug`` performs a single data augmentation
     where the optional arguments are chosen at random from a given discrete or continuous range
@@ -228,98 +226,103 @@ class DynamicSingleAug():
     >>> plt.show()
 
     """
-    def __init__(self,
-                 augmentation,
-                 discrete_arg: Dict[str, Any]=None,
-                 range_arg: Dict[str, list[ int or float, int or float]]=None,
-                 range_type: Dict[str, str or bool] or list[str or bool]=None
-                ):
+
+    def __init__(
+        self,
+        augmentation,
+        discrete_arg: Dict[str, Any] = None,
+        range_arg: Dict[str, list[int or float, int or float]] = None,
+        range_type: Dict[str, str or bool] or list[str or bool] = None,
+    ):
 
         # set augmentation function
-        if not(inspect.isfunction(augmentation) or inspect.isbuiltin(augmentation)):
-            raise ValueError('augmentation must be a function to call')
+        if not (inspect.isfunction(augmentation) or inspect.isbuiltin(augmentation)):
+            raise ValueError("augmentation must be a function to call")
         else:
-            self.augmentation=augmentation
+            self.augmentation = augmentation
 
         # get function argument name
-        self.argnames= inspect.getfullargspec(augmentation)[0][1:]
+        self.argnames = inspect.getfullargspec(augmentation)[0][1:]
 
         # check if given discrete_arg keys are actually augmentation arguments
-        self.discrete_arg=None
+        self.discrete_arg = None
         if discrete_arg != None:
             if isinstance(discrete_arg, dict):
                 if all(i in self.argnames for i in discrete_arg):
-                    self.discrete_arg=discrete_arg
+                    self.discrete_arg = discrete_arg
                 else:
-                    raise ValueError('keys of discrete_arg argument must be the argument of the augmentation fun')
+                    raise ValueError(
+                        "keys of discrete_arg argument must be the argument of the augmentation fun"
+                    )
             else:
-                raise ValueError('discrete_arg must be a dictionary')
+                raise ValueError("discrete_arg must be a dictionary")
 
         # check if given range_arg keys are actually augmentation arguments
         # also check if values are two element list
-        self.range_arg=None
+        self.range_arg = None
         if range_arg != None:
             if isinstance(range_arg, dict):
                 if all(i in self.argnames for i in range_arg):
-                    if all( (isinstance(i,list) and len(i)==2) for i in range_arg.values()):
-                        self.range_arg=range_arg
+                    if all((isinstance(i, list) and len(i) == 2) for i in range_arg.values()):
+                        self.range_arg = range_arg
                     else:
-                        raise ValueError('range_arg values must be a len 2 list with min and max range')
+                        raise ValueError(
+                            "range_arg values must be a len 2 list with min and max range"
+                        )
                 else:
-                    raise ValueError('keys of range_arg argument must be the argument of the augmentation fun')
+                    raise ValueError(
+                        "keys of range_arg argument must be the argument of the augmentation fun"
+                    )
                 for i in range_arg:
-                    if not(isinstance(range_arg[i],list)):
+                    if not (isinstance(range_arg[i], list)):
                         range_arg[i] = [range_arg[i]]
             else:
-                raise ValueError('range_arg must be a dictionary')
+                raise ValueError("range_arg must be a dictionary")
 
         # check if range_types keys are the same as range_args
-        self.range_type=None
-        if range_type!=None:
+        self.range_type = None
+        if range_type != None:
             if isinstance(range_type, dict):
                 if range_type.keys() == range_arg.keys():
-                    self.range_type=range_type
+                    self.range_type = range_type
                 else:
-                    raise ValueError('keys of range_type must be the same as range_arg')
+                    raise ValueError("keys of range_type must be the same as range_arg")
             elif isinstance(range_type, list):
-                if len(range_type)==len(self.range_arg):
-                    self.range_type=range_type
+                if len(range_type) == len(self.range_arg):
+                    self.range_type = range_type
                 else:
-                    raise ValueError('range_type must have the same length as range_args')
+                    raise ValueError("range_type must have the same length as range_args")
             else:
-                raise ValueError('discrete_arg must be a dictionary or a list')
+                raise ValueError("discrete_arg must be a dictionary or a list")
         else:
-            if self.range_arg!=None:
-                self.range_type=[True]*len(self.range_arg)
+            if self.range_arg != None:
+                self.range_type = [True] * len(self.range_arg)
 
-        self.is_range_type_dict= True if isinstance(self.range_type, dict) else False
+        self.is_range_type_dict = True if isinstance(self.range_type, dict) else False
 
-        self.given_arg = list(self.discrete_arg) if self.discrete_arg!=None else []
-        self.given_arg += list(self.range_arg) if self.range_arg!=None else []
+        self.given_arg = list(self.discrete_arg) if self.discrete_arg != None else []
+        self.given_arg += list(self.range_arg) if self.range_arg != None else []
 
-
-    def PerformAugmentation(self,
-                            X: ArrayLike
-                           ) -> ArrayLike:
-        arguments={i:None for i in self.given_arg}
-        if self.discrete_arg!=None:
+    def PerformAugmentation(self, X: ArrayLike) -> ArrayLike:
+        arguments = {i: None for i in self.given_arg}
+        if self.discrete_arg != None:
             for i in self.discrete_arg:
-                if isinstance(self.discrete_arg[i],list):
-                    arguments[i] = random.choice(self.discrete_arg[i]) #nosec
+                if isinstance(self.discrete_arg[i], list):
+                    arguments[i] = random.choice(self.discrete_arg[i])  # nosec
                 else:
-                    arguments[i]= self.discrete_arg[i]
+                    arguments[i] = self.discrete_arg[i]
 
-        cnt=0 # counter if range_type is a list, it's a sort of enumerate
-        if self.range_arg!=None:
+        cnt = 0  # counter if range_type is a list, it's a sort of enumerate
+        if self.range_arg != None:
             for i in self.range_arg.keys():
-                arguments[i]=random.uniform(self.range_arg[i][0], self.range_arg[i][1]) #nosec
+                arguments[i] = random.uniform(self.range_arg[i][0], self.range_arg[i][1])  # nosec
                 if self.is_range_type_dict:
-                    if self.range_type[i] in ['int', True]:
+                    if self.range_type[i] in ["int", True]:
                         arguments[i] = int(arguments[i])
                 else:
-                    if self.range_type[cnt] in ['int', True]:
+                    if self.range_type[cnt] in ["int", True]:
                         arguments[i] = int(arguments[i])
-                    cnt+=1
+                    cnt += 1
 
         Xaug = self.augmentation(X, **arguments)
         return Xaug
@@ -328,8 +331,7 @@ class DynamicSingleAug():
         return self.PerformAugmentation(X)
 
 
-
-class SequentialAug():
+class SequentialAug:
     """
     ``SequentialAug`` applies a sequence of augmentations in a specified order.
     No random choice between the given list of augmentation is performed, just
@@ -390,21 +392,20 @@ class SequentialAug():
 
     """
 
-    def __init__(self,*augmentations):
-        self.augs=[item for item in augmentations]
+    def __init__(self, *augmentations):
+        self.augs = [item for item in augmentations]
 
-    def PerformAugmentation(self,
-                            X: ArrayLike
-                           ) -> ArrayLike:
+    def PerformAugmentation(self, X: ArrayLike) -> ArrayLike:
         Xaugs = self.augs[0](X)
-        for i in range(1,len(self.augs)):
+        for i in range(1, len(self.augs)):
             Xaugs = self.augs[i](Xaugs)
         return Xaugs
 
     def __call__(self, X):
         return self.PerformAugmentation(X)
 
-class RandomAug():
+
+class RandomAug:
     """
     ``RandomAug`` applies an augmentations selected randomly from a given set.
 
@@ -471,24 +472,24 @@ class RandomAug():
     >>> plt.show()
 
     """
-    def __init__(self,*augmentations, p=None):
+
+    def __init__(self, *augmentations, p=None):
 
         self.augs = [item for item in augmentations]
         self.N = len(self.augs)
         self.p = p
         if p is not None:
-            if len(p)!=self.N:
-                raise ValueError('length of p does not match the number of augmentations')
-            self.p = np.array(p) + 0.
+            if len(p) != self.N:
+                raise ValueError("length of p does not match the number of augmentations")
+            self.p = np.array(p) + 0.0
             self.p /= np.sum(p)
-        self.nprange_ = np.arange(0,self.N)
-
+        self.nprange_ = np.arange(0, self.N)
 
     def PerformAugmentation(self, X):
         if self.p is None:
-            idx=random.randint(0,self.N-1) #nosec
+            idx = random.randint(0, self.N - 1)  # nosec
         else:
-            idx=np.random.choice(self.nprange_, p=self.p)
+            idx = np.random.choice(self.nprange_, p=self.p)
         Xaugs = self.augs[idx](X)
         return Xaugs
 
