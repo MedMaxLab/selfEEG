@@ -1,7 +1,7 @@
 pip>=23.3
 pandas>=2.0.0
 scikit-learn>=1.2.2
-torch>2.0.1
+torch>=2.0.1
 torchaudio>=2.0.2
 torchvision>=0.15.2
 tqdm>=4.65.0
