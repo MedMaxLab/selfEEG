@@ -2,7 +2,6 @@ on:
   push:
     paths:
       - 'Paper/**'
-      - '.github/workflows/**'
 
 jobs:
   paper:
