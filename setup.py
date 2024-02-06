@@ -1,6 +1,7 @@
 # license info
 
 import os
+
 import setuptools
 
 requirements = [

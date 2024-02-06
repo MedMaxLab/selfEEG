@@ -1,13 +1,15 @@
 from __future__ import annotations
-from typing import Union, Sequence, Optional
+
+import copy
 import os
 import pickle
-import copy
 import random
+from typing import Optional, Sequence, Union
+
 import numpy as np
 import pandas as pd
-from numpy.typing import ArrayLike
 import torch
+from numpy.typing import ArrayLike
 
 __all__ = [
     "check_models",

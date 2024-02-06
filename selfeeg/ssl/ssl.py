@@ -1,17 +1,19 @@
 from __future__ import annotations
-import os
-import math
+
 import copy
 import datetime
-import tqdm
+import math
+import os
 import random
 import sys
+from typing import Optional, Union
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from ..losses import losses as Loss
+import tqdm
+
 from ..dataloading import EEGsampler
-from typing import Any, Callable, Iterable, TypeVar, Generic, Sequence, List, Optional, Union
+from ..losses import losses as Loss
 
 __all__ = [
     "Barlow_Twins",

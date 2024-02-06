@@ -1,1 +1,1 @@
-from .losses import SimCLR_loss, SimSiam_loss, Moco_loss, BYOL_loss, Barlow_loss, VICReg_loss
+from .losses import Barlow_loss, BYOL_loss, Moco_loss, SimCLR_loss, SimSiam_loss, VICReg_loss

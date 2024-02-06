@@ -1,9 +1,11 @@
-import unittest
+import itertools
 import os
 import sys
-import itertools
+import unittest
+
 import numpy as np
 import torch
+
 from selfeeg import losses
 
 

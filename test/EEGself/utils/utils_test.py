@@ -1,16 +1,11 @@
-import unittest
-import os
-import random
-import sys
 import itertools
-import platform
-import importlib
+import random
+import unittest
 
 import numpy as np
-import pandas as pd
 import torch
-from selfeeg import utils
-from selfeeg import models
+
+from selfeeg import models, utils
 
 
 class TestUtils(unittest.TestCase):

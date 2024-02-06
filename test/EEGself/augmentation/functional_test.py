@@ -1,14 +1,15 @@
-import unittest
 import os
 import sys
+import unittest
 
 sys.path.append(os.getcwd().split("/test")[0])
 import itertools
-import random
 import math
-import torch
+
 import numpy as np
+import torch
 from scipy.signal import periodogram
+
 from selfeeg import augmentation as aug
 
 

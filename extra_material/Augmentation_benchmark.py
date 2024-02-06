@@ -1,9 +1,10 @@
-import os
 import glob
+import math
+import os
+import random
 import time
 import timeit
-import math
-import random
+
 import numpy as np
 import pandas as pd
 import torch
@@ -15,6 +16,7 @@ except:
 
     sys.path.append(os.getcwd().split("/extra_material")[0])
     from selfeeg import augmentation as aug
+
 import argparse
 
 help_d = """

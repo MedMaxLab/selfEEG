@@ -1,21 +1,20 @@
-import os
-import sys
 import glob
-import time
 import math
+import os
 import random
-import copy
+import sys
 import warnings
-from typing import Union, Sequence, Optional
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-import tqdm
-from scipy.io import loadmat
 import torch
+import tqdm
 from numpy.typing import ArrayLike
+from scipy.io import loadmat
 from torch.utils.data import Dataset, Sampler
-from ..utils.utils import subarray_closest_sum, get_subarray_closest_sum
 
+from ..utils.utils import get_subarray_closest_sum
 
 __all__ = [
     "GetEEGPartitionNumber",
@@ -195,9 +194,9 @@ def GetEEGPartitionNumber(
     else:
         try:
             if EEGpath[-1] == os.sep:
-                EEGfiles = [glob.glob(eegpath + i) for i in file_format]
+                EEGfiles = [glob.glob(EEGpath + i) for i in file_format]
             else:
-                EEGfiles = [glob.glob(eegpath + os.sep + i) for i in file_format]
+                EEGfiles = [glob.glob(EEGpath + os.sep + i) for i in file_format]
             EEGfiles = [item for sublist in EEGfiles for item in sublist]
         except:
             print("file_format must be a string or an iterable (e.g. list) of strings")
@@ -208,7 +207,6 @@ def GetEEGPartitionNumber(
         return None
 
     EEGfiles = sorted(EEGfiles)
-    NumFiles = len(EEGfiles)
 
     # Create Table
     EEGlen = []

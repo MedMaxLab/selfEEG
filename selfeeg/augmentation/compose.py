@@ -1,8 +1,10 @@
 from __future__ import annotations
+
 import inspect
 import random
-import numpy as np
 from typing import Any, Dict
+
+import numpy as np
 from numpy.typing import ArrayLike
 
 __all__ = ["DynamicSingleAug", "RandomAug", "SequentialAug", "StaticSingleAug"]

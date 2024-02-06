@@ -29,7 +29,7 @@ version = version
 release = version
 
 # -- General configuration ---------------------------------------------------
-
+#
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
@@ -37,7 +37,7 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
-    #'sphinx.ext.autosummary',
+    # 'sphinx.ext.autosummary',
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.extlinks",
@@ -45,7 +45,7 @@ extensions = [
     "nbsphinx",
     "myst_parser",
     "sphinx_automodapi.automodapi",
-    #'sphinx.ext.doctest'
+    # 'sphinx.ext.doctest'
 ]
 # doctest_test_doctest_blocks = 'default'
 # doctest_global_setup = '''
@@ -91,8 +91,8 @@ html_theme_options = {
     "style_external_links": False,
     # Toc options
     "collapse_navigation": False,
-    #'sticky_navigation': True,
-    #'style_nav_header_background': '#E3E3E3',
+    # 'sticky_navigation': True,
+    # 'style_nav_header_background': '#E3E3E3',
     "navigation_depth": -1,
     "includehidden": True,
     "titles_only": True,

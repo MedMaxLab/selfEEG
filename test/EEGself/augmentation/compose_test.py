@@ -1,10 +1,8 @@
 import unittest
-import os
-import sys
-import itertools
+
 import numpy as np
-import random
 import torch
+
 from selfeeg import augmentation as aug
 
 
@@ -113,7 +111,7 @@ class TestAugmentationCompose(unittest.TestCase):
         AUG_flipv = aug.StaticSingleAug(aug.flip_vertical)
         AUG_flipr = aug.StaticSingleAug(aug.flip_horizontal)
         AUG_id = aug.StaticSingleAug(aug.identity)
-        Sequence1 = aug.RandomAug(AUG_id, AUG_flipv, AUG_id, p=[0.5, 0.25, 0.25])
+        Sequence1 = aug.RandomAug(AUG_id, AUG_flipv, AUG_flipr, p=[0.5, 0.25, 0.25])
 
         # SECOND RANDOM SELECTION: ADD SOME NOISE
         AUG_band = aug.DynamicSingleAug(

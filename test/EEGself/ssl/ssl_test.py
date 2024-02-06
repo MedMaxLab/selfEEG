@@ -1,19 +1,15 @@
-import unittest
-import os
-import glob
-import random
-import pickle
-import sys
 import itertools
+import os
+import pickle
 import platform
+import random
+import unittest
 
 # IMPORT CLASSICAL PACKAGES
 import numpy as np
-import pandas as pd
 
 # IMPORT TORCH
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 

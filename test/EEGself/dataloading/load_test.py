@@ -1,13 +1,13 @@
-import unittest
+import itertools
 import os
+import pickle
 import platform
 import random
-import pickle
-import sys
-import itertools
+import unittest
+
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
+
 from selfeeg import dataloading as dl
 
 
