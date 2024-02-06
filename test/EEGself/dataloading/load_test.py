@@ -316,11 +316,11 @@ class TestDataloading(unittest.TestCase):
         print('removing generated residual directories (Simulated_EEG, tmpsave)')
         try:
             if platform.system() == 'Windows':
-                os.system('rmdir /Q /S Simulated_EEG')
-                os.system('rmdir /Q /S tmpsave')
+                os.system('rmdir /Q /S Simulated_EEG') #nosec
+                os.system('rmdir /Q /S tmpsave') #nosec
             else:
-                os.system('rm -r Simulated_EEG')
-                os.system('rm -r tmpsave')
+                os.system('rm -r Simulated_EEG') #nosec
+                os.system('rm -r tmpsave') #nosec
         except:
             print('Failed to delete \"Simulated_EEG\" and \"tmpsave\" folders.'
                   ' Please don\'t hate me and do it manually')

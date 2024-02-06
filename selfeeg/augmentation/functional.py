@@ -801,7 +801,7 @@ def scaling(x: ArrayLike,
         batch_equal=True # speed up computation
     if batch_equal or Ndim<3:
         if value is None:
-            value = random.uniform(0.5, 2)
+            value = random.uniform(0.5, 2) #nosec
         x_scale *= value
     else:
         for i in range(x_scale.shape[0]):

@@ -291,9 +291,9 @@ class TestSSL(unittest.TestCase):
         print('removing generated residual directory (Simulated_EEG)')
         try:
             if platform.system() == 'Windows':
-                os.system('rmdir /Q /S Simulated_EEG')
+                os.system('rmdir /Q /S Simulated_EEG') #nosec
             else:
-                os.system('rm -r Simulated_EEG')
+                os.system('rm -r Simulated_EEG') #nosec
         except:
             print('Failed to delete \"Simulated_EEG\" folder'
                   ' Please don\'t hate me and do it manually')

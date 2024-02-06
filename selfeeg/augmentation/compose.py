@@ -305,14 +305,14 @@ class DynamicSingleAug():
         if self.discrete_arg!=None:
             for i in self.discrete_arg:
                 if isinstance(self.discrete_arg[i],list):
-                    arguments[i] = random.choice(self.discrete_arg[i])
+                    arguments[i] = random.choice(self.discrete_arg[i]) #nosec
                 else:
                     arguments[i]= self.discrete_arg[i]
 
         cnt=0 # counter if range_type is a list, it's a sort of enumerate
         if self.range_arg!=None:
             for i in self.range_arg.keys():
-                arguments[i]=random.uniform(self.range_arg[i][0], self.range_arg[i][1])
+                arguments[i]=random.uniform(self.range_arg[i][0], self.range_arg[i][1]) #nosec
                 if self.is_range_type_dict:
                     if self.range_type[i] in ['int', True]:
                         arguments[i] = int(arguments[i])
@@ -486,7 +486,7 @@ class RandomAug():
 
     def PerformAugmentation(self, X):
         if self.p is None:
-            idx=random.randint(0,self.N-1)
+            idx=random.randint(0,self.N-1) #nosec
         else:
             idx=np.random.choice(self.nprange_, p=self.p)
         Xaugs = self.augs[idx](X)

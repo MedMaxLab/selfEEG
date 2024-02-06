@@ -16,3 +16,9 @@ repos:
     hooks:
     -   id: nb-ensure-clean
         files: ^Notebooks/.*\..ipynb$
+
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+    -   id: bandit
+        args: ["-c", "bandit.yaml"]

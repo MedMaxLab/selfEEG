@@ -592,7 +592,7 @@ def GetEEGSplitTable(partition_table: pd.DataFrame,
             try:
                 EEGsplit.drop(columns='index') #useless but to be sure
             except:
-                pass
+                pass #nosec
             EEGsplit= EEGsplit.drop_duplicates(ignore_index=True)
             EEGsplit = EEGsplit.sort_values(by='file_name').reset_index().drop(columns='index')
 

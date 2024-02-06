@@ -1,0 +1,2 @@
+# FILE: bandit.yaml
+skips: ['B311', 'B301', 'B403']
