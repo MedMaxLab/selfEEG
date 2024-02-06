@@ -1,0 +1,29 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: check-yaml
+        exclude: ^conda_recipe/
+    -   id: check-toml
+    -   id: check-ast
+    -   id: end-of-file-fixer
+    -   id: check-added-large-files
+        args: [-- maxkb=5000]
+
+-   repo: https://gitlab.com/iamlikeme/nbhooks
+    rev: 1.0.0
+    hooks:
+    -   id: nb-ensure-clean
+        files: ^Notebooks/.*\..ipynb$
+
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+    -   id: bandit
+        args: ["-c", "bandit.yaml"]
+
+-   repo: https://github.com/psf/black
+    rev: 24.1.1
+    hooks:
+    -   id: black

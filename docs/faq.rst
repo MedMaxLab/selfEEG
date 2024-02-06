@@ -25,7 +25,7 @@ You can split data at the session level with the ``GetEEGSplitTable`` function. 
 
 - Give to the ``dataset_id_extractor`` a function to get the subject ID
 - Give to the ``subject_id_extractor`` a function to get the session ID
-- set ``split mode`` to 1. 
+- set ``split mode`` to 1.
 
 The point is that this function support splits at two granularity levels, with the second being able to identify unique IDs only when coupled with the first level. In this case, it is reasonable to assume that different subjects can have the same session ID, but there not exist duplicate (subject, session) ID pairs.
 
@@ -33,7 +33,7 @@ The names `subjects` and `dataset ID` were decided only for convention. However,
 
 3) **Can I implement a Leave One Subject Out cross-validation?**
 
-Of course. You just need to call the ``GetEEGSplitTableKfold`` function, setting validation split to subject mode and setting the number of folds equals to the number of subjects. Remember to add a subject_id extractor if needed and, if you have enough data to create a separate test set, to also set the test split mode to subject and adjust the number of folds according to the number of subjects minus ones put in the test set  
+Of course. You just need to call the ``GetEEGSplitTableKfold`` function, setting validation split to subject mode and setting the number of folds equals to the number of subjects. Remember to add a subject_id extractor if needed and, if you have enough data to create a separate test set, to also set the test split mode to subject and adjust the number of folds according to the number of subjects minus ones put in the test set
 
 
 
@@ -48,7 +48,7 @@ Setting ``batch_equal`` to True has a dual effect. On the one hand, it increases
 
 Most of the time, augmentations executed on GPUs are faster compared to one on CPUs. However, it is worth to note that three main factors can affect the computational time of augmentations: the GPU device (cuda or mps), the ``batch_equal`` argument, and the object type (numpy array or tensor).
 
-If you want to check how augmentations perform on different configurations, see the following table, which reported a benchmark test (times in second) run on the Padova Neuroscience Center Server (GPU Tesla V100) with a 3D array of size (64*61*512). Alternatively, you can run the benchmarking test and check how augmentations specifically perform on your device. 
+If you want to check how augmentations perform on different configurations, see the following table, which reported a benchmark test (times in second) run on the Padova Neuroscience Center Server (GPU Tesla V100) with a 3D array of size (64*61*512). Alternatively, you can run the benchmarking test and check how augmentations specifically perform on your device.
 
 .. csv-table:: Augmentation Benchmark
     :file: _static/bench_table.csv
@@ -74,24 +74,5 @@ It depends on the type of pretraining task you want to define. However, by defin
 The important step here is the definition of the ``collite_fn`` function (see `here <https://discuss.pytorch.org/t/how-to-create-a-dataloader-with-variable-size-input/8278?u=ptrblck>`_ on how to create custom collite_fn functions), which is used to create the pretraining target. For example:
 
 1. Reconstructive pretraining (generative): create an augmented batch with the augmenter, then return the augmented batch as the input, and the original batch as the target.
-2. Predict if the sample was augmented (predictive): apply an augmentation to a random number of samples before constructing the batch, then return the constructed batch and a binary label (1: augmented sample, 0: original sample)  
+2. Predict if the sample was augmented (predictive): apply an augmentation to a random number of samples before constructing the batch, then return the constructed batch and a binary label (1: augmented sample, 0: original sample)
 3. Predict the type of augmentation applied (predictive): Similar to point 2, with a multiclass label.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

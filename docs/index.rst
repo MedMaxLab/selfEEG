@@ -68,7 +68,7 @@ If you want to preprocess EEG data in a really good way, take a look at:
 
 
 Getting Started
-===============    
+===============
 
 About Self-Supervised Learning
 ------------------------------
@@ -82,15 +82,15 @@ If you are new to the concept of self-supervised learning, we suggest taking a l
 Installation
 ------------
 SelfEEG can be installed via pip::
-    
+
     pip install selfeeg
 
 Additionally, optional but useful packages which we suggest to include in your environment, especially if you plan to work with jupyter, can be automatically installed with the following pip command::
-    
+
     pip install selfeeg[interactive]
 
 
-SelfEEG can be also installed via conda by running the following command::   
+SelfEEG can be also installed via conda by running the following command::
 
     conda install -c Pup_Fede_Cnd -c pytorch selfeeg
 
@@ -102,16 +102,16 @@ Although the dependency list is pretty short, it is strongly suggested to instal
 1. `new virtual environment <https://docs.python.org/3/library/venv.html>`_
 2. `new conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`_
 
-In addition, if PyTorch, Torchvision and Torchaudio are not present in your environment, the previous commands will install the CPU_only versions of such packages. 
-If you have CUDA installed on your system, we strongly encourage you to first install PyTorch, Torchvision and Torchaudio by choosing the 
-right configuration, which varies depending on your OS and CUDA versions; then install selfEEG. The official PyTorch documentation provides an installation command selector, which is available at the following `link <https://pytorch.org/get-started/locally/>`_. 
+In addition, if PyTorch, Torchvision and Torchaudio are not present in your environment, the previous commands will install the CPU_only versions of such packages.
+If you have CUDA installed on your system, we strongly encourage you to first install PyTorch, Torchvision and Torchaudio by choosing the
+right configuration, which varies depending on your OS and CUDA versions; then install selfEEG. The official PyTorch documentation provides an installation command selector, which is available at the following `link <https://pytorch.org/get-started/locally/>`_.
 
 Dependencies
 ------------
 selfEEG requires the following packages to correctly work. If you want to use selfEEG by forking and cloning the project, be sure to install them:
 
 - pandas
-- scipy 
+- scipy
 - torch >= 2.0.0
 - torchaudio >=2.0.2
 - torchvision >=0.15.2
@@ -134,7 +134,7 @@ Tutorial Notebooks
 The following notebook-style pages include a detailed guide on how to use some library functionalities that we believe require further explanation in addition to the examples provided in the documentation API.
 
 :doc:`Dataload_guide`
-   learn how to use the dataloading module for creating PyTorch dataloaders 
+   learn how to use the dataloading module for creating PyTorch dataloaders
 
 :doc:`Augmentation_guide`
    learn how to combine different data augmentations to construct custom augmenters
@@ -200,7 +200,7 @@ Contributors:
 
 - Eng.  Federico Del Pup
 - M.Sc. Andrea Zanola
-- M.Sc. Louis Fabrice Tshimanga 
+- M.Sc. Louis Fabrice Tshimanga
 - Eng.  Paolo Emilio Mazzon
 - Prof. Manfredo Atzori
 

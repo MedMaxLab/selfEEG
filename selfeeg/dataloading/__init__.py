@@ -1,2 +1,9 @@
-from .load import (GetEEGPartitionNumber, GetEEGSplitTable, GetEEGSplitTableKfold,
-                   getsplit, check_split, EEGDataset, EEGsampler)
+from .load import (
+    EEGDataset,
+    EEGsampler,
+    GetEEGPartitionNumber,
+    GetEEGSplitTable,
+    GetEEGSplitTableKfold,
+    check_split,
+    getsplit,
+)

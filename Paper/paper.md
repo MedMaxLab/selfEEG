@@ -10,29 +10,29 @@ tags:
   - Electroencephalography (EEG)
   - Biomedical signals
 authors:
-  - name: 
-      given-names: Federico 
+  - name:
+      given-names: Federico
       surname: Del Pup
     orcid: 0009-0004-0698-962X
     corresponding: true
     affiliation: "1, 2, 3"
-  - name: 
-      given-names: Andrea 
+  - name:
+      given-names: Andrea
       surname: Zanola
     orcid: 0000-0001-6973-8634
     equal-contrib: true
     affiliation: 3
-  - name: 
+  - name:
       given-names: Louis Fabrice
       surname: Tshimanga
     orcid: 0009-0002-1240-4830
     equal-contrib: true
     affiliation: "2, 3"
-  - name: 
+  - name:
       given-names: Paolo Emilio
       surname: Mazzon
     affiliation: 3
-  - name: 
+  - name:
       given-names: Manfredo
       surname: Atzori
     orcid: 0000-0001-5397-2063
@@ -52,10 +52,10 @@ bibliography: bibliography.bib
 
 
 # Summary
-SelfEEG is an open-source Python library developed to assist researchers in conducting Self-Supervised Learning (SSL) experiments on electroencephalography (EEG) data. 
-Its primary objective is to offer a user-friendly but highly customizable environment, enabling users to efficiently design and execute self-supervised learning tasks on EEG data. 
+SelfEEG is an open-source Python library developed to assist researchers in conducting Self-Supervised Learning (SSL) experiments on electroencephalography (EEG) data.
+Its primary objective is to offer a user-friendly but highly customizable environment, enabling users to efficiently design and execute self-supervised learning tasks on EEG data.
 
-SelfEEG covers all the stages of a typical SSL pipeline, ranging from data import to model design and training. 
+SelfEEG covers all the stages of a typical SSL pipeline, ranging from data import to model design and training.
 It includes modules specifically designed to: split data at various granularity levels (e.g., session-, subject-, or dataset-based splits); effectively manage data stored with different configurations (e.g., file extensions, data types) during mini-batch construction; provide a wide range of standard deep learning models, data augmentations and SSL baseline methods applied to EEG data.
 
 Most of the functionality offered by selfEEG can be executed both on GPUs and CPUs, expanding its usability beyond the self-supervised learning area.
@@ -65,7 +65,7 @@ These features make selfEEG a versatile deep learning tool for biomedical applic
 
 
 # Statement of need
-SelfEEG answers to the lack of Self-Supervised Learning (SSL) frameworks for the analysis of EEG data. 
+SelfEEG answers to the lack of Self-Supervised Learning (SSL) frameworks for the analysis of EEG data.
 
 In fact, despite the recent high number of publications (more than 20 journal papers in the last 4 years [@DelPup2023]), there are currently no frameworks or common standards for developing EEG-based SSL pipelines, contrary to other fields such as computer vision (see [LightlySSL](https://github.com/lightly-ai/lightly) or [ViSSL](https://github.com/facebookresearch/vissl)).
 
@@ -90,20 +90,20 @@ In particular, selfEEG comprises the following modules:
 
 # Related open-source projects
 Despite several deep learning frameworks having been developed for the analysis of EEG data, a library focused on the construction of self-supervised learning pipelines on EEG data is still not available to the best of our knowledge, hindering the advancement of the scientific knowledge and the progress in the field.
-A comprehensive review of open-source projects related to neuroscientific data analysis is provided in [@app13095472]. 
-Few examples are EEG-DL [@eegdl] and [torchEEG](https://github.com/torcheeg/torcheeg), which characterized for their completeness and spread among the neuroscientific community. 
+A comprehensive review of open-source projects related to neuroscientific data analysis is provided in [@app13095472].
+Few examples are EEG-DL [@eegdl] and [torchEEG](https://github.com/torcheeg/torcheeg), which characterized for their completeness and spread among the neuroscientific community.
 
 
 # Future development
-Considering how rapidly self-supervised learning is evolving, this library is expected to be constantly updated by the authors and the open-source community, especially by adding novel SSL algorithms, deep learning models, and functionalities that can enhance the comparison between different developed strategies. 
+Considering how rapidly self-supervised learning is evolving, this library is expected to be constantly updated by the authors and the open-source community, especially by adding novel SSL algorithms, deep learning models, and functionalities that can enhance the comparison between different developed strategies.
 In particular, the authors plan to continue working on selfEEG during the next years via several ongoing European and national projects.
 
 
 # CRediT Authorship Statement
-FDP: Conceptualization, Writing - Original Draft, Software - Development, Software - Design, Software - Testing; 
-AZ: Writing - Review & Editing, Software - design (dataloading and utils modules), Software - Testing; 
+FDP: Conceptualization, Writing - Original Draft, Software - Development, Software - Design, Software - Testing;
+AZ: Writing - Review & Editing, Software - design (dataloading and utils modules), Software - Testing;
 LFT: Writing - Review & Editing, Software - design (dataloading and utils modules), Software - Testing;
-PEM: Technical support, Writing - Review & Editing, Software - Testing; 
+PEM: Technical support, Writing - Review & Editing, Software - Testing;
 MA: Funding Acquisition, Project Administration, Supervision, Writing - Review & Editing.
 
 # Acknowledgements

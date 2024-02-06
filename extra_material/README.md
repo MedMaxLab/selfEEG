@@ -8,7 +8,3 @@ This folder contains additional files that integrate information presented in th
 
 2. **bench_table.csv**: A table reporting the results of our augmentation benchmark performed on the Padova Neuroscience Server with a Tesla V100 and 100 repetitions. Remember that higher repetitions means higher reported times, since table values referes to the total time. Higher repetitions also means better assessment of the performance differences
 3. **geogebra-export.gbb**: A geogebra file used to design the custom range scaler with soft clipping. You can import it in the online version of geogebra and see how values are mapped from the input "uV" range to the desired output.
-
-
-
-

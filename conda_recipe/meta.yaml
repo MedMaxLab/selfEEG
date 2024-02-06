@@ -41,15 +41,15 @@ about:
   license_file: LICENSE.md
   description: |
     To install selfEEG in a fresh environment, run the following command:
-    
+
     ``conda install -c Pup_Fede_Cnd -c pytorch selfeeg``
-    
-    Alternatively, we suggest to first install PyTorch, Torchvision and Torchaudio by choosing the 
-    right configuration depending on your preferences (see the official PyTorch documentation); 
+
+    Alternatively, we suggest to first install PyTorch, Torchvision and Torchaudio by choosing the
+    right configuration depending on your preferences (see the official PyTorch documentation);
     then, run the following command:
-    
+
     ``conda install -c Pup_Fede_Cnd selfeeg``
-    
+
     .
   doc_url: https://selfeeg.readthedocs.io/en/latest/index.html
   dev_url: https://github.com/MedMaxLab/selfEEG

@@ -1,6 +1,6 @@
-<img src="Images/LibraryLogo.png" 
-        alt="Picture" 
-        width="300" 
+<img src="Images/LibraryLogo.png"
+        alt="Picture"
+        width="300"
         style="display: block; margin: 0 auto" />
 
 <table>
@@ -32,7 +32,7 @@
   <td>License</td>
   <td>
     <a href="https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" 
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg"
         alt="license" />
     </a>
 </td>
@@ -79,7 +79,7 @@ Additionally, optional but useful packages which we suggest to include in your e
 pip install selfeeg[interactive]
 ```
 
-SelfEEG can be also installed via conda by running the following command:   
+SelfEEG can be also installed via conda by running the following command:
 ```
 conda install -c Pup_Fede_Cnd -c pytorch selfeeg
 ```
@@ -91,9 +91,9 @@ Although the dependency list is pretty short, it is strongly suggested to instal
 1. [new virtual environment](https://docs.python.org/3/library/venv.html)
 2. [new conda environment](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands)
 
-In addition, if PyTorch, Torchvision and Torchaudio are not present in your environment, the previous commands will install the CPU_only versions of such packages. 
-If you have CUDA installed on your system, we strongly encourage you to first install PyTorch, Torchvision and Torchaudio by choosing the 
-right configuration, which varies depending on your OS and CUDA versions; then install selfEEG. The official PyTorch documentation provides an installation command selector, which is available at the following [link](https://pytorch.org/get-started/locally/). 
+In addition, if PyTorch, Torchvision and Torchaudio are not present in your environment, the previous commands will install the CPU_only versions of such packages.
+If you have CUDA installed on your system, we strongly encourage you to first install PyTorch, Torchvision and Torchaudio by choosing the
+right configuration, which varies depending on your OS and CUDA versions; then install selfEEG. The official PyTorch documentation provides an installation command selector, which is available at the following [link](https://pytorch.org/get-started/locally/).
 
 
 
@@ -140,7 +140,7 @@ We have worked really hard to develop this library. If you use selfEEG during yo
 
 ```bibtex
 @misc{delpup2023selfeeg,
-      title={SelfEEG: A Python library for Self-Supervised Learning in Electroencephalography}, 
+      title={SelfEEG: A Python library for Self-Supervised Learning in Electroencephalography},
       author={Federico Del Pup and Andrea Zanola and Louis Fabrice Tshimanga and Paolo Emilio Mazzon and Manfredo Atzori},
       year={2023},
       eprint={2401.05405},
@@ -154,8 +154,8 @@ Alternatively, you can cite the following [IEEE article](https://ieeexplore.ieee
 ```bibtex
 @article{delpup2023,
   author={Del Pup, Federico and Atzori, Manfredo},
-  journal={IEEE Access}, 
-  title={Applications of Self-Supervised Learning to Biomedical Signals: a Survey}, 
+  journal={IEEE Access},
+  title={Applications of Self-Supervised Learning to Biomedical Signals: a Survey},
   year={2023},
   volume={11},
   number={},
@@ -173,15 +173,3 @@ Contributors:
 ## License
 SelfEEG is released under the
 [MIT Licence](LICENSE.md)
-
-
-
-
-
-
-
-
-
-
-
-

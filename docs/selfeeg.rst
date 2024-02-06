@@ -10,4 +10,3 @@ SelfEEG
    selfeeg.models
    selfeeg.ssl
    selfeeg.utils
-

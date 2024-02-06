@@ -3,7 +3,7 @@ name: Unittest
 on:
   push:
     paths:
-    - 'selfeeg/**' 
+    - 'selfeeg/**'
     - 'test/**'
     - '.github/workflows/**'
 
@@ -32,4 +32,3 @@ jobs:
           pip install -r requirements.txt
       - name: Test with unittest
         run: python -m unittest discover test "*_test.py"
-        

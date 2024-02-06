@@ -1,6 +1,6 @@
 # SelfEEG TEST
 
-This folder contains all the tests you must run to assess the correct functionality of the selfEEG library. 
+This folder contains all the tests you must run to assess the correct functionality of the selfEEG library.
 
 All the tests were implemented with **unittest**, a standard testing framework.
 
@@ -8,13 +8,13 @@ To run the whole test, you just need to go to the main working directory (if you
 
     python -m unittest discover test "*_test.py"
 
-which basically tells python to search for all the unittest tests included in python files inside the test folder and subdirectories whose name ends with "*_test.py*". In addition, you can use the test notebooks included in the Notebooks folder of this repo, which we used as the the starting point for the unittest implementation and can be modified according to your needs, especially if you want to perform additional tests. 
+which basically tells python to search for all the unittest tests included in python files inside the test folder and subdirectories whose name ends with "*_test.py*". In addition, you can use the test notebooks included in the Notebooks folder of this repo, which we used as the the starting point for the unittest implementation and can be modified according to your needs, especially if you want to perform additional tests.
 
-If you encounter any problem during the test, or think additional assertions should be added in existing test methods, please raise an issue on GitHub, so that we can work on that. 
+If you encounter any problem during the test, or think additional assertions should be added in existing test methods, please raise an issue on GitHub, so that we can work on that.
 
 Also, remember to add a test of any functionality you are working on and check that any other already implemented will not break. To see which basic assertion you must include in a test for a novel functionality, read the following list and take a look at the already implemented code.
 
-To conclude, if you are working on a new data augmentation, please add its benchmarking test in the Augmentation_benchmark.py file in the extra_material folder, just for completeness. 
+To conclude, if you are working on a new data augmentation, please add its benchmarking test in the Augmentation_benchmark.py file in the extra_material folder, just for completeness.
 
 
 ## Basic Assertions
@@ -23,17 +23,17 @@ Here is reported a basic list of assertion you must include in your tests based 
 
 ### General
 
-All the functions must check that any allowed combination of input arguments will not raise an unexpected error. To speed up the procedure, you can create a dictionary of possible values per arguments and create the input iterator with the `makegrid` method included in each unittest.TestCase class. See already implemented testing pipelines. 
+All the functions must check that any allowed combination of input arguments will not raise an unexpected error. To speed up the procedure, you can create a dictionary of possible values per arguments and create the input iterator with the `makegrid` method included in each unittest.TestCase class. See already implemented testing pipelines.
 
 
 ### Dataloading
 
-**loading functions**: 
+**loading functions**:
 
 - all the files are loaded as excpected
 - the output table dimension is the expected one
 
-**split functions** 
+**split functions**
 
 - the split is done correctly according to the given setting
 - a subset label (train/validation/test/excluded) is assigned to all the dataset files
@@ -42,14 +42,14 @@ All the functions must check that any allowed combination of input arguments wil
 
 ### Augmentation
 
-**Funtional** 
+**Funtional**
 
 - the augmentation will return a tensor with the same size as the input one
 - the range of values is the expected one
 - no NaN values are returned
 - additional test to check that the augmentation is performed correctly
 
-**Composition** 
+**Composition**
 
 - the composition is done correctly according to the desired order and modality
 
@@ -76,6 +76,4 @@ All the functions must check that any allowed combination of input arguments wil
 
 1. MacBook Pro 14 inch M2-Pro, MacOS 13.6.2, mps backend
 2. Padova Neuroscience Center Server, Ubuntu 18.04.1, Tesla V100 GPU
-3. Custom built PC, Windows 10 22H2, NVIDIA RTX 2080 super 
-
-
+3. Custom built PC, Windows 10 22H2, NVIDIA RTX 2080 super

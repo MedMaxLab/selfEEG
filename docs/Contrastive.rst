@@ -19,5 +19,3 @@ Many contrastive learning alorithm has been proposed in the last few years. Here
 - `[SimSiam, 2021] <https://arxiv.org/abs/2011.10566>`_
 - `[VICReg, 2022] <https://arxiv.org/abs/2105.04906>`_
 - `[DINO, 2021] <https://arxiv.org/abs/2104.14294>`_
-
-
