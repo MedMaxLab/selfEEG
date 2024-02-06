@@ -59,10 +59,10 @@ setuptools.setup(
         "Programming Language :: Python :: 3.11",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    keywords=["Deep Learning", 
+    keywords=["Deep Learning",
               "Self-Supervised Learning",
               "Contrastive Learning",
-              "Electroencephalography", 
+              "Electroencephalography",
               "EEG"
              ],
     project_urls={

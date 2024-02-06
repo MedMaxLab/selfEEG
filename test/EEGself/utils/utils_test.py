@@ -21,7 +21,7 @@ class TestUtils(unittest.TestCase):
         print('TESTING UTILS MODULE')
         print('--------------------')
 
-    def makeGrid(self, pars_dict):  
+    def makeGrid(self, pars_dict):
         keys=pars_dict.keys()
         combinations=itertools.product(*pars_dict.values())
         ds=[dict(zip(keys,cc)) for cc in combinations]
@@ -29,7 +29,7 @@ class TestUtils(unittest.TestCase):
 
     def test_scale_range_soft_clip(self):
         print('testing scale range with soft clip function...', end="", flush=True)
-        device= torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu") 
+        device= torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
         device  = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         random.seed(1234)
         x    = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))*500
@@ -38,7 +38,7 @@ class TestUtils(unittest.TestCase):
         if device.type != 'cpu':
             xgpu  = torch.clone(x).to(device=device)
             inplist = [x, xnp, xgpu]
-        input_args = {'x': inplist, 'Range': [200, 300], 'asintote':[1.0, 2.3, 3.5], 
+        input_args = {'x': inplist, 'Range': [200, 300], 'asintote':[1.0, 2.3, 3.5],
                       'scale': ['uV'], 'exact':[True, False]}
         input_args = self.makeGrid(input_args)
         for i in input_args:
@@ -63,7 +63,7 @@ class TestUtils(unittest.TestCase):
         if device.type != 'cpu':
             xgpu  = torch.clone(x).to(device=device)
             inplist = [x, xnp, xgpu]
-        input_args = {'x': inplist, 'Range': [200, 300], 'asintote':[1.0, 2.3, 3.5], 
+        input_args = {'x': inplist, 'Range': [200, 300], 'asintote':[1.0, 2.3, 3.5],
                       'scale': ['uV'], 'exact':[True, False]}
         input_args = self.makeGrid(input_args)
         for i in input_args:
@@ -77,7 +77,7 @@ class TestUtils(unittest.TestCase):
             self.assertTrue( x_scaled.max()<=i['asintote'] and x_scaled.min()>= -i['asintote'])
         print('   Range Scaler OK')
 
-    
+
     def test_get_subarray_closest_sum(self):
         print('testing subarray closest sum function...', end="", flush=True)
         random.seed(1235)
@@ -90,7 +90,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual( sum(best_sub_arr), 2497)
         print('   subarray closest sum OK')
 
-    
+
     def test_check_models(self):
         print('testing check models function...', end="", flush=True)
         model1 = models.EEGNet(4,8,512)
@@ -101,7 +101,7 @@ class TestUtils(unittest.TestCase):
         print('   check models OK')
 
 
-    
+
     def test_count_parameters(self):
         print('testng count parameters function...\n')
         mdl = models.ShallowNet(4,8,1024)
@@ -110,16 +110,3 @@ class TestUtils(unittest.TestCase):
         a,b = utils.count_parameters(mdl, True, True,True)
         self.assertEqual(b, 23760) # should return True
         print('\n   count parameters OK')
-
-
-
-
-
-
-
-
-
-
-
-
-

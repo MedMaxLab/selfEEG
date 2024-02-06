@@ -26,7 +26,7 @@ If you are new to selfEEG or self-supervised learning in general, we recommend y
 
 ## How to contribute
 
-You can contribute to this library by reporting and/or solving issues, or by proposing and/or implementing novel features. Both contributions are very welcome. 
+You can contribute to this library by reporting and/or solving issues, or by proposing and/or implementing novel features. Both contributions are very welcome.
 
 
 ### Reporting issues
@@ -49,7 +49,7 @@ The following (not exhaustive) list of possible additions, sorted by priority or
 To start contributing, follow these simple steps:
 
 1. Fork the repository.
-2. Clone the forked repository to your local machine. 
+2. Clone the forked repository to your local machine.
 3. Create a new branch for your contribution.
 4. Set up a python virtual environment.
 5. Make necessary changes/additions to the source code.
@@ -63,8 +63,8 @@ More details about setting your working environment and how to prepare your pull
 
 ## Set up a Python virtual environment
 
-To work on your changes you first need to setup a virtual environment. 
-Just create a fresh environment, activate it and pip install the library with its dependencies. 
+To work on your changes you first need to setup a virtual environment.
+Just create a fresh environment, activate it and pip install the library with its dependencies.
 
 We suggest working with conda (or miniconda), where a new environment can be easily created with the following commands:
 
@@ -80,7 +80,7 @@ this will install all the selfeeg main dependencies. As reported in the [README.
 
 ## testing
 
-It is important to ensure that all the implemented changes will not break any existing library functionality. The [test](/test) folder provides an automatic way to check all the library functionalities. Tests will be performed automatically via GitHub Actions whenever changes to the test, selfeeg, or . github/workflows folders are pushed to the remote repository. However, these tests are performed only on a CPU device. For this reason, it is strongly suggested to perform tests locally before any push in order to evaluate the functionalities of selfEEG also on a GPU device. 
+It is important to ensure that all the implemented changes will not break any existing library functionality. The [test](/test) folder provides an automatic way to check all the library functionalities. Tests will be performed automatically via GitHub Actions whenever changes to the test, selfeeg, or . github/workflows folders are pushed to the remote repository. However, these tests are performed only on a CPU device. For this reason, it is strongly suggested to perform tests locally before any push in order to evaluate the functionalities of selfEEG also on a GPU device.
 Local tests can be performed with unittest by simply running the following command using the main repository directory as the working directory:
 
 ```
@@ -96,7 +96,7 @@ If you believe that your changes are ready for possible merging with our main br
 
 1. Existing tests can be run without errors
 2. Novel tests were added to check that an issue is solved or a novel feature works correctly.
-3. Additions are properly documented and ready to be included without errors in our API documentation. 
+3. Additions are properly documented and ready to be included without errors in our API documentation.
 4. The code style follow that of the project. In particular, check that:
    * indentations follow a 4 space rule.
    * comments are provided wherever necessary for clarity.

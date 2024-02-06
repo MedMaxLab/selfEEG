@@ -3,4 +3,4 @@ include selfeeg/VERSION.txt
 include Notebooks/Augmentation_guide.ipynb
 include Notebooks/Dataload_guide.ipynb
 include Notebooks/SSL_guide.ipynb
-prune */__pycache__ 
+prune */__pycache__

@@ -13,7 +13,7 @@ from selfeeg import augmentation as aug
 
 class TestAugmentationFunctional(unittest.TestCase):
 
-    def makeGrid(self, pars_dict):  
+    def makeGrid(self, pars_dict):
         keys=pars_dict.keys()
         combinations=itertools.product(*pars_dict.values())
         ds=[dict(zip(keys,cc)) for cc in combinations]
@@ -86,23 +86,23 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
                         'value': [1, 2.0, 4] }
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.shift_vertical(**i)
-        
+
         x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
         xaug = aug.shift_vertical(x, 4)
         self.assertTrue(torch.equal(x+4,xaug)) # should return True
         print('   shift vertical OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_shift_horizontal(self):
         print('Testing shift horizontal...', end="", flush=True)
         aug_args = { 'x': [self.x1, self.x2, self.x3, self.x4,
-                           self.x1np, self.x2np, self.x3np, self.x4np], 'Fs':[128], 
+                           self.x1np, self.x2np, self.x3np, self.x4np], 'Fs':[128],
                     'shift_time': [0.5, 1, 2.0], 'forward':[None, True, False],
                     'random_shift':[False,True], 'batch_equal':[True,False]
                    }
@@ -121,7 +121,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128], 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128],
                         'shift_time': [0.5, 1, 2.0], 'forward':[None, True, False],
                         'random_shift':[False,True], 'batch_equal':[True,False]
                        }
@@ -131,20 +131,20 @@ class TestAugmentationFunctional(unittest.TestCase):
                     if not( i['random_shift'] or (i['forward'] is None) ):
                         i['batch_equal']=True
                 xaug = aug.shift_horizontal(**i)
-        
+
         xaug = aug.shift_horizontal(self.x4, 64, 1, True)
-        self.assertTrue(xaug[...,0:64].sum()==0) 
-        self.assertFalse(xaug[...,65].sum()==0 )        
-        print('   shift vertical OK: tested', N+len(aug_args)+1, 
+        self.assertTrue(xaug[...,0:64].sum()==0)
+        self.assertFalse(xaug[...,65].sum()==0 )
+        print('   shift vertical OK: tested', N+len(aug_args)+1,
               'combinations of input arguments')
 
 
 
-    
+
     def test_shift_frequency(self):
         print('Testing shift frequency...', end="", flush=True)
-        aug_args = { 'x': [self.x1, self.x2, self.x3, self.x4, 
-                           self.x1np, self.x2np, self.x3np, self.x4np], 'Fs':[128], 
+        aug_args = { 'x': [self.x1, self.x2, self.x3, self.x4,
+                           self.x1np, self.x2np, self.x3np, self.x4np], 'Fs':[128],
                     'shift_freq': [1.35, 2, 4.12], 'forward':[None, True, False],
                     'random_shift':[False,True], 'batch_equal':[True,False]
                    }
@@ -160,9 +160,9 @@ class TestAugmentationFunctional(unittest.TestCase):
             else:
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
-        N = len(aug_args)    
+        N = len(aug_args)
         if (self.device.type != 'cpu') and (self.device.type != 'mps'):
-            aug_args = { 'x': [self.x1gpu,  self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128], 
+            aug_args = { 'x': [self.x1gpu,  self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128],
                         'shift_freq': [1.35, 2, 4.12], 'forward':[None, True, False],
                         'random_shift':[False,True], 'batch_equal':[True,False]
                        }
@@ -180,11 +180,11 @@ class TestAugmentationFunctional(unittest.TestCase):
         f, per1 =periodogram(x[0,0], fs=Fs)
         per2 =periodogram(xaug[0,0], fs=Fs)[1]
         self.assertTrue(math.isclose(per1[4],per2[84], rel_tol=1e-5))
-        self.assertTrue(math.isclose(per1[24],per2[104],rel_tol=1e-5)) 
+        self.assertTrue(math.isclose(per1[24],per2[104],rel_tol=1e-5))
         print('   shift frequency OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_flip_vertical(self):
         print('Testing flip vertical...', end="", flush=True)
         aug_args = { 'x': [self.x1, self.x2, self.x3, self.x4,
@@ -231,19 +231,19 @@ class TestAugmentationFunctional(unittest.TestCase):
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.flip_horizontal(**i)
-        
+
         x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
         xaug = aug.flip_horizontal(x)
-        self.assertTrue(torch.equal(xaug, torch.flip(x, [len(x.shape)-1]))) # should return True 
+        self.assertTrue(torch.equal(xaug, torch.flip(x, [len(x.shape)-1]))) # should return True
         print('   flip horizontal OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_gaussian_noise(self):
         print('Testing gaussian noise...', end="", flush=True)
         aug_args = { 'x': [self.x1, self.x2, self.x3, self.x4,
-                           self.x1np, self.x2np, self.x3np, self.x4np], 
-                    'mean':[0, 1, 2.5], 
+                           self.x1np, self.x2np, self.x3np, self.x4np],
+                    'mean':[0, 1, 2.5],
                     'std': [1.35, 2, 0.72]
                    }
         aug_args = self.makeGrid(aug_args)
@@ -255,10 +255,10 @@ class TestAugmentationFunctional(unittest.TestCase):
             else:
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
-        N = len(aug_args)    
+        N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],  
-                        'mean':[0, 1, 2.5], 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
+                        'mean':[0, 1, 2.5],
                         'std': [1.35, 2, 0.72]}
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
@@ -270,10 +270,10 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('   gaussian noise OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_add_noise_SNR(self):
         print('Testing noise SNR...', end="", flush=True)
-        aug_args = { 'x': [self.x1, self.x2, self.x3, self.x4, 
+        aug_args = { 'x': [self.x1, self.x2, self.x3, self.x4,
                            self.x1np, self.x2np, self.x3np, self.x4np], 'target_snr':[1,2,5] }
         aug_args = self.makeGrid(aug_args)
         for i in aug_args:
@@ -284,9 +284,9 @@ class TestAugmentationFunctional(unittest.TestCase):
             else:
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
-        N = len(aug_args)    
+        N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
                         'target_snr':[1,2,5] }
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
@@ -299,11 +299,11 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('   noise SNR OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_add_band_noise(self):
         print('Testing band noise...', end="", flush=True)
-        aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4, 
-                           self.x1np, self.x2np, self.x3np, self.x4np], 
+        aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
+                           self.x1np, self.x2np, self.x3np, self.x4np],
                     'bandwidth':[['theta','gamma'],[(1,10),(15,18)],[4,50],50,
                                  ['theta',(10,20),50]],
                     'samplerate':[128],'noise_range':[None,2,1.5], 'std':[None,1.4,1.23]
@@ -317,9 +317,9 @@ class TestAugmentationFunctional(unittest.TestCase):
             else:
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
-        N = len(aug_args)    
+        N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
                         'bandwidth':[['theta','gamma'],[(1,10),(15,18)],[4,50],50,
                                      ['theta',(10,20),50]],
                         'samplerate':[128],'noise_range':[None,2,1.5], 'std':[None,1.4,1.23]
@@ -335,11 +335,11 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('   band noise OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_scaling(self):
         print('Testing scaling...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
-                            self.x1np, self.x2np, self.x3np, self.x4np], 
+                            self.x1np, self.x2np, self.x3np, self.x4np],
                     'value':[None,1.5,2,0.5], 'batch_equal':[True,False]
                    }
         aug_args = self.makeGrid(aug_args)
@@ -351,9 +351,9 @@ class TestAugmentationFunctional(unittest.TestCase):
             else:
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
-        N = len(aug_args)    
+        N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
+            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
                         'value':[None,1.5,2,0.5], 'batch_equal':[True,False]
                        }
             aug_args = self.makeGrid(aug_args)
@@ -366,12 +366,12 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('   scaling OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_random_slope_scale(self):
         print('Testing random slope scale...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
-                            self.x1np, self.x2np,self.x3np,self.x4np], 
-                    'min_scale':[0.7,0.9], 'max_scale':[1.2,1.5], 
+                            self.x1np, self.x2np,self.x3np,self.x4np],
+                    'min_scale':[0.7,0.9], 'max_scale':[1.2,1.5],
                     'batch_equal':[True,False], 'keep_memory':[True,False]
                    }
         aug_args = self.makeGrid(aug_args)
@@ -385,10 +385,10 @@ class TestAugmentationFunctional(unittest.TestCase):
             else:
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
-        N = len(aug_args)    
+        N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
-                    'min_scale':[0.7,0.9], 'max_scale':[1.2,1.5], 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
+                    'min_scale':[0.7,0.9], 'max_scale':[1.2,1.5],
                     'batch_equal':[True,False], 'keep_memory':[True,False]
                        }
             aug_args = self.makeGrid(aug_args)
@@ -396,21 +396,21 @@ class TestAugmentationFunctional(unittest.TestCase):
                 if i['batch_equal'] and len(i['x'].shape)<2:
                     i['batch_equal']=False
                 xaug = aug.random_slope_scale(**i)
-        
+
         x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
         xaug = aug.random_slope_scale(x)
         diff1=torch.abs(xaug[0,0,1:] - xaug[0,0,:-1])
         diff2=torch.abs(x[0,0,1:] - x[0,0,:-1])
         self.assertEqual(torch.logical_or(diff1<=(diff2*1.2),diff1>=(diff2*0.9)).sum(),1023)
-        print('   random slope scale OK: tested', N+len(aug_args), 
+        print('   random slope scale OK: tested', N+len(aug_args),
               'combinations of input arguments')
 
 
-    
+
     def test_random_FT_phase(self):
         print('Testing random FT phase...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
-                            self.x1np, self.x2np, self.x3np, self.x4np], 
+                            self.x1np, self.x2np, self.x3np, self.x4np],
                     'value':[0.2,0.5,0.75], 'batch_equal':[True,False]
                    }
         aug_args = self.makeGrid(aug_args)
@@ -422,9 +422,9 @@ class TestAugmentationFunctional(unittest.TestCase):
             else:
                 self.assertTrue(np.isnan(xaug).sum()==0)
                 self.assertFalse(np.array_equal(i['x'],xaug))
-        N = len(aug_args)    
+        N = len(aug_args)
         if (self.device.type != 'cpu') and (self.device.type != 'mps'):
-            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
+            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
                         'value':[0.2,0.5,0.75], 'batch_equal':[True,False]
                        }
             aug_args = self.makeGrid(aug_args)
@@ -440,7 +440,7 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('   random FT phase OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_moving_average(self):
         print('Testing moving average...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
@@ -456,25 +456,25 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
+            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
                         'order': [3, 5, 9] }
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.moving_avg(**i)
-        
+
         x = torch.randn(16,32,1024)
         xaug = aug.moving_avg(x, 5)
         self.assertTrue( math.isclose( x[0,0,5:5+5].sum()/5, xaug[0,0,7] , rel_tol=1e-5))
         print('   moving average OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
 
     def test_filter_lowpass(self):
         print('Testing lowpass filter...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
                             self.x1np, self.x2np, self.x3np, self.x4np], 'Fs':[128,256],
-                    'Wp':[30], 'Ws':[50], 'rp':[-20*np.log10(.90)], 'rs':[-20*np.log10(.15)], 
+                    'Wp':[30], 'Ws':[50], 'rp':[-20*np.log10(.90)], 'rs':[-20*np.log10(.15)],
                     'filter_type': ['butter', 'ellip', 'cheby1', 'cheby2']
                    }
         aug_args = self.makeGrid(aug_args)
@@ -491,7 +491,7 @@ class TestAugmentationFunctional(unittest.TestCase):
         N = len(aug_args)
         if self.device.type != 'cpu':
             aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],  'Fs':[128,256],
-                    'Wp':[30], 'Ws':[50], 'rp':[-20*np.log10(.95)], 'rs':[-20*np.log10(.15)], 
+                    'Wp':[30], 'Ws':[50], 'rp':[-20*np.log10(.95)], 'rs':[-20*np.log10(.15)],
                     'filter_type': ['butter', 'ellip', 'cheby1', 'cheby2']}
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
@@ -500,9 +500,9 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(torch.equal(i['x'],xaug))
                 self.assertTrue( (xaug>1e2).sum()==0)
                 self.assertTrue( (xaug<-1e2).sum()==0)
-        
+
         x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
-        x += torch.sin(torch.linspace(0, 48*2*torch.pi,1024)) 
+        x += torch.sin(torch.linspace(0, 48*2*torch.pi,1024))
         x += torch.sin(torch.linspace(0, 256*2*torch.pi,1024))
         f, per1 = periodogram(x[0,0], 128)
         xaug = aug.filter_lowpass(x, 128, 20, 30)
@@ -511,12 +511,12 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('   lowpass filter OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_filter_highpass(self):
         print('Testing highpass filter...', end="", flush=True)
-        aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4, 
+        aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
                            self.x1np, self.x2np, self.x3np, self.x4np], 'Fs':[128,256],
-                    'Wp':[40], 'Ws':[20], 'rp':[-20*np.log10(.9)], 'rs':[-20*np.log10(.15)], 
+                    'Wp':[40], 'Ws':[20], 'rp':[-20*np.log10(.9)], 'rs':[-20*np.log10(.15)],
                     'filter_type': ['butter', 'ellip', 'cheby1', 'cheby2']
                    }
         aug_args = self.makeGrid(aug_args)
@@ -533,7 +533,7 @@ class TestAugmentationFunctional(unittest.TestCase):
         N = len(aug_args)
         if self.device.type != 'cpu':
             aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],  'Fs':[128,256],
-                    'Wp':[40], 'Ws':[20], 'rp':[-20*np.log10(.95)], 'rs':[-20*np.log10(.15)], 
+                    'Wp':[40], 'Ws':[20], 'rp':[-20*np.log10(.95)], 'rs':[-20*np.log10(.15)],
                     'filter_type': ['butter', 'ellip', 'cheby1', 'cheby2']}
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
@@ -542,9 +542,9 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(torch.equal(i['x'],xaug))
                 self.assertTrue( (xaug>1e2).sum()==0)
                 self.assertTrue( (xaug<-1e2).sum()==0)
-        
+
         x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
-        x += torch.sin(torch.linspace(0, 48*2*torch.pi,1024)) 
+        x += torch.sin(torch.linspace(0, 48*2*torch.pi,1024))
         x += torch.sin(torch.linspace(0, 256*2*torch.pi,1024))
         f, per1 = periodogram(x[0,0], 128)
         xaug = aug.filter_highpass(x, 128, 20, 30)
@@ -554,11 +554,11 @@ class TestAugmentationFunctional(unittest.TestCase):
 
 
 
-    
+
     def test_filter_bandpass(self):
         print('Testing bandpass filter...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
-                            self.x1np, self.x2np, self.x3np,self.x4np], 'Fs':[128,256], 
+                            self.x1np, self.x2np, self.x3np,self.x4np], 'Fs':[128,256],
                     'eeg_band':["delta", "alpha", "beta", "gamma", "gamma_low"],
                     'filter_type': ['butter', 'ellip', 'cheby1', 'cheby2']
                    }
@@ -575,8 +575,8 @@ class TestAugmentationFunctional(unittest.TestCase):
             self.assertTrue( (xaug<-1e2).sum()==0)
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128,256], 
-                        'eeg_band':[None,"delta", "alpha", "beta", 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128,256],
+                        'eeg_band':[None,"delta", "alpha", "beta",
                                     "gamma", "gamma_low"],
                         'filter_type': ['butter', 'ellip', 'cheby1', 'cheby2']
                        }
@@ -587,9 +587,9 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(torch.equal(i['x'],xaug))
                 self.assertTrue( (xaug>1e2).sum()==0)
                 self.assertTrue( (xaug<-1e2).sum()==0)
-        
+
         x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
-        x += torch.sin(torch.linspace(0, 48*2*torch.pi,1024)) 
+        x += torch.sin(torch.linspace(0, 48*2*torch.pi,1024))
         x += torch.sin(torch.linspace(0, 256*2*torch.pi,1024))
         f, per1 = periodogram(x[0,0], 128)
         xaug = aug.filter_bandpass(x, 128, [13,22], [5,27])
@@ -603,8 +603,8 @@ class TestAugmentationFunctional(unittest.TestCase):
     def test_filter_bandstop(self):
         print('Testing bandstop filter...', end="", flush=True)
         aug_args = { 'x': [self.x1,self.x2,self.x3,self.x4,
-                           self.x1np,self.x2np,self.x3np,self.x4np], 'Fs':[128,256], 
-                    'eeg_band':[None,"delta", "theta", "alpha", "beta", 
+                           self.x1np,self.x2np,self.x3np,self.x4np], 'Fs':[128,256],
+                    'eeg_band':[None,"delta", "theta", "alpha", "beta",
                                 "gamma", "gamma_low"],
                     'filter_type': ['butter', 'ellip', 'cheby1', 'cheby2']
                    }
@@ -621,8 +621,8 @@ class TestAugmentationFunctional(unittest.TestCase):
             self.assertTrue( (xaug<-1e2).sum()==0)
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128,256], 
-                        'eeg_band':[None,"delta", "theta", "alpha", "beta", 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128,256],
+                        'eeg_band':[None,"delta", "theta", "alpha", "beta",
                                     "gamma", "gamma_low"],
                         'filter_type': ['butter', 'ellip', 'cheby1', 'cheby2']
                        }
@@ -634,12 +634,12 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertTrue( (xaug>1e2).sum()==0)
                 self.assertTrue( (xaug<-1e2).sum()==0)
         x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
-        x += torch.sin(torch.linspace(0, 48*2*torch.pi,1024)) 
+        x += torch.sin(torch.linspace(0, 48*2*torch.pi,1024))
         x += torch.sin(torch.linspace(0, 256*2*torch.pi,1024))
         f, per1 = periodogram(x[0,0], 128)
         xaug = aug.filter_bandpass(x, 128, [13,22], [5,27])
         f, per2 = periodogram(xaug[0,0], 128)
-        self.assertTrue(np.isclose(np.max(per2[np.logical_and(f>5, f<27)]), 
+        self.assertTrue(np.isclose(np.max(per2[np.logical_and(f>5, f<27)]),
                                    0, rtol=1e-04, atol=1e-04))
         print('   bandstop filter OK: tested', N+len(aug_args), 'combinations of input arguments')
 
@@ -647,12 +647,12 @@ class TestAugmentationFunctional(unittest.TestCase):
 
     def test_permute_channels(self):
         print('Testing permute channels...', end="", flush=True)
-        channel_map = ['FP1', 'AF3', 'F1', 'F3', 'FC5', 'FC3', 'FC1', 'C1', 
-                       'C5', 'TP7', 'CP5', 'CP3', 'CP1', 'P7', 'PO7', 'POZ', 
-                       'PZ', 'FPZ', 'FP2', 'AFZ', 'FZ', 'F2', 'F4', 'F6', 
+        channel_map = ['FP1', 'AF3', 'F1', 'F3', 'FC5', 'FC3', 'FC1', 'C1',
+                       'C5', 'TP7', 'CP5', 'CP3', 'CP1', 'P7', 'PO7', 'POZ',
+                       'PZ', 'FPZ', 'FP2', 'AFZ', 'FZ', 'F2', 'F4', 'F6',
                        'FT8', 'C4', 'T8', 'TP8', 'CP6', 'CP4', 'CP2', 'PO8']
-        aug_args = { 'x': [self.x2, self.x3, self.x4, 
-                           self.x2np,self.x3np, self.x4np], 'chan2shuf':[-1, 5, 10], 
+        aug_args = { 'x': [self.x2, self.x3, self.x4,
+                           self.x2np,self.x3np, self.x4np], 'chan2shuf':[-1, 5, 10],
                     'mode':["random", "network"], 'chan_net':["DMN","FPN", ['DMN', 'FPN'],"all"],
                     'batch_equal': [True,False], 'channel_map': [channel_map]
                    }
@@ -672,7 +672,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x2gpu, self.x3gpu, self.x4gpu], 'chan2shuf':[-1, 5, 10], 
+            aug_args = { 'x': [self.x2gpu, self.x3gpu, self.x4gpu], 'chan2shuf':[-1, 5, 10],
                     'mode':["random", "network"], 'chan_net':["DMN","FPN", ['DMN', 'FPN'],"all"],
                     'batch_equal': [True,False],'channel_map': [channel_map]
                    }
@@ -690,14 +690,14 @@ class TestAugmentationFunctional(unittest.TestCase):
         xaug2 = aug.permute_channels(x,50, mode='network', chan_net=["DMN","VFN"])
         self.assertTrue( ((x[:,0]!=xaug2[:,0]).sum())==50) # should output True
         self.assertTrue( ((x[b,0]==xaug2[b,0]).sum())==len(b) ) # should output True
-        print('   permute channels OK: tested', N+len(aug_args), 
+        print('   permute channels OK: tested', N+len(aug_args),
               'combinations of input arguments')
 
 
     def test_permutation_signal(self):
         print('Testing permute signal...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
-                            self.x1np, self.x2np, self.x3np, self.x4np], 'segments':[10, 15, 20], 
+                            self.x1np, self.x2np, self.x3np, self.x4np], 'segments':[10, 15, 20],
                     'seg_to_per':[-1,2,5,8],'batch_equal': [True,False]
                    }
         aug_args = self.makeGrid(aug_args)
@@ -711,8 +711,8 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
-                        'segments':[10, 15, 20], 
+            aug_args = { 'x': [self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
+                        'segments':[10, 15, 20],
                         'seg_to_per':[-1,2,5,8],'batch_equal': [True,False]
                        }
             aug_args = self.makeGrid(aug_args)
@@ -721,18 +721,18 @@ class TestAugmentationFunctional(unittest.TestCase):
         torch.manual_seed(1234)
         x = torch.ones(16,32,1024)*2 + torch.sin(torch.linspace(0, 8*torch.pi,1024))
         xaug = aug.masking(x, 3, 0.5)
-        self.assertTrue( torch.isclose( ((xaug[0,0]==0).sum()/len(xaug[0,0])) , 
+        self.assertTrue( torch.isclose( ((xaug[0,0]==0).sum()/len(xaug[0,0])) ,
                                           torch.tensor([0.5]), rtol=1e-8,atol=1e-8) )
         a = xaug[0,0]==0
         self.assertTrue( (a[:-1].ne(a[1:])).sum()==6) # should return True
-        print('   permute signal OK: tested', N+len(aug_args), 
+        print('   permute signal OK: tested', N+len(aug_args),
               'combinations of input arguments')
 
 
     def test_warp_signal(self):
         print('Testing warp signal...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
-                           self.x1np, self.x2np, self.x3np, self.x4np], 'segments':[15], 
+                           self.x1np, self.x2np, self.x3np, self.x4np], 'segments':[15],
                     'stretch_strength':[2,1.5],'squeeze_strength':[0.4,0.8],
                     'batch_equal': [True,False]
                    }
@@ -747,7 +747,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'segments':[15], 
+            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'segments':[15],
                     'stretch_strength':[2,1.5],'squeeze_strength':[0.4,0.8],
                     'batch_equal': [True,False]
                    }
@@ -757,11 +757,11 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('   warp signal OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_crop_and_resize(self):
         print('Testing crop and resize...', end="", flush=True)
         aug_args = { 'x': [ self.x2, self.x3, self.x4,
-                            self.x2np, self.x3np, self.x4np], 'segments':[15], 
+                            self.x2np, self.x3np, self.x4np], 'segments':[15],
                     'N_cut':[1,5], 'batch_equal': [True,False]
                    }
         aug_args = self.makeGrid(aug_args)
@@ -775,7 +775,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [ self.x2gpu, self.x3gpu, self.x4gpu], 'segments':[15], 
+            aug_args = { 'x': [ self.x2gpu, self.x3gpu, self.x4gpu], 'segments':[15],
                     'N_cut':[1,5], 'batch_equal': [True,False]
                    }
             aug_args = self.makeGrid(aug_args)
@@ -787,8 +787,8 @@ class TestAugmentationFunctional(unittest.TestCase):
 
     def test_change_ref(self):
         print('Testing change reference...', end="", flush=True)
-        aug_args = { 'x': [ self.x2, self.x3, self.x4, self.x2np, self.x3np, self.x4np], 
-                    'mode':['chan','avg'], 
+        aug_args = { 'x': [ self.x2, self.x3, self.x4, self.x2np, self.x3np, self.x4np],
+                    'mode':['chan','avg'],
                     'reference':[None, 5], 'exclude_from_ref': [None, 9,[9,10]]
                    }
         aug_args = self.makeGrid(aug_args)
@@ -802,30 +802,30 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x2gpu, self.x3gpu, self.x4gpu], 'mode':['chan','avg'], 
+            aug_args = { 'x': [self.x2gpu, self.x3gpu, self.x4gpu], 'mode':['chan','avg'],
                     'reference':[None, 5], 'exclude_from_ref': [None, 9,[9,10]]
                    }
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.change_ref(**i)
-        
+
         torch.manual_seed(1234)
         x = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*torch.pi,1024))
         x[:,0,:]= 0.
         xaug = aug.change_ref(x, 'channel', 5)
         self.assertFalse(x[0,0].max()!=0 and x[0,0].min()!=0) # should return False
-        self.assertTrue( (xaug[0,[i for i in range(1,32)]].min().item()==0 and 
+        self.assertTrue( (xaug[0,[i for i in range(1,32)]].min().item()==0 and
                           xaug[0,0].min().item()!=0)) # should return True
-        print('   change refeference OK: tested', N+len(aug_args), 
+        print('   change refeference OK: tested', N+len(aug_args),
               'combinations of input arguments')
 
 
-                        
+
 
     def test_masking(self):
         print('Testing masking...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
-                           self.x1np,self.x2np, self.x3np, self.x4np], 'mask_number':[1,2,4], 
+                           self.x1np,self.x2np, self.x3np, self.x4np], 'mask_number':[1,2,4],
                     'masked_ratio':[0.1,0.2,0.4], 'batch_equal': [True,False]
                    }
         aug_args = self.makeGrid(aug_args)
@@ -839,22 +839,22 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 
-                        'mask_number':[1,2,4], 
+            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu],
+                        'mask_number':[1,2,4],
                         'masked_ratio':[0.1,0.2,0.4], 'batch_equal': [True,False]
                        }
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.masking(**i)
-        
+
         x = torch.ones(16,32,1024)*2 + torch.sin(torch.linspace(0, 8*torch.pi,1024))
         xaug = aug.masking(x, 3, 0.5)
-        self.assertTrue( torch.isclose( ((xaug[0,0]==0).sum()/len(xaug[0,0])) 
-                                       ,torch.tensor([0.5]), rtol=1e-6,atol=1e-8) ) 
+        self.assertTrue( torch.isclose( ((xaug[0,0]==0).sum()/len(xaug[0,0]))
+                                       ,torch.tensor([0.5]), rtol=1e-6,atol=1e-8) )
         print('   masking OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
     def test_channel_dropout(self):
         print('Testing channel dropout...', end="", flush=True)
         aug_args = { 'x': [ self.x2, self.x3, self.x4, self.x2np, self.x3np, self.x4np],
@@ -870,7 +870,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [self.x2gpu, self.x3gpu, self.x4gpu], 
+            aug_args = { 'x': [self.x2gpu, self.x3gpu, self.x4gpu],
                         'Nchan':[None,2,3],'batch_equal': [True,False]}
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
@@ -881,12 +881,12 @@ class TestAugmentationFunctional(unittest.TestCase):
         print('   channel dropout OK: tested', N+len(aug_args), 'combinations of input arguments')
 
 
-    
+
 
     def test_eeg_artifact(self):
         print('Testing eeg artifact...', end="", flush=True)
         aug_args = { 'x': [ self.x1, self.x2, self.x3, self.x4,
-                            self.x1np, self.x2np, self.x3np, self.x4np], 'Fs':[128], 
+                            self.x1np, self.x2np, self.x3np, self.x4np], 'Fs':[128],
                     'artifact':[None,'white','line','eye','muscle','drift','lost'],
                     'amplitude':[None,1],'line_at_60Hz':[True,False],'lost_time':[0.5,None],
                     'drift_slope':[None,0.2],'batch_equal': [True,False]}
@@ -901,7 +901,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(np.array_equal(i['x'],xaug))
         N = len(aug_args)
         if self.device.type != 'cpu':
-            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128], 
+            aug_args = { 'x': [ self.x1gpu, self.x2gpu, self.x3gpu, self.x4gpu], 'Fs':[128],
                     'artifact':[None,'white','line','eye','muscle','drift','lost'],
                     'amplitude':[None,1],'line_at_60Hz':[True,False],'lost_time':[0.5,None],
                     'drift_slope':[None,0.2],'batch_equal': [True,False]}
@@ -909,4 +909,3 @@ class TestAugmentationFunctional(unittest.TestCase):
             for i in aug_args:
                 xaug = aug.add_eeg_artifact(**i)
         print('   eeg artifact OK: tested', N+len(aug_args), 'combinations of input arguments')
-

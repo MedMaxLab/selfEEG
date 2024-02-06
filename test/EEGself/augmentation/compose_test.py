@@ -21,22 +21,22 @@ class TestAugmentationCompose(unittest.TestCase):
     def test_StaticSingleAug(self):
         print('Testing static single augmentation...', end="", flush=True)
         Aug_scal = aug.StaticSingleAug(aug.scaling, {'value': 2, 'batch_equal': True})
-        
+
         BatchEEGaug = Aug_scal(self.BatchEEG)
         self.assertTrue( ((BatchEEGaug.min() +2.0) < 1e-5).item() )
         self.assertTrue( ((BatchEEGaug.max() -2.0) < 1e-5).item() )
-        
+
         Aug_scal = aug.StaticSingleAug(aug.scaling, [{'value': 1.5, 'batch_equal': False},
                                                     {'value': 2.0, 'batch_equal': False}])
-        
+
         BatchEEGaug1 = Aug_scal(self.BatchEEG)
         self.assertTrue( ((BatchEEGaug1.min() +1.5) < 1e-5).item() )
         self.assertTrue( ((BatchEEGaug1.max() -1.49999) < 1e-5).item() )
-        
+
         BatchEEGaug2 = Aug_scal(self.BatchEEG)
         self.assertTrue( ((BatchEEGaug2.min() +2.0) < 1e-5).item() )
         self.assertTrue( ((BatchEEGaug2.max() -2.0) < 1e-5).item() )
-        
+
         self.assertFalse(torch.equal(self.BatchEEG,BatchEEGaug))
         self.assertFalse(torch.equal(self.BatchEEG,BatchEEGaug1))
         self.assertFalse(torch.equal(self.BatchEEG,BatchEEGaug2))
@@ -46,9 +46,9 @@ class TestAugmentationCompose(unittest.TestCase):
 
     def test_DynamicSingleAug(self):
         print('Testing dynamic single augmentation...', end="", flush=True)
-        Aug_warp = aug.DynamicSingleAug(aug.warp_signal, 
-                                        discrete_arg = {'batch_equal': [True, False]}, 
-                                        range_arg= {'segments': [5,15], 
+        Aug_warp = aug.DynamicSingleAug(aug.warp_signal,
+                                        discrete_arg = {'batch_equal': [True, False]},
+                                        range_arg= {'segments': [5,15],
                                                     'stretch_strength': [1.5,2.5],
                                                     'squeeze_strength': [0.4,2/3]},
                                         range_type={'segments': True, 'stretch_strength': False,
@@ -74,7 +74,7 @@ class TestAugmentationCompose(unittest.TestCase):
         # check that scaling has been performed
         self.assertTrue( ((BatchEEGaug1.min() +2.0) < 1e-5).item() )
         self.assertTrue( ((BatchEEGaug1.max() -2.0) < 1e-5).item() )
-        
+
         # check that flip has been performed
         self.assertTrue( torch.equal(BatchEEGaug1,BatchEEGaug2*(-1)))
         print(' Sequential augmentation OK')
@@ -93,14 +93,14 @@ class TestAugmentationCompose(unittest.TestCase):
                 counter[0] += 1
             else:
                 counter[1] += 1
-        counter[0] /= N 
-        counter[1] /= N 
+        counter[0] /= N
+        counter[1] /= N
         self.assertTrue( abs(counter[0] - 0.7)<1e-2)
         self.assertTrue( abs(counter[1] - 0.3)<1e-2)
         print('   Random augmentation OK')
-    
+
     def test_UltimateAugmentationComposition(self):
-        print('Testing final augmentation composition based on all previous classes...', 
+        print('Testing final augmentation composition based on all previous classes...',
               end="", flush=True)
         # DEFINE AUGMENTER
         # FIRST RANDOM SELECTION: APPLY FLIP OR CHANGE REFERENCE OR NOTHING
@@ -108,17 +108,17 @@ class TestAugmentationCompose(unittest.TestCase):
         AUG_flipr = aug.StaticSingleAug(aug.flip_horizontal)
         AUG_id = aug.StaticSingleAug(aug.identity)
         Sequence1 = aug.RandomAug( AUG_id, AUG_flipv, AUG_id, p=[0.5, 0.25, 0.25])
-        
+
         # SECOND RANDOM SELECTION: ADD SOME NOISE
-        AUG_band = aug.DynamicSingleAug(aug.add_band_noise, 
-                                        discrete_arg={'bandwidth': ["delta", "theta", "alpha", 
-                                                                    "beta", (30,49) ], 
+        AUG_band = aug.DynamicSingleAug(aug.add_band_noise,
+                                        discrete_arg={'bandwidth': ["delta", "theta", "alpha",
+                                                                    "beta", (30,49) ],
                                                        'samplerate': self.Fs,
                                                        'noise_range': 0.1
                                                       }
                                         )
         Aug_eye = aug.DynamicSingleAug(aug.add_eeg_artifact,
-                                       discrete_arg = {'Fs': self.Fs, 'artifact': 'eye', 
+                                       discrete_arg = {'Fs': self.Fs, 'artifact': 'eye',
                                                        'batch_equal': False},
                                        range_arg= {'amplitude': [0.1,0.5]},
                                        range_type={'amplitude': False}
@@ -129,16 +129,16 @@ class TestAugmentationCompose(unittest.TestCase):
                                         discrete_arg={'batch_equal': False},
                                         range_arg ={'N_cut': [1, 4], 'segments': [10,15]},
                                         range_type ={'N_cut': True, 'segments': True})
-        Aug_warp = aug.DynamicSingleAug(aug.warp_signal, 
-                                        discrete_arg = {'batch_equal': [True, False]}, 
-                                        range_arg= {'segments': [5,15], 
+        Aug_warp = aug.DynamicSingleAug(aug.warp_signal,
+                                        discrete_arg = {'batch_equal': [True, False]},
+                                        range_arg= {'segments': [5,15],
                                                     'stretch_strength': [1.5,2.5],
                                                     'squeeze_strength': [0.4,2/3]},
                                         range_type={'segments': True, 'stretch_strength': False,
                                                     'squeeze_strength': False}
                                        )
         Sequence3 = aug.RandomAug( AUG_crop, Aug_warp)
-        
+
         # FINAL AUGMENTER: SEQUENCE OF THE THREE RANDOM LISTS
         Augmenter = aug.SequentialAug(Sequence1, Sequence2, Sequence3)
         BatchEEGaug1 = Augmenter(self.BatchEEG)
@@ -146,4 +146,3 @@ class TestAugmentationCompose(unittest.TestCase):
         self.assertFalse(torch.equal(self.BatchEEG,BatchEEGaug1))
         self.assertFalse(torch.equal(self.BatchEEG,BatchEEGaug2))
         print('   final augmentation composition OK')
-
