@@ -48,7 +48,7 @@ Setting ``batch_equal`` to True has a dual effect. On the one hand, it increases
 
 Most of the time, augmentations executed on GPUs are faster compared to one on CPUs. However, it is worth to note that three main factors can affect the computational time of augmentations: the GPU device (cuda or mps), the ``batch_equal`` argument, and the object type (numpy array or tensor).
 
-If you want to check how augmentations perform on different configurations, see the following table, which reported a benchmark test run on the Padova Neuroscience Center Server (GPU Tesla V100) with a 3D array of size (64*61*512). Alternatively, you can run the benchmarking test and check how augmentations specifically perform on your device. 
+If you want to check how augmentations perform on different configurations, see the following table, which reported a benchmark test (times in second) run on the Padova Neuroscience Center Server (GPU Tesla V100) with a 3D array of size (64*61*512). Alternatively, you can run the benchmarking test and check how augmentations specifically perform on your device. 
 
 .. csv-table:: Augmentation Benchmark
     :file: _static/bench_table.csv

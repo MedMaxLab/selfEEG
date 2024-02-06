@@ -142,6 +142,8 @@ The following notebook-style pages include a detailed guide on how to use some l
 :doc:`SSL_guide`
    learn how to build a self-supervised learning pipeline.
 
+:doc:`SSL_guide_BCI`
+   learn how to use selfEEG on a real-world dataset.
 
 
 API
