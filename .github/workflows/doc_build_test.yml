@@ -1,11 +1,6 @@
 name: Sphinx_build_test
 
 on:
-  push:
-    paths:
-      - 'selfeeg/**'
-      - 'docs/**'
-      - '.github/workflows/doc_build_test.yml'
   pull_request:
     branches:
       - main
