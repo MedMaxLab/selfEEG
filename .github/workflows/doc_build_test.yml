@@ -32,8 +32,11 @@ jobs:
           pip install -U sphinx
           pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
           pip install pypandoc_binary
+          pip install pypandoc
           pip install -r docs/doc_requirements.txt
       - name: Pandoc
         uses: docker://pandoc/core:2.9
+        with:
+          args: "--help"
       - name: Sphinx build
         run: sphinx-build -M html docs docs
