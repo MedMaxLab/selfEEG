@@ -2,10 +2,17 @@ name: Unittest
 
 on:
   push:
+    branches:
+      - main
     paths:
-    - 'selfeeg/**'
-    - 'test/**'
-    - '.github/workflows/**'
+      - 'selfeeg/**'
+      - 'test/**'
+      - '.github/workflows/python-app.yml'
+  pull_request:
+    paths:
+      - 'selfeeg/**'
+      - 'test/**'
+      - '.github/workflows/python-app.yml'
 
 jobs:
   selfeegtest:
