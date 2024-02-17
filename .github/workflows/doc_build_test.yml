@@ -31,7 +31,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -U sphinx
           pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-          pip install --upgrade pandoc
+          pip install pypandoc_binary
           pip install -r docs/doc_requirements.txt
       - name: Sphinx build
         run: sphinx-build -M html docs docs
