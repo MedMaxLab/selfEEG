@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/selfeeg-{{ version }}.tar.gz
-  sha256: f86aac58a303a229f5f083adc05fa50c762759f85cc104dd1f6b1c6e1180c512
+  sha256: 449284ab74e614786f68d73954fcb4f61cd1b8bb4e54167e6f9aabe558f6a680
 
 build:
   noarch: python
