@@ -91,7 +91,7 @@ In particular, selfEEG comprises the following modules:
 # Related open-source projects
 Despite several deep learning frameworks having been developed for the analysis of EEG data, a library focused on the construction of self-supervised learning pipelines on EEG data is still not available to the best of our knowledge, hindering the advancement of the scientific knowledge and the progress in the field.
 A comprehensive review of open-source projects related to neuroscientific data analysis is provided in [@app13095472].
-Few examples are EEG-DL [@eegdl] and torchEEG [@torchEEG], which characterized for their completeness and spread among the neuroscientific community.
+A few examples are EEG-DL [@eegdl] and torchEEG [@torchEEG], which characterized for their completeness and spread among the neuroscientific community.
 
 
 # Future development
