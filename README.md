@@ -10,11 +10,8 @@
     <a href="https://pypi.org/project/selfeeg/">
     <img src="https://img.shields.io/pypi/v/selfeeg" alt="latest release" />
     </a>
-    <a href="https://anaconda.org/pup_fede_cnd/selfeeg">
-    <img src="https://anaconda.org/pup_fede_cnd/selfeeg/badges/version.svg" />
-    </a>
-    <a href="https://anaconda.org/pup_fede_cnd/selfeeg">
-    <img src="https://anaconda.org/pup_fede_cnd/selfeeg/badges/latest_release_date.svg" />
+    <a href="https://anaconda.org/Pup_Fede_Cnd/selfeeg">
+    <img src="https://anaconda.org/Pup_Fede_Cnd/selfeeg/badges/version.svg" />
     </a>
 </tr>
 <tr>
