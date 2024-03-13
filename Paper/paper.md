@@ -38,13 +38,13 @@ authors:
     orcid: 0000-0001-5397-2063
     affiliation: "2, 3, 4"
 affiliations:
- - name: Department of Information Engineering, University of Padova, Via Gradenigo 6/b, 35131 Padova, Italy
+ - name: Department of Information Engineering, University of Padova, Padova, Italy
    index: 1
- - name: Department of Neuroscience, University of Padua, Via Belzoni 160, 35121 Padova, Italy
+ - name: Department of Neuroscience, University of Padova, Padova, Italy
    index: 2
- - name: Padova Neuroscience Center, University of Padova, Via Orus 2/B, 35129 Padova, Italy
+ - name: Padova Neuroscience Center, University of Padova, Padova, Italy
    index: 3
- - name: Information Systems Institute, University of Applied Sciences Western Switzerland (HES-SO Valais), 2800 Sierre, Switzerland
+ - name: Information Systems Institute, University of Applied Sciences Western Switzerland (HES-SO Valais), Sierre, Switzerland
    index: 4
 date: 01 December 2023
 bibliography: bibliography.bib
@@ -61,13 +61,13 @@ It includes modules specifically designed to: split data at various granularity 
 Most of the functionality offered by selfEEG can be executed both on GPUs and CPUs, expanding its usability beyond the self-supervised learning area.
 Additionally, selfEEG can be employed for the analysis of other biomedical signals often coupled with EEGs, such as electromyography or electrocardiography data.
 
-These features make selfEEG a versatile deep learning tool for biomedical applications and a useful resource in SSL, one of the currently most active fields of Artificial Intelligence.
+These features make selfEEG a versatile deep learning tool for biomedical applications and a useful resource in SSL, one of the currently most active fields of artificial intelligence.
 
 
 # Statement of need
 SelfEEG answers to the lack of Self-Supervised Learning (SSL) frameworks for the analysis of EEG data.
 
-In fact, despite the recent high number of publications [more than 20 journal papers in the last 4 years\; @DelPup2023], there are currently no frameworks or common standards for developing EEG-based SSL pipelines, contrary to other fields such as computer vision (see [LightlySSL](https://github.com/lightly-ai/lightly) or [ViSSL](https://github.com/facebookresearch/vissl)).
+In fact, despite the recent high number of publications [more than 20 journal papers in the last 4 years\; @DelPup2023], there are currently no frameworks or common standards for developing EEG-based SSL pipelines, contrary to other fields such as computer vision [see Lightly SSL\; @lightly, or ViSSL; @vissl].
 
 In the field of EEG data analysis, where it has been demonstrated that SSL can improve models’ accuracy and mitigate overfitting [@eegrafiei; @banville], the absence of a self-supervised learning framework dedicated to EEG signals limits the development of novel strategies, reproducibility of results, and the progress of the field.
 
