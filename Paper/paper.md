@@ -67,9 +67,9 @@ These features make selfEEG a versatile deep learning tool for biomedical applic
 # Statement of need
 SelfEEG answers to the lack of Self-Supervised Learning (SSL) frameworks for the analysis of EEG data.
 
-In fact, despite the recent high number of publications (more than 20 journal papers in the last 4 years [@DelPup2023]), there are currently no frameworks or common standards for developing EEG-based SSL pipelines, contrary to other fields such as computer vision (see [LightlySSL](https://github.com/lightly-ai/lightly) or [ViSSL](https://github.com/facebookresearch/vissl)).
+In fact, despite the recent high number of publications [more than 20 journal papers in the last 4 years\; @DelPup2023], there are currently no frameworks or common standards for developing EEG-based SSL pipelines, contrary to other fields such as computer vision (see [LightlySSL](https://github.com/lightly-ai/lightly) or [ViSSL](https://github.com/facebookresearch/vissl)).
 
-In the field of EEG data analysis, where it has been demonstrated that SSL can improve models’ accuracy and mitigate overfitting [@eegrafiei] [@banville], the absence of a self-supervised learning framework dedicated to EEG signals limits the development of novel strategies, reproducibility of results, and the progress of the field.
+In the field of EEG data analysis, where it has been demonstrated that SSL can improve models’ accuracy and mitigate overfitting [@eegrafiei; @banville], the absence of a self-supervised learning framework dedicated to EEG signals limits the development of novel strategies, reproducibility of results, and the progress of the field.
 
 Thanks to selfEEG, researchers can instead easily build SSL pipelines, speeding up experimental design and improving the reproducibility of results. Reproducibility is a key factor in this area, as it enhances the comparison of different strategies and supports the creation of useful benchmarks.
 
