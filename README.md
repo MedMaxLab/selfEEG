@@ -133,31 +133,21 @@ If you have some requests or you have noticed some bugs, use the [GitHub issues]
 
 
 ## Authors and Citation
-We have worked really hard to develop this library. If you use selfEEG during your research, please cite our work. It will help us to continue doing our research. We are working on a research paper to submit to the Journal of Open Source Software. Until then, you can cite the following [ArXiv preprint](https://arxiv.org/abs/2401.05405):
+We have worked really hard to develop this library. If you use selfEEG during your research, please cite [our work](https://doi.org/10.21105/joss.06224) published in the Journal of Open Source Software (JOSS). It would help us to continue our research.
 
 ```bibtex
-@misc{delpup2023selfeeg,
-      title={SelfEEG: A Python library for Self-Supervised Learning in Electroencephalography},
-      author={Federico Del Pup and Andrea Zanola and Louis Fabrice Tshimanga and Paolo Emilio Mazzon and Manfredo Atzori},
-      year={2023},
-      eprint={2401.05405},
-      archivePrefix={arXiv},
-      primaryClass={eess.SP}
+@article{DelPup2024,
+  title = {SelfEEG: A Python library for Self-Supervised Learning in Electroencephalography},
+  author = {Federico Del Pup and Andrea Zanola and Louis Fabrice Tshimanga and Paolo Emilio Mazzon and Manfredo Atzori},
+  year = {2024}, 
+  publisher = {The Open Journal},
+  journal = {Journal of Open Source Software} 
+  volume = {9},
+  number = {95},
+  pages = {6224},
+  doi = {10.21105/joss.06224},
+  url = {https://doi.org/10.21105/joss.06224}
 }
-```
-
-Alternatively, you can cite the following [IEEE article](https://ieeexplore.ieee.org/document/10365170):
-
-```bibtex
-@article{delpup2023,
-  author={Del Pup, Federico and Atzori, Manfredo},
-  journal={IEEE Access},
-  title={Applications of Self-Supervised Learning to Biomedical Signals: a Survey},
-  year={2023},
-  volume={11},
-  number={},
-  pages={144180-144203},
-  doi={10.1109/ACCESS.2023.3344531}}
 ```
 
 Contributors:

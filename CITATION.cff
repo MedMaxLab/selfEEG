@@ -1,0 +1,50 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Del Pup
+  given-names: Federico
+  orcid: "https://orcid.org/0009-0004-0698-962X"
+- family-names: Zanola
+  given-names: Andrea
+  orcid: "https://orcid.org/0000-0001-6973-8634"
+- family-names: Tshimanga
+  given-names: Louis Fabrice
+  orcid: "https://orcid.org/0009-0002-1240-4830"
+- family-names: Mazzon
+  given-names: Paolo Emilio
+- family-names: Atzori
+  given-names: Manfredo
+  orcid: "https://orcid.org/0000-0001-5397-2063"
+doi: 10.5281/zenodo.10813095
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Del Pup
+    given-names: Federico
+    orcid: "https://orcid.org/0009-0004-0698-962X"
+  - family-names: Zanola
+    given-names: Andrea
+    orcid: "https://orcid.org/0000-0001-6973-8634"
+  - family-names: Tshimanga
+    given-names: Louis Fabrice
+    orcid: "https://orcid.org/0009-0002-1240-4830"
+  - family-names: Mazzon
+    given-names: Paolo Emilio
+  - family-names: Atzori
+    given-names: Manfredo
+    orcid: "https://orcid.org/0000-0001-5397-2063"
+  date-published: 2024-03-17
+  doi: 10.21105/joss.06224
+  issn: 2475-9066
+  issue: 95
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6224
+  title: "SelfEEG: A Python library for Self-Supervised Learning in
+    Electroencephalography"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06224"
+  volume: 9
+title: "SelfEEG: A Python library for Self-Supervised Learning in
+  Electroencephalography"
