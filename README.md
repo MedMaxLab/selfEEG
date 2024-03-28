@@ -139,9 +139,9 @@ We have worked really hard to develop this library. If you use selfEEG during yo
 @article{DelPup2024,
   title = {SelfEEG: A Python library for Self-Supervised Learning in Electroencephalography},
   author = {Federico Del Pup and Andrea Zanola and Louis Fabrice Tshimanga and Paolo Emilio Mazzon and Manfredo Atzori},
-  year = {2024}, 
+  year = {2024},
   publisher = {The Open Journal},
-  journal = {Journal of Open Source Software} 
+  journal = {Journal of Open Source Software}
   volume = {9},
   number = {95},
   pages = {6224},

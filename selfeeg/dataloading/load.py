@@ -1418,6 +1418,11 @@ class EEGDataset(Dataset):
         to change the default float32 only if there are specific requirements since
         float32 are faster on GPU devices.
 
+    Methods
+    -------
+    preload_dataset()
+        Eagerly load the entire dataset.
+
     Example
     -------
     >>> import pickle
@@ -1530,6 +1535,12 @@ class EEGDataset(Dataset):
         self.label_info = None
         self.label_info_keys = None
 
+        # Set attributes for lazy load. In this case the entire dataset
+        # will be pre-loaded and stored in the Dataset class
+        self.is_preloaded = False
+        self.x_preload = None
+        self.y_preload = None
+
     def __len__(self):
         """
         :meta private:
@@ -1537,11 +1548,99 @@ class EEGDataset(Dataset):
         """
         return self.DatasetSize
 
+    def preload_dataset(self):
+        """
+        ``preload_dataset`` eagerly loads the entire dataset to allow a
+        faster batch creation. The dataset will be stored inside two torch
+        tensors: `x_preload` for the EEG data and `y_preload` for the label,
+        if supervised is set to True.
+
+        In case a tensor conversion is not possible, a tuple will be created
+        instead.
+
+        Warnings
+        --------
+        As reported by many, eagerly loading the data, i.e. pre-loading the entire
+        data in the Dataset.__init__, increase the overall memory usage
+        significantly. Do not pre-load the entire dataset if you have a really
+        large dataset or you plan to use multiple workers, as each worker will
+        hold a reference to an own Dataset. See
+        https://discuss.pytorch.org/t/what-data-does-each-worker-process-hold-
+        does-it-hold-the-full-dataset-object-or-only-a-batch-of-it/160136
+
+        """
+        # load one sample and try to convert in torch.Tensor. In this way it
+        # is possible to understand if a tuple or a tensor must be created and
+        # which size use for the pre allocation of the whole dataset
+        x_to_convert = True
+        y_to_convert = False
+        if self.supervised:
+            x, y = self.__getitem__(0)
+            try:
+                if not (isinstance(y, torch.Tensor)):
+                    y = torch.tensor(y, dtype=self.default_dtype)
+                # if it's a scalar, create a 1D array with length as the
+                # dataset length otherwise add more dimensions
+                if len(y.shape) == 1 and y.numel() == 1:
+                    y = torch.empty(self.__len__(), dtype=self.default_dtype)
+                else:
+                    y_to_convert = True
+                    self.y_preload = torch.empty(
+                        [self.__len__(), *y.shape], dtype=self.default_dtype
+                    )
+            except Exception:
+                self.y_preload = [None] * self.__len__()
+        else:
+            x = self.__getitem__(0)
+
+        try:
+            # expecting x as scalar is unrealistic
+            if isinstance(x, torch.Tensor):
+                x_to_convert = False
+            else:
+                x = torch.tensor(x, dtype=self.default_dtype)
+            self.x_preload = torch.empty([self.__len__(), *x.shape], dtype=self.default_dtype)
+        except Exception:
+            x_to_convert = False
+            self.x_preload = [None] * self.__len__()
+
+        # complete the lazy loading
+        x = None
+        y = None
+        for i in range(self.__len__()):
+            if self.supervised:
+                x, y = self.__getitem__(i)
+                if y_to_convert:
+                    y = torch.tensor(y, dtype=self.default_dtype)
+                self.y_preload[i] = y
+            else:
+                x = self.__getitem__(i)
+            if x_to_convert:
+                x = torch.tensor(x, dtype=self.default_dtype)
+            self.x_preload[i] = x
+
+        # convert to tuple if it is a list for faster sample extraction
+        if isinstance(self.x_preload, list):
+            self.x_preload = tuple(self.x_preload)
+        if isinstance(self.y_preload, list):
+            self.y_preload = tuple(self.y_preload)
+
+        # set preloaded to true.
+        # __getitem__() will now look into x_preload and y_preload
+        self.is_preloaded = True
+
     def __getitem__(self, index):
         """
         :meta private:
 
         """
+        # If the dataset was lazy loaded, just get the
+        # sample from the preloaded tensor or tuple
+        if self.is_preloaded:
+            if self.supervised:
+                return self.x_preload[index], self.y_preload[index]
+            else:
+                return self.x_preload[index]
 
         # Check if a new EEG file must be loaded. If so, a new EEG file is loaded,
         # transformed (if necessary) and all loading attributes are

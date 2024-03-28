@@ -429,6 +429,7 @@ class TestDataloading(unittest.TestCase):
     def test_EEGDataset(self):
         # checks: extraction is performed correctly
         print("Testing EEGDataset on both unsupervised and supervised mode...", end="", flush=True)
+
         EEGlen = dl.GetEEGPartitionNumber(
             self.eegpath,
             self.freq,
@@ -442,6 +443,7 @@ class TestDataloading(unittest.TestCase):
         Labels = np.zeros(EEGlen.shape[0], dtype=int)
         for i in range(EEGlen.shape[0]):
             _, Labels[i] = self.loadEEG(EEGlen.iloc[i]["full_path"], True)
+
         EEGsplit = dl.GetEEGSplitTable(
             EEGlen,
             test_ratio=0.1,
@@ -452,6 +454,7 @@ class TestDataloading(unittest.TestCase):
             perseverance=5000,
             split_tolerance=0.005,
         )
+
         dataset_pretrain = dl.EEGDataset(
             EEGlen,
             EEGsplit,
@@ -463,6 +466,7 @@ class TestDataloading(unittest.TestCase):
         sample_1 = dataset_pretrain.__getitem__(0)
         self.assertTrue(isinstance(sample_1, torch.Tensor))
         self.assertEqual(sample_1.shape[-1], 256)
+
         dataset_finetune = dl.EEGDataset(
             EEGlen,
             EEGsplit,
@@ -475,9 +479,14 @@ class TestDataloading(unittest.TestCase):
             label_on_load=True,
         )
         sample_2, label_2 = dataset_finetune.__getitem__(0)
-        self.assertTrue(isinstance(sample_1, torch.Tensor))
+        self.assertTrue(isinstance(sample_2, torch.Tensor))
         self.assertEqual(sample_2.shape[-1], 256)
         self.assertTrue(isinstance(label_2, int))
+
+        dataset_finetune.preload_dataset()
+        sample_3, label_3 = dataset_finetune.__getitem__(0)
+        self.assertTrue(isinstance(sample_3, torch.Tensor))
+        self.assertEqual(sample_3.shape[-1], 256)
         print("   EEGDataset OK")
 
     def test_EEGsamples(self):
