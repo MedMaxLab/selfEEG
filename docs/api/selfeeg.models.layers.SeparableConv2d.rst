@@ -1,7 +1,7 @@
 SeparableConv2d
 ===============
 
-.. currentmodule:: selfeeg.models.zoo
+.. currentmodule:: selfeeg.models.layers
 
 .. autoclass:: SeparableConv2d
    :show-inheritance:

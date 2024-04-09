@@ -1,5 +1,6 @@
 from .zoo import (
     BasicBlock1,
+    ConstrainedConv1d,
     ConstrainedConv2d,
     ConstrainedDense,
     DeepConvNet,
@@ -22,4 +23,12 @@ from .zoo import (
     STNetEncoder,
     TinySleepNet,
     TinySleepNetEncoder,
+)
+
+from .layers import (
+    ConstrainedConv1d,
+    ConstrainedConv2d,
+    ConstrainedDense,
+    DepthwiseConv2d,
+    SeparableConv2d,
 )

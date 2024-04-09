@@ -1,9 +1,20 @@
 selfeeg.models
 ==============
 
-This module collects various Deep Learning models proposed for EEG applications.
-In addition, it implements some layers not directly available in the PyTorch nn.Module, such as:
-a Depthwise Conv2d layer, a Separable Conv2d layer, Conv2d with max norm constraint, Linear layer with max norm constraint.
+This module collects various Deep Learning models and custom layers.
+It is divided in two submodules:
+
+- **layers**: a collection custom layers with the possibility to add norm constraints.
+- **zoo**: a collection of deep learning models proposed for EEG applications.
+
+models.layers module
+--------------------
+
+.. automodapi:: selfeeg.models.layers
+  :no-inheritance-diagram:
+  :no-main-docstr:
+  :noindex:
+  :no-heading:
 
 models.zoo module
 -----------------

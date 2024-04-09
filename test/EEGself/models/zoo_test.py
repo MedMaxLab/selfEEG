@@ -24,13 +24,13 @@ class TestModels(unittest.TestCase):
         )
         if cls.device.type == "cpu":
             cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-        print("\n---------------------")
-        print("TESTING MODELS MODULE")
+        print("\n-------------------------")
+        print("TESTING MODELS.ZOO MODULE")
         if cls.device.type != "cpu":
             print("Found gpu device: testing module with both cpu and gpu")
         else:
             print("Didn't found cuda device: testing module with only cpu")
-        print("---------------------")
+        print("-------------------------")
         cls.N = 2
         cls.Chan = 8
         cls.Samples = 2048
@@ -44,145 +44,6 @@ class TestModels(unittest.TestCase):
 
     def setUp(self):
         torch.manual_seed(1234)
-
-    def test_DepthwiseConv2d(self):
-        print("Testing Depthwise conv2d with max norm constraint...", end="", flush=True)
-        Depthwise_args = {
-            "in_channels": [1],
-            "depth_multiplier": [2, 3, 4],
-            "kernel_size": [(1, 64), (5, 1), (5, 64)],
-            "stride": [1, 2, 3],
-            "dilation": [1, 2],
-            "bias": [True, False],
-            "max_norm": [None, 2, 3],
-            "padding": ["valid"],
-        }
-        Depthwise_args = self.makeGrid(Depthwise_args)
-        for i in Depthwise_args:
-            model = models.DepthwiseConv2d(**i)
-            model.weight = torch.nn.Parameter(model.weight * 10)
-            out = model(self.xl)
-            if i["max_norm"] is not None:
-                norm = model.weight.norm(dim=2, keepdim=True).norm(dim=3, keepdim=True).squeeze()
-                self.assertEqual((norm > i["max_norm"]).sum(), 0)
-            self.assertEqual(torch.isnan(out).sum(), 0)
-            self.assertEqual(out.shape[1], i["depth_multiplier"])
-
-        if self.device.type != "cpu":
-            for i in Depthwise_args:
-                model = models.DepthwiseConv2d(**i).to(device=self.device)
-                model.weight = torch.nn.Parameter(model.weight * 10)
-                out = model(self.xl2)
-                if i["max_norm"] is not None:
-                    norm = (
-                        model.weight.norm(dim=2, keepdim=True).norm(dim=3, keepdim=True).squeeze()
-                    )
-                    self.assertEqual((norm > i["max_norm"]).sum(), 0)
-                self.assertEqual(torch.isnan(out).sum(), 0)
-                self.assertEqual(out.shape[1], i["depth_multiplier"])
-        print(
-            "   Depthwise conv2d OK: tested",
-            len(Depthwise_args),
-            " combinations of input arguments",
-        )
-
-    def test_SeparableConv2d(self):
-        print("Testing Separable conv2d with norm constraint...", end="", flush=True)
-        Separable_args = {
-            "in_channels": [1],
-            "out_channels": [5, 16],
-            "depth_multiplier": [1, 3],
-            "kernel_size": [(1, 64), (5, 1), (5, 64)],
-            "stride": [1, 2, 3],
-            "dilation": [1, 2],
-            "bias": [True, False],
-            "depth_max_norm": [None, 2, 3],
-            "padding": ["valid"],
-        }
-        Separable_args = self.makeGrid(Separable_args)
-        for i in Separable_args:
-            model = models.SeparableConv2d(**i)
-            out = model(self.xl)
-            self.assertEqual(torch.isnan(out).sum(), 0)
-            self.assertEqual(out.shape[1], i["out_channels"])
-
-        if self.device.type != "cpu":
-            for i in Separable_args:
-                model = models.SeparableConv2d(**i).to(device=self.device)
-                out = model(self.xl2)
-                self.assertEqual(torch.isnan(out).sum(), 0)
-                self.assertEqual(out.shape[1], i["out_channels"])
-        print(
-            "   Separable conv2d OK: tested", len(Separable_args), "combinations of input arguments"
-        )
-
-    def test_ConstrainedConv2d(self):
-        print("Testing conv2d with max norm constraint...", end="", flush=True)
-        Conv_args = {
-            "in_channels": [1],
-            "out_channels": [5, 16],
-            "kernel_size": [(1, 64), (5, 1), (5, 64)],
-            "stride": [1, 2, 3],
-            "dilation": [1, 2],
-            "bias": [True, False],
-            "max_norm": [None, 2, 3],
-            "padding": ["valid"],
-        }
-        Conv_args = self.makeGrid(Conv_args)
-        for i in Conv_args:
-            model = models.ConstrainedConv2d(**i)
-            model.weight = torch.nn.Parameter(model.weight * 10)
-            out = model(self.xl)
-            if i["max_norm"] is not None:
-                norm = model.weight.norm(dim=2, keepdim=True).norm(dim=3, keepdim=True).squeeze()
-                self.assertEqual((norm > i["max_norm"]).sum(), 0)
-            self.assertEqual(torch.isnan(out).sum(), 0)
-
-        if self.device.type != "cpu":
-            for i in Conv_args:
-                model = models.ConstrainedConv2d(**i).to(device=self.device)
-                model.weight = torch.nn.Parameter(model.weight * 10)
-                out = model(self.xl2)
-                if i["max_norm"] is not None:
-                    norm = (
-                        model.weight.norm(dim=2, keepdim=True).norm(dim=3, keepdim=True).squeeze()
-                    )
-                    self.assertEqual((norm > i["max_norm"]).sum(), 0)
-                self.assertEqual(torch.isnan(out).sum(), 0)
-        print(
-            "   Constrained conv2d OK: tested", len(Conv_args), " combinations of input arguments"
-        )
-
-    def test_ConstrainedDense(self):
-        print("Testing Dense layer with max norm constraint...", end="", flush=True)
-        Dense_args = {
-            "in_features": [128],
-            "out_features": [32],
-            "bias": [True, False],
-            "max_norm": [None, 2, 3],
-        }
-        Dense_args = self.makeGrid(Dense_args)
-        for i in Dense_args:
-            model = models.ConstrainedDense(**i)
-            model.weight = torch.nn.Parameter(model.weight * 10)
-            out = model(self.xd)
-            if i["max_norm"] is not None:
-                norm = model.weight.norm(dim=1, keepdim=True)
-                self.assertEqual((norm > i["max_norm"]).sum(), 0)
-            self.assertEqual(torch.isnan(out).sum(), 0)
-            self.assertEqual(out.shape[1], 32)
-
-        if self.device.type != "cpu":
-            for i in Dense_args:
-                model = models.ConstrainedDense(**i).to(device=self.device)
-                model.weight = torch.nn.Parameter(model.weight * 10)
-                out = model(self.xd2)
-                if i["max_norm"] is not None:
-                    norm = model.weight.norm(dim=1, keepdim=True)
-                    self.assertEqual((norm > i["max_norm"]).sum(), 0)
-                self.assertEqual(torch.isnan(out).sum(), 0)
-                self.assertEqual(out.shape[1], 32)
-        print("   Dense layer OK: tested", len(Dense_args), " combinations of input arguments")
 
     def test_DeepConvNet(self):
         print("Testing DeepConvNet...", end="", flush=True)
@@ -258,8 +119,6 @@ class TestModels(unittest.TestCase):
                     self.assertGreaterEqual(out.min(), 0)
         print("   EEGInception OK: tested", len(EEGin_args), " combinations of input arguments")
 
-    # In[8]:
-
     def test_EEGNet(self):
         print("Testing EEGnet...", end="", flush=True)
         EEGnet_args = {
@@ -295,8 +154,6 @@ class TestModels(unittest.TestCase):
                     self.assertLessEqual(out.max(), 1)
                     self.assertGreaterEqual(out.min(), 0)
         print("   EEGnet OK: tested", len(EEGnet_args), " combinations of input arguments")
-
-    # In[9]:
 
     def test_EEGSym(self):
         print("Testing EEGsym...", end="", flush=True)
@@ -334,9 +191,7 @@ class TestModels(unittest.TestCase):
                     self.assertGreaterEqual(out.min(), 0)
         print("   EEGsym OK: tested", len(EEGsym_args), " combinations of input arguments")
 
-    # In[10]:
-
-    def test_EEGSym(self):
+    def test_ResNet(self):
         print("Testing ResNet...", end="", flush=True)
         EEGres_args = {
             "nb_classes": [2, 4],
@@ -369,8 +224,6 @@ class TestModels(unittest.TestCase):
                     self.assertLessEqual(out.max(), 1)
                     self.assertGreaterEqual(out.min(), 0)
         print("   ResNet OK: tested", len(EEGres_args), " combinations of input arguments")
-
-    # In[11]:
 
     def test_ShallowNet(self):
         print("Testing ShallowNet...", end="", flush=True)
@@ -474,8 +327,6 @@ class TestModels(unittest.TestCase):
 
     def test_TinySleepNet(self):
         print("Testing TinySleepNet...", end="", flush=True)
-        # nb_classes, Chans, Fs, F=128, kernlength=8, pool=8,
-        # dropRate=0.5, batch_momentum=0.1, max_dense_norm=2.0, return_logits=True
         EEGsleep_args = {
             "nb_classes": [2, 4],
             "Chans": [self.Chan],

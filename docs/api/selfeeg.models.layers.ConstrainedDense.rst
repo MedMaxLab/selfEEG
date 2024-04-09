@@ -1,9 +1,9 @@
-DepthwiseConv2d
-===============
+ConstrainedDense
+================
 
-.. currentmodule:: selfeeg.models.zoo
+.. currentmodule:: selfeeg.models.layers
 
-.. autoclass:: DepthwiseConv2d
+.. autoclass:: ConstrainedDense
    :show-inheritance:
    :noindex:
 
@@ -11,8 +11,8 @@ DepthwiseConv2d
 
    .. autosummary::
 
-      ~DepthwiseConv2d.forward
-      ~DepthwiseConv2d.scale_norm
+      ~ConstrainedDense.forward
+      ~ConstrainedDense.scale_norm
 
    .. rubric:: Methods Documentation
 

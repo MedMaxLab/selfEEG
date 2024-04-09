@@ -2,7 +2,18 @@
 
 **Functionality**
 
-* EEGdataset can preload the entire dataset.
+- **dataloading module**:
+    - EEGdataset can preload the entire dataset.
+- **models module**:
+    - custom layers were moved in a new models.layer submodule
+    - layer constraints now include MaxNorm, MinMaxNorm, UnitNorm, with axis selection like in Keras.
+    - added Conv1d layer with norm constraint
+
+**Maintenance**
+
+* fixed typos on model module unittest.
+* Added new tests for novel functionalities.
+
 
 # Version 0.1.1 (latest)
 

@@ -1,9 +1,9 @@
-ConstrainedConv2d
+ConstrainedConv1d
 =================
 
-.. currentmodule:: selfeeg.models.zoo
+.. currentmodule:: selfeeg.models.layers
 
-.. autoclass:: ConstrainedConv2d
+.. autoclass:: ConstrainedConv1d
    :show-inheritance:
    :noindex:
 
@@ -11,8 +11,8 @@ ConstrainedConv2d
 
    .. autosummary::
 
-      ~ConstrainedConv2d.forward
-      ~ConstrainedConv2d.scale_norm
+      ~ConstrainedConv1d.forward
+      ~ConstrainedConv1d.scale_norm
 
    .. rubric:: Methods Documentation
 
