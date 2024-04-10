@@ -213,7 +213,8 @@ class ConstrainedConv1d(nn.Conv1d):
 
         Default = 1
     padding: int, tuple or str, optional
-        Padding added to all four sides of the input.
+        Padding added to all four sides of the input. This class also accepts the
+        string 'causal', which triggers causal convolution like in Wavenet. 
 
         Default = 0
     dilation: int or tuple, optional
@@ -268,6 +269,15 @@ class ConstrainedConv1d(nn.Conv1d):
     constraint, set both min_norm and max_norm. To apply a UnitNorm constraint,
     set both min_norm and max_norm to 1.0.
 
+    Note
+    ----
+    When setting ``padding`` to ``"causal"``, padding will be internally changed
+    to an integer equal to ``(kernel_size - 1) * dilation``. Then, during forward,
+    the extra features are removed. This is preferable over F.pad, which can 
+    lead to memory allocation or even non-deterministic operations during the 
+    backboard pass. Additional information can be found at the following link:
+    https://github.com/pytorch/pytorch/issues/1333
+
     Example
     -------
     >>> from import selfeeg.models import ConstrainedConv1d
@@ -301,12 +311,21 @@ class ConstrainedConv1d(nn.Conv1d):
         axis_norm=[1,2],
         minmax_rate=1.0
     ):
+
+        # Check causal Padding
+        self.pad = padding
+        self.causal_pad = False
+        if isinstance(padding, str):
+            if padding.casefold() == "causal":
+                self.causal_pad = True
+                self.pad = (kernel_size - 1) * dilation
+        
         super(ConstrainedConv1d, self).__init__(
             in_channels,
             out_channels,
             kernel_size,
             stride,
-            padding,
+            self.pad,
             dilation,
             groups,
             bias,
@@ -410,7 +429,10 @@ class ConstrainedConv1d(nn.Conv1d):
         """
         if self.constraint_type != 0:
             self.scale_norm()
-        return self._conv_forward(input, self.weight, self.bias)
+        if self.causal_pad:
+            return self._conv_forward(input, self.weight, self.bias)[:,:,:-self.pad]
+        else:
+            return self._conv_forward(input, self.weight, self.bias)
 
 
 class ConstrainedConv2d(nn.Conv2d):

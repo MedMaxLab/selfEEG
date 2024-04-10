@@ -56,7 +56,7 @@ class TestModels(unittest.TestCase):
             "bias": [True, False],
             "max_norm": [None, 1, 2],
             "min_norm": [None, 1],
-            "padding": ["valid"],
+            "padding": ["valid", "causal"],
         }
         Conv_args = self.makeGrid(Conv_args)
         for i in Conv_args:
