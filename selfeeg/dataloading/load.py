@@ -268,7 +268,7 @@ def GetEEGPartitionNumber(
             if includePartial:
                 N_EEG = round(N_Partial) if N_Partial >= 1 else 0
             else:
-                N_EEG = N
+                N_EEG = int(N)
 
             # check for extra dimension (file with multiple trials)
             if M > 2:

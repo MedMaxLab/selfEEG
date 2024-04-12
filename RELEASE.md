@@ -4,10 +4,13 @@
 
 - **dataloading module**:
     - EEGdataset can preload the entire dataset.
+    - Fixed bugs
+      (GetEEGPartitionNumber returns float values with some input arguments) 
 - **models module**:
     - custom layers were moved in a new models.layer submodule
-    - layer constraints now include MaxNorm, MinMaxNorm, UnitNorm, with axis selection like in Keras.
-    - added Conv1d layer with norm constraint
+    - layer constraints now include MaxNorm, MinMaxNorm, UnitNorm, with axis
+      selection like in Keras.
+    - added Conv1d layer with norm constraint and causal padding
 
 **Maintenance**
 
