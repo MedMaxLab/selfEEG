@@ -5,7 +5,7 @@
 - **dataloading module**:
     - EEGdataset can preload the entire dataset.
     - Fixed bugs
-      (GetEEGPartitionNumber returns float values with some input arguments) 
+      (GetEEGPartitionNumber returns float values with some input arguments)
 - **models module**:
     - custom layers were moved in a new models.layer submodule
     - layer constraints now include MaxNorm, MinMaxNorm, UnitNorm, with axis
@@ -20,7 +20,7 @@
 
 # Version 0.1.1 (latest)
 
-This release includes all the revisions made during the Journal of Open Source 
+This release includes all the revisions made during the Journal of Open Source
 Software (JOSS) peer-review.
 
 **Functionality**

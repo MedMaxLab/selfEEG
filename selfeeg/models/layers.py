@@ -10,10 +10,11 @@ __all__ = [
     "SeparableConv2d",
 ]
 
+
 class ConstrainedDense(nn.Linear):
     """
-    Pytorch implementation of the Dense layer with the possibility of adding a 
-    MaxNorm, MinMaxNorm, or a UnitNorm constraint. Most of the parameters are 
+    Pytorch implementation of the Dense layer with the possibility of adding a
+    MaxNorm, MinMaxNorm, or a UnitNorm constraint. Most of the parameters are
     the same as described in torch.nn.Linear help.
 
     Parameters
@@ -31,7 +32,7 @@ class ConstrainedDense(nn.Linear):
     dtype: torch dtype, optional
         layer dtype, i.e., the data type of the torch.Tensor defining the layer weights.
     max_norm: float, optional
-        The maximum norm each hidden unit can have. 
+        The maximum norm each hidden unit can have.
         If None no constraint will be added.
 
         Default = 2.0
@@ -44,16 +45,16 @@ class ConstrainedDense(nn.Linear):
     axis_norm: Union[int, list, tuple], optional
         The axis along weights are constrained. It behaves like Keras. So, considering
         that a Conv2D layer has shape (output_depth, input_depth), set axis
-        to 1 will constrain the weights of each filter tensor of size 
+        to 1 will constrain the weights of each filter tensor of size
         (input_depth,).
-        
+
         Default = 1
     minmax_rate: float, optional
         A constraint for MinMaxNorm setting how weights will be rescaled at each step.
-        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using 
-        minmax_rate = 1 will set a strict enforcement of the constraint, 
+        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using
+        minmax_rate = 1 will set a strict enforcement of the constraint,
         while rate<1.0 will slowly rescale layer's hidden units at each step.
-        
+
         Default = 1.0
 
     Note
@@ -86,15 +87,9 @@ class ConstrainedDense(nn.Linear):
         max_norm=2.0,
         min_norm=None,
         axis_norm=1,
-        minmax_rate=1.0
+        minmax_rate=1.0,
     ):
-        super(ConstrainedDense, self).__init__(
-            in_features,
-            out_features,
-            bias,
-            device,
-            dtype
-        )
+        super(ConstrainedDense, self).__init__(in_features, out_features, bias, device, dtype)
 
         # Check that max_norm is valid
         if max_norm is not None:
@@ -137,7 +132,7 @@ class ConstrainedDense(nn.Linear):
                         raise ValueError("Axis values must be in 0 or 1")
         self.axis_norm = axis_norm
 
-        # set the constraint case: 
+        # set the constraint case:
         # 0 --> no contraint
         # 1 --> MaxNorm
         # 2 --> MinMaxNorm
@@ -157,11 +152,11 @@ class ConstrainedDense(nn.Linear):
 
     def scale_norm(self, eps=1e-9):
         """
-        ``scale_norm`` applies the desired constraint on the Layer. 
-        It is highly based on the Keras implementation, but here 
-        MaxNorm, MinMaxNorm and UnitNorm are all implemented inside 
+        ``scale_norm`` applies the desired constraint on the Layer.
+        It is highly based on the Keras implementation, but here
+        MaxNorm, MinMaxNorm and UnitNorm are all implemented inside
         this function.
-        
+
         """
         if self.constraint_type == 1:
             norms = torch.sqrt(
@@ -169,16 +164,17 @@ class ConstrainedDense(nn.Linear):
             )
             desired = torch.clamp(norms, 0, self.max_norm)
             self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
-        
+
         elif self.constraint_type == 2:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
-            desired = (self.minmax_rate \
-                       * torch.clamp(norms, self.min_norm, self.max_norm) \
-                       + (1 - self.minmax_rate) * norms)
+            desired = (
+                self.minmax_rate * torch.clamp(norms, self.min_norm, self.max_norm)
+                + (1 - self.minmax_rate) * norms
+            )
             self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
-        
+
         elif self.constraint_type == 3:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
@@ -196,8 +192,8 @@ class ConstrainedDense(nn.Linear):
 
 class ConstrainedConv1d(nn.Conv1d):
     """
-    Pytorch implementation of the 1D Convolutional layer with the possibility 
-    to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along the given axis. 
+    Pytorch implementation of the 1D Convolutional layer with the possibility
+    to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along the given axis.
     Most of the parameters are the same as described in pytorch Conv2D help.
 
     Parameters
@@ -214,7 +210,7 @@ class ConstrainedConv1d(nn.Conv1d):
         Default = 1
     padding: int, tuple or str, optional
         Padding added to all four sides of the input. This class also accepts the
-        string 'causal', which triggers causal convolution like in Wavenet. 
+        string 'causal', which triggers causal convolution like in Wavenet.
 
         Default = 0
     dilation: int or tuple, optional
@@ -238,7 +234,7 @@ class ConstrainedConv1d(nn.Conv1d):
     dtype: torch.dtype, optional
         Layer dtype, i.e., the data type of the torch.Tensor defining the layer weights.
     max_norm: float, optional
-        The maximum norm each hidden unit can have. 
+        The maximum norm each hidden unit can have.
         If None no constraint will be added.
 
         Default = 2.0
@@ -251,16 +247,16 @@ class ConstrainedConv1d(nn.Conv1d):
     axis_norm: Union[int, list, tuple], optional
         The axis along weights are constrained. It behaves like Keras. So, considering
         that a Conv2D layer has shape (output_depth, input_depth, length), set axis
-        to [1, 2] will constrain the weights of each filter tensor of size 
+        to [1, 2] will constrain the weights of each filter tensor of size
         (input_depth, length).
-        
+
         Default = [1,2]
     minmax_rate: float, optional
         A constraint for MinMaxNorm setting how weights will be rescaled at each step.
-        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using 
-        minmax_rate = 1 will set a strict enforcement of the constraint, 
+        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using
+        minmax_rate = 1 will set a strict enforcement of the constraint,
         while rate<1.0 will slowly rescale layer's hidden units at each step.
-        
+
         Default = 1.0
 
     Note
@@ -273,8 +269,8 @@ class ConstrainedConv1d(nn.Conv1d):
     ----
     When setting ``padding`` to ``"causal"``, padding will be internally changed
     to an integer equal to ``(kernel_size - 1) * dilation``. Then, during forward,
-    the extra features are removed. This is preferable over F.pad, which can 
-    lead to memory allocation or even non-deterministic operations during the 
+    the extra features are removed. This is preferable over F.pad, which can
+    lead to memory allocation or even non-deterministic operations during the
     backboard pass. Additional information can be found at the following link:
     https://github.com/pytorch/pytorch/issues/1333
 
@@ -308,8 +304,8 @@ class ConstrainedConv1d(nn.Conv1d):
         dtype=None,
         max_norm=2.0,
         min_norm=None,
-        axis_norm=[1,2],
-        minmax_rate=1.0
+        axis_norm=[1, 2],
+        minmax_rate=1.0,
     ):
 
         # Check causal Padding
@@ -319,7 +315,7 @@ class ConstrainedConv1d(nn.Conv1d):
             if padding.casefold() == "causal":
                 self.causal_pad = True
                 self.pad = (kernel_size - 1) * dilation
-        
+
         super(ConstrainedConv1d, self).__init__(
             in_channels,
             out_channels,
@@ -331,7 +327,7 @@ class ConstrainedConv1d(nn.Conv1d):
             bias,
             padding_mode,
             device,
-            dtype
+            dtype,
         )
 
         # Check that max_norm is valid
@@ -375,7 +371,7 @@ class ConstrainedConv1d(nn.Conv1d):
                         raise ValueError("Axis values must be in [0, 2]")
         self.axis_norm = axis_norm
 
-        # set the constraint case: 
+        # set the constraint case:
         # 0 --> no contraint
         # 1 --> MaxNorm
         # 2 --> MinMaxNorm
@@ -395,11 +391,11 @@ class ConstrainedConv1d(nn.Conv1d):
 
     def scale_norm(self, eps=1e-9):
         """
-        ``scale_norm`` applies the desired constraint on the Layer. 
-        It is highly based on the Keras implementation, but here 
-        MaxNorm, MinMaxNorm and UnitNorm are all implemented inside 
+        ``scale_norm`` applies the desired constraint on the Layer.
+        It is highly based on the Keras implementation, but here
+        MaxNorm, MinMaxNorm and UnitNorm are all implemented inside
         this function.
-        
+
         """
         if self.constraint_type == 1:
             norms = torch.sqrt(
@@ -407,16 +403,17 @@ class ConstrainedConv1d(nn.Conv1d):
             )
             desired = torch.clamp(norms, 0, self.max_norm)
             self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
-        
+
         elif self.constraint_type == 2:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
-            desired = (self.minmax_rate \
-                       * torch.clamp(norms, self.min_norm, self.max_norm) \
-                       + (1 - self.minmax_rate) * norms)
+            desired = (
+                self.minmax_rate * torch.clamp(norms, self.min_norm, self.max_norm)
+                + (1 - self.minmax_rate) * norms
+            )
             self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
-        
+
         elif self.constraint_type == 3:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
@@ -430,15 +427,15 @@ class ConstrainedConv1d(nn.Conv1d):
         if self.constraint_type != 0:
             self.scale_norm()
         if self.causal_pad:
-            return self._conv_forward(input, self.weight, self.bias)[:,:,:-self.pad]
+            return self._conv_forward(input, self.weight, self.bias)[:, :, : -self.pad]
         else:
             return self._conv_forward(input, self.weight, self.bias)
 
 
 class ConstrainedConv2d(nn.Conv2d):
     """
-    Pytorch implementation of the 2D Convolutional layer with the possibility 
-    to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along the given axis. 
+    Pytorch implementation of the 2D Convolutional layer with the possibility
+    to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along the given axis.
     Most of the parameters are the same as described in pytorch Conv2D help.
 
     Parameters
@@ -478,7 +475,7 @@ class ConstrainedConv2d(nn.Conv2d):
     dtype: torch.dtype, optional
         Layer dtype, i.e., the data type of the torch.Tensor defining the layer weights.
     max_norm: float, optional
-        The maximum norm each hidden unit can have. 
+        The maximum norm each hidden unit can have.
         If None no constraint will be added.
 
         Default = 2.0
@@ -491,16 +488,16 @@ class ConstrainedConv2d(nn.Conv2d):
     axis_norm: Union[int, list, tuple], optional
         The axis along weights are constrained. It behaves like Keras. So, considering
         that a Conv2D layer has shape (output_depth, input_depth, rows, cols), set axis
-        to [1, 2, 3] will constrain the weights of each filter tensor of size 
+        to [1, 2, 3] will constrain the weights of each filter tensor of size
         (input_depth, rows, cols).
-        
+
         Default = [1,2,3]
     minmax_rate: float, optional
         A constraint for MinMaxNorm setting how weights will be rescaled at each step.
-        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using 
-        minmax_rate = 1 will set a strict enforcement of the constraint, 
+        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using
+        minmax_rate = 1 will set a strict enforcement of the constraint,
         while rate<1.0 will slowly rescale layer's hidden units at each step.
-        
+
         Default = 1.0
 
     Note
@@ -539,8 +536,8 @@ class ConstrainedConv2d(nn.Conv2d):
         dtype=None,
         max_norm=2.0,
         min_norm=None,
-        axis_norm=[1,2,3],
-        minmax_rate=1.0
+        axis_norm=[1, 2, 3],
+        minmax_rate=1.0,
     ):
         super(ConstrainedConv2d, self).__init__(
             in_channels,
@@ -597,7 +594,7 @@ class ConstrainedConv2d(nn.Conv2d):
                         raise ValueError("Axis values must be in [0, 3]")
         self.axis_norm = axis_norm
 
-        # set the constraint case: 
+        # set the constraint case:
         # 0 --> no contraint
         # 1 --> MaxNorm
         # 2 --> MinMaxNorm
@@ -617,11 +614,11 @@ class ConstrainedConv2d(nn.Conv2d):
 
     def scale_norm(self, eps=1e-9):
         """
-        ``scale_norm`` applies the desired constraint on the Layer. 
-        It is highly based on the Keras implementation, but here 
-        MaxNorm, MinMaxNorm and UnitNorm are all implemented inside 
+        ``scale_norm`` applies the desired constraint on the Layer.
+        It is highly based on the Keras implementation, but here
+        MaxNorm, MinMaxNorm and UnitNorm are all implemented inside
         this function.
-        
+
         """
         if self.constraint_type == 1:
             norms = torch.sqrt(
@@ -629,16 +626,17 @@ class ConstrainedConv2d(nn.Conv2d):
             )
             desired = torch.clamp(norms, 0, self.max_norm)
             self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
-        
+
         elif self.constraint_type == 2:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
-            desired = (self.minmax_rate \
-                       * torch.clamp(norms, self.min_norm, self.max_norm) \
-                       + (1 - self.minmax_rate) * norms)
+            desired = (
+                self.minmax_rate * torch.clamp(norms, self.min_norm, self.max_norm)
+                + (1 - self.minmax_rate) * norms
+            )
             self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
-        
+
         elif self.constraint_type == 3:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
@@ -656,9 +654,9 @@ class ConstrainedConv2d(nn.Conv2d):
 
 class DepthwiseConv2d(nn.Conv2d):
     """
-    Pytorch implementation of the Depthwise Convolutional layer with 
-    the possibility to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along 
-    the given axis. Most of the parameters are the same as described in pytorch 
+    Pytorch implementation of the Depthwise Convolutional layer with
+    the possibility to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along
+    the given axis. Most of the parameters are the same as described in pytorch
     Conv2D help.
 
     Parameters
@@ -686,7 +684,7 @@ class DepthwiseConv2d(nn.Conv2d):
 
         Default = True
     max_norm: float, optional
-        The maximum norm each hidden unit can have. 
+        The maximum norm each hidden unit can have.
         If None no constraint will be added.
 
         Default = 2.0
@@ -699,16 +697,16 @@ class DepthwiseConv2d(nn.Conv2d):
     axis_norm: Union[int, list, tuple], optional
         The axis along weights are constrained. It behaves like Keras. So, considering
         that a Conv2D layer has shape (output_depth, input_depth, rows, cols), set axis
-        to [1, 2, 3] will constrain the weights of each filter tensor of size 
+        to [1, 2, 3] will constrain the weights of each filter tensor of size
         (input_depth, rows, cols).
-        
+
         Default = [1,2,3]
     minmax_rate: float, optional
         A constraint for MinMaxNorm setting how weights will be rescaled at each step.
-        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using 
-        minmax_rate = 1 will set a strict enforcement of the constraint, 
+        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using
+        minmax_rate = 1 will set a strict enforcement of the constraint,
         while rate<1.0 will slowly rescale layer's hidden units at each step.
-        
+
         Default = 1.0
 
     Note
@@ -743,8 +741,8 @@ class DepthwiseConv2d(nn.Conv2d):
         bias=False,
         max_norm=2.0,
         min_norm=None,
-        axis_norm=[1,2,3],
-        minmax_rate=1.0
+        axis_norm=[1, 2, 3],
+        minmax_rate=1.0,
     ):
         super(DepthwiseConv2d, self).__init__(
             in_channels,
@@ -754,7 +752,7 @@ class DepthwiseConv2d(nn.Conv2d):
             stride=stride,
             padding=padding,
             dilation=dilation,
-            bias=bias
+            bias=bias,
         )
 
         # Check that max_norm is valid
@@ -798,7 +796,7 @@ class DepthwiseConv2d(nn.Conv2d):
                         raise ValueError("Axis values must be in [0, 3]")
         self.axis_norm = axis_norm
 
-        # set the constraint case: 
+        # set the constraint case:
         # 0 --> no contraint
         # 1 --> MaxNorm
         # 2 --> MinMaxNorm
@@ -818,11 +816,11 @@ class DepthwiseConv2d(nn.Conv2d):
 
     def scale_norm(self, eps=1e-9):
         """
-        ``scale_norm`` applies the desired constraint on the Layer. 
-        It is highly based on the Keras implementation, but here 
-        MaxNorm, MinMaxNorm and UnitNorm are all implemented inside 
+        ``scale_norm`` applies the desired constraint on the Layer.
+        It is highly based on the Keras implementation, but here
+        MaxNorm, MinMaxNorm and UnitNorm are all implemented inside
         this function.
-        
+
         """
         if self.constraint_type == 1:
             norms = torch.sqrt(
@@ -830,16 +828,17 @@ class DepthwiseConv2d(nn.Conv2d):
             )
             desired = torch.clamp(norms, 0, self.max_norm)
             self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
-        
+
         elif self.constraint_type == 2:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
-            desired = (self.minmax_rate \
-                       * torch.clamp(norms, self.min_norm, self.max_norm) \
-                       + (1 - self.minmax_rate) * norms)
+            desired = (
+                self.minmax_rate * torch.clamp(norms, self.min_norm, self.max_norm)
+                + (1 - self.minmax_rate) * norms
+            )
             self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
-        
+
         elif self.constraint_type == 3:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
@@ -891,29 +890,29 @@ class SeparableConv2d(nn.Module):
 
         Default = 1
     depth_max_norm: float, optional
-        The maximum norm each hidden unit in the depthwise layer can have. 
+        The maximum norm each hidden unit in the depthwise layer can have.
         If None no constraint will be added.
 
         Default = None
     depth_min_norm: float, optional
-        The minimum norm each hidden unit in the depthwise layer can have. 
-        Must be a float lower than max_norm. If given, MinMaxNorm will be applied 
+        The minimum norm each hidden unit in the depthwise layer can have.
+        Must be a float lower than max_norm. If given, MinMaxNorm will be applied
         in the case max_norm is also given. Otherwise, it will be ignored.
 
         Default = None
     depth_minmax_rate: float, optional
-        A constraint for depthwise's MinMaxNorm setting how weights will be rescaled 
-        at each step. It behaves like Keras `rate` argument of MinMaxNorm contraint. 
-        So, using minmax_rate = 1 will set a strict enforcement of the constraint, 
+        A constraint for depthwise's MinMaxNorm setting how weights will be rescaled
+        at each step. It behaves like Keras `rate` argument of MinMaxNorm contraint.
+        So, using minmax_rate = 1 will set a strict enforcement of the constraint,
         while rate<1.0 will slowly rescale layer's hidden units at each step.
-        
+
         Default = 1.0
     axis_norm: Union[int, list, tuple], optional
         The axis along weights are constrained. It behaves like Keras. So, considering
         that a Conv2D layer has shape (output_depth, input_depth), set axis
-        to 1 will constrain the weights of each filter tensor of size 
+        to 1 will constrain the weights of each filter tensor of size
         (input_depth,).
-        
+
         Default = 1
     point_max_norm: float, optional
         Same as depth_max_norm, but applied to the pointwise Convolutional layer.
@@ -925,7 +924,7 @@ class SeparableConv2d(nn.Module):
         Default = None
     point_minmax_rate: float, optional
         Same as depth_minmax_rate, but applied to the pointwise Convolutional layer.
-        
+
         Default = 1.0
 
     Example
@@ -956,7 +955,7 @@ class SeparableConv2d(nn.Module):
         point_max_norm=None,
         point_min_norm=None,
         point_minmax_rate=1.0,
-        axis_norm=[1,2,3]
+        axis_norm=[1, 2, 3],
     ):
         super(SeparableConv2d, self).__init__()
         self.depthwise = DepthwiseConv2d(
@@ -970,7 +969,7 @@ class SeparableConv2d(nn.Module):
             max_norm=depth_max_norm,
             min_norm=depth_min_norm,
             axis_norm=axis_norm,
-            minmax_rate=depth_minmax_rate
+            minmax_rate=depth_minmax_rate,
         )
         self.pointwise = ConstrainedConv2d(
             in_channels * depth_multiplier,
@@ -980,7 +979,7 @@ class SeparableConv2d(nn.Module):
             max_norm=point_max_norm,
             min_norm=point_min_norm,
             axis_norm=axis_norm,
-            minmax_rate=point_minmax_rate
+            minmax_rate=point_minmax_rate,
         )
 
     def forward(self, input):

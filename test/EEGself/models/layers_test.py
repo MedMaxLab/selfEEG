@@ -64,10 +64,10 @@ class TestModels(unittest.TestCase):
             model.weight = torch.nn.Parameter(model.weight * 10)
             out = model(self.x)
             if i["max_norm"] is not None:
-                norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1,2]))
-                self.assertTrue(torch.sum(norms>(i["max_norm"]+1e-3)).item() == 0)
+                norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1, 2]))
+                self.assertTrue(torch.sum(norms > (i["max_norm"] + 1e-3)).item() == 0)
                 if i["min_norm"] is not None:
-                    self.assertTrue(torch.sum(norms<(i["min_norm"]-1e-3)).item() == 0)
+                    self.assertTrue(torch.sum(norms < (i["min_norm"] - 1e-3)).item() == 0)
             self.assertEqual(torch.isnan(out).sum(), 0)
 
         if self.device.type != "cpu":
@@ -76,15 +76,15 @@ class TestModels(unittest.TestCase):
                 model.weight = torch.nn.Parameter(model.weight * 10)
                 out = model(self.x2)
                 if i["max_norm"] is not None:
-                    norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1,2]))
-                    self.assertTrue(torch.sum(norms>(i["max_norm"]+1e-3)).item() == 0)
+                    norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1, 2]))
+                    self.assertTrue(torch.sum(norms > (i["max_norm"] + 1e-3)).item() == 0)
                     if i["min_norm"] is not None:
-                        self.assertTrue(torch.sum(norms<(i["min_norm"]-1e-3)).item() == 0)
+                        self.assertTrue(torch.sum(norms < (i["min_norm"] - 1e-3)).item() == 0)
                 self.assertEqual(torch.isnan(out).sum(), 0)
         print(
             "   Constrained conv1d OK: tested", len(Conv_args), " combinations of input arguments"
         )
-    
+
     def test_ConstrainedConv2d(self):
         print("Testing conv2d with norm constraint...", end="", flush=True)
         Conv_args = {
@@ -104,10 +104,10 @@ class TestModels(unittest.TestCase):
             model.weight = torch.nn.Parameter(model.weight * 10)
             out = model(self.xl)
             if i["max_norm"] is not None:
-                norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1,2,3]))
-                self.assertTrue(torch.sum(norms>(i["max_norm"]+1e-3)).item() == 0)
+                norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1, 2, 3]))
+                self.assertTrue(torch.sum(norms > (i["max_norm"] + 1e-3)).item() == 0)
                 if i["min_norm"] is not None:
-                    self.assertTrue(torch.sum(norms<(i["min_norm"]-1e-3)).item() == 0)
+                    self.assertTrue(torch.sum(norms < (i["min_norm"] - 1e-3)).item() == 0)
             self.assertEqual(torch.isnan(out).sum(), 0)
 
         if self.device.type != "cpu":
@@ -116,10 +116,10 @@ class TestModels(unittest.TestCase):
                 model.weight = torch.nn.Parameter(model.weight * 10)
                 out = model(self.xl2)
                 if i["max_norm"] is not None:
-                    norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1,2,3]))
-                    self.assertTrue(torch.sum(norms>(i["max_norm"]+1e-3)).item() == 0)
+                    norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1, 2, 3]))
+                    self.assertTrue(torch.sum(norms > (i["max_norm"] + 1e-3)).item() == 0)
                     if i["min_norm"] is not None:
-                        self.assertTrue(torch.sum(norms<(i["min_norm"]-1e-3)).item() == 0)
+                        self.assertTrue(torch.sum(norms < (i["min_norm"] - 1e-3)).item() == 0)
                 self.assertEqual(torch.isnan(out).sum(), 0)
         print(
             "   Constrained conv2d OK: tested", len(Conv_args), " combinations of input arguments"
@@ -141,9 +141,9 @@ class TestModels(unittest.TestCase):
             out = model(self.xd)
             if i["max_norm"] is not None:
                 norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=1))
-                self.assertTrue(torch.sum(norms>(i["max_norm"]+1e-3)).item() == 0)
+                self.assertTrue(torch.sum(norms > (i["max_norm"] + 1e-3)).item() == 0)
                 if i["min_norm"] is not None:
-                    self.assertTrue(torch.sum(norms<(i["min_norm"]-1e-3)).item() == 0)
+                    self.assertTrue(torch.sum(norms < (i["min_norm"] - 1e-3)).item() == 0)
             self.assertEqual(torch.isnan(out).sum(), 0)
             self.assertEqual(out.shape[1], 32)
 
@@ -154,9 +154,9 @@ class TestModels(unittest.TestCase):
                 out = model(self.xd2)
                 if i["max_norm"] is not None:
                     norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=1))
-                    self.assertTrue(torch.sum(norms>(i["max_norm"]+1e-3)).item() == 0)
+                    self.assertTrue(torch.sum(norms > (i["max_norm"] + 1e-3)).item() == 0)
                     if i["min_norm"] is not None:
-                        self.assertTrue(torch.sum(norms<(i["min_norm"]-1e-3)).item() == 0)
+                        self.assertTrue(torch.sum(norms < (i["min_norm"] - 1e-3)).item() == 0)
                 self.assertEqual(torch.isnan(out).sum(), 0)
                 self.assertEqual(out.shape[1], 32)
         print("   Dense layer OK: tested", len(Dense_args), " combinations of input arguments")
@@ -180,8 +180,8 @@ class TestModels(unittest.TestCase):
             model.weight = torch.nn.Parameter(model.weight * 10)
             out = model(self.xl)
             if i["max_norm"] is not None:
-                norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1,2,3]))
-                self.assertTrue(torch.sum(norms>(i["max_norm"]+1e-3)).item() == 0)
+                norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1, 2, 3]))
+                self.assertTrue(torch.sum(norms > (i["max_norm"] + 1e-3)).item() == 0)
             self.assertEqual(torch.isnan(out).sum(), 0)
             self.assertEqual(out.shape[1], i["depth_multiplier"])
 
@@ -191,10 +191,10 @@ class TestModels(unittest.TestCase):
                 model.weight = torch.nn.Parameter(model.weight * 10)
                 out = model(self.xl2)
                 if i["max_norm"] is not None:
-                    norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1,2,3]))
-                    self.assertTrue(torch.sum(norms>(i["max_norm"]+1e-3)).item() == 0)
+                    norms = torch.sqrt(torch.sum(torch.square(model.weight), axis=[1, 2, 3]))
+                    self.assertTrue(torch.sum(norms > (i["max_norm"] + 1e-3)).item() == 0)
                     if i["min_norm"] is not None:
-                        self.assertTrue(torch.sum(norms<(i["min_norm"]-1e-3)).item() == 0)
+                        self.assertTrue(torch.sum(norms < (i["min_norm"] - 1e-3)).item() == 0)
                 self.assertEqual(torch.isnan(out).sum(), 0)
                 self.assertEqual(out.shape[1], i["depth_multiplier"])
         print(
@@ -235,6 +235,7 @@ class TestModels(unittest.TestCase):
         print(
             "   Separable conv2d OK: tested", len(Separable_args), "combinations of input arguments"
         )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -6,7 +6,7 @@ from .layers import (
     ConstrainedConv2d,
     ConstrainedDense,
     DepthwiseConv2d,
-    SeparableConv2d
+    SeparableConv2d,
 )
 
 __all__ = [
@@ -30,7 +30,6 @@ __all__ = [
     "TinySleepNet",
     "TinySleepNetEncoder",
 ]
-
 
 
 # ------------------------------
@@ -1359,7 +1358,7 @@ class ShallowNetEncoder(nn.Module):
 
     """
 
-    def __init__(self, Chans, F=8, K1=25, Pool=75, p=0.2):
+    def __init__(self, Chans, F=40, K1=25, Pool=75, p=0.2):
 
         super(ShallowNetEncoder, self).__init__()
         self.conv1 = nn.Conv2d(1, F, (1, K1), stride=(1, 1))

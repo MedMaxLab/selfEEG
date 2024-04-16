@@ -106,7 +106,7 @@ class TestSSL(unittest.TestCase):
         Block2 = lambda x: selfeeg.utils.scale_range_soft_clip(x, 500, 1.5, "uV", True)
         cls.Augmenter = aug.SequentialAug(Block1, Block2)
 
-        cls.enc = selfeeg.models.ShallowNetEncoder(8)
+        cls.enc = selfeeg.models.ShallowNetEncoder(8, 8)
         cls.head_size = [16, 32, 32]
         cls.predictor_size = [32, 32]
 
