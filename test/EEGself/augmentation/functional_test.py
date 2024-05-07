@@ -28,6 +28,13 @@ class TestAugmentationFunctional(unittest.TestCase):
         )
         if cls.device.type == "cpu":
             cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+        if cls.device.type == "mps":
+            try:
+                xx = torch.randn(2,2).to(device=cls.device)
+            except Exception:
+                cls.device = torch.device("cpu")
+                
         device = cls.device
         print("\n---------------------------")
         print("TESTING AUGMENTATION.FUNCTIONAL MODULE")
@@ -1035,3 +1042,6 @@ class TestAugmentationFunctional(unittest.TestCase):
             for i in aug_args:
                 xaug = aug.add_eeg_artifact(**i)
         print("   eeg artifact OK: tested", N + len(aug_args), "combinations of input arguments")
+
+if __name__ == "__main__":
+    unittest.main()

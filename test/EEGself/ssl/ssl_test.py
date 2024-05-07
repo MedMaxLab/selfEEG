@@ -49,6 +49,13 @@ class TestSSL(unittest.TestCase):
         )
         if cls.device.type == "cpu":
             cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+        if cls.device.type == "mps":
+            try:
+                xx = torch.randn(2,2).to(device=cls.device)
+            except Exception:
+                cls.device = torch.device("cpu")
+                
         print("\n---------------------------")
         print("TESTING SSL MODULE")
         if cls.device.type != "cpu":
@@ -379,3 +386,6 @@ class TestSSL(unittest.TestCase):
             print(
                 'Failed to delete "Simulated_EEG" folder' " Please don't hate me and do it manually"
             )
+
+if __name__ == "__main__":
+    unittest.main()

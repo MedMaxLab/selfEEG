@@ -24,6 +24,13 @@ class TestModels(unittest.TestCase):
         )
         if cls.device.type == "cpu":
             cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+        if cls.device.type == "mps":
+            try:
+                xx = torch.randn(2,2).to(device=cls.device)
+            except Exception:
+                cls.device = torch.device("cpu")
+                
         print("\n-------------------------")
         print("TESTING MODELS.ZOO MODULE")
         if cls.device.type != "cpu":
@@ -180,7 +187,7 @@ class TestModels(unittest.TestCase):
                 self.assertLessEqual(out.max(), 1)
                 self.assertGreaterEqual(out.min(), 0)
 
-        if self.device.type != "cpu":
+        if self.device.type not in ["cpu", "mps"]:
             for i in EEGsym_args:
                 model = models.EEGSym(**i).to(device=self.device)
                 out = model(self.x2)

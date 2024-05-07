@@ -155,3 +155,6 @@ class TestAugmentationCompose(unittest.TestCase):
         self.assertFalse(torch.equal(self.BatchEEG, BatchEEGaug1))
         self.assertFalse(torch.equal(self.BatchEEG, BatchEEGaug2))
         print("   final augmentation composition OK")
+
+if __name__ == "__main__":
+    unittest.main()

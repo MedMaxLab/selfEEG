@@ -14,6 +14,22 @@ class TestUtils(unittest.TestCase):
     def setUpClass(cls):
         print("\n--------------------")
         print("TESTING UTILS MODULE")
+        cls.device = (
+            torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
+        )
+        if cls.device.type == "cpu":
+            cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+        if cls.device.type == "mps":
+            try:
+                xx = torch.randn(2,2).to(device=cls.device)
+            except Exception:
+                cls.device = torch.device("cpu")
+        
+        if cls.device.type != "cpu":
+            print("Found gpu device: testing module with both cpu and gpu")
+        else:
+            print("Didn't found cuda device: testing module with only cpu")
         print("--------------------")
 
     def makeGrid(self, pars_dict):
@@ -24,14 +40,12 @@ class TestUtils(unittest.TestCase):
 
     def test_scale_range_soft_clip(self):
         print("testing scale range with soft clip function...", end="", flush=True)
-        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
-        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         random.seed(1234)
         x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024)) * 500
         xnp = x.numpy()
         inplist = [x, xnp]
-        if device.type != "cpu":
-            xgpu = torch.clone(x).to(device=device)
+        if self.device.type != "cpu":
+            xgpu = torch.clone(x).to(device=self.device)
             inplist = [x, xnp, xgpu]
         input_args = {
             "x": inplist,
@@ -53,14 +67,12 @@ class TestUtils(unittest.TestCase):
 
     def test_RangeScaler(self):
         print("testing Range Scaler...", end="", flush=True)
-        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
-        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         random.seed(1234)
         x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024)) * 500
         xnp = x.numpy()
         inplist = [x, xnp]
-        if device.type != "cpu":
-            xgpu = torch.clone(x).to(device=device)
+        if self.device.type != "cpu":
+            xgpu = torch.clone(x).to(device=self.device)
             inplist = [x, xnp, xgpu]
         input_args = {
             "x": inplist,
@@ -112,3 +124,6 @@ class TestUtils(unittest.TestCase):
         a, b = utils.count_parameters(mdl, True, True, True)
         self.assertEqual(b, 23760)  # should return True
         print("\n   count parameters OK")
+
+if __name__ == "__main__":
+    unittest.main()

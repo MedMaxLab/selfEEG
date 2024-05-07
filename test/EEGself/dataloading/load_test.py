@@ -544,3 +544,6 @@ class TestDataloading(unittest.TestCase):
                 'Failed to delete "Simulated_EEG" and "tmpsave" folders.'
                 " Please don't hate me and do it manually"
             )
+
+if __name__ == "__main__":
+    unittest.main()

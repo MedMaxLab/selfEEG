@@ -24,6 +24,13 @@ class TestLoss(unittest.TestCase):
         )
         if cls.device.type == "cpu":
             cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+        if cls.device.type == "mps":
+            try:
+                xx = torch.randn(2,2).to(device=cls.device)
+            except Exception:
+                cls.device = torch.device("cpu")
+        
         device = cls.device
         print("\n---------------------")
         print("TESTING LOSSES MODULE")
@@ -269,3 +276,6 @@ class TestLoss(unittest.TestCase):
         loss = losses.Moco_loss(x, y)
         self.assertTrue((loss - 0.4952) < 1e-4)
         print("   MoCo Loss OK: tested", len(Moco_args), "combinations of input arguments")
+
+if __name__ == "__main__":
+    unittest.main()

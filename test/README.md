@@ -6,7 +6,7 @@ All the tests were implemented with **unittest**, a standard testing framework.
 
 To run the whole test, you just need to go to the main working directory (if you are currently in this folder just type `cd ..` ), then type:
 
-    python -m unittest discover test "*_test.py"
+    python3 -m unittest discover test "*_test.py"
 
 which basically tells python to search for all the unittest tests included in python files inside the test folder and subdirectories whose name ends with "*_test.py*". In addition, you can use the test notebooks included in the Notebooks folder of this repo, which we used as the the starting point for the unittest implementation and can be modified according to your needs, especially if you want to perform additional tests.
 
