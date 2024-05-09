@@ -67,7 +67,7 @@ class TestSSL(unittest.TestCase):
         cls.freq = 128  # sampling frequency in [Hz]
         cls.overlap = 0.3  # overlap between partitions
         cls.window = 1  # window length in [seconds]
-        cls.workers = 2
+        cls.workers = 0
         cls.batchsize = 16
         cls.Chan = 16
 
@@ -144,12 +144,17 @@ class TestSSL(unittest.TestCase):
             label_on_load=True,
         )
         TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
-        shanet = selfeeg.models.ShallowNet(2, 8, 256)
-        Stopper = selfeeg.ssl.EarlyStopping(patience=1, monitored="train")
-        Stopper.rec_best_weights(shanet)  # little hack to force early stop correctly
+        eegnet = selfeeg.models.EEGNet(2, 8, 256)
+        Stopper = selfeeg.ssl.EarlyStopping(
+            patience=1, monitored="train", device=self.device
+        )
+        Stopper.rec_best_weights(eegnet)  # little hack to force early stop correctly
+        self.assertEqual(
+            Stopper.best_model['Dense.bias'].device.type, self.device.type
+        )
         Stopper.best_loss = 0  # little hack to force early stop correctly
         loss_info = selfeeg.ssl.fine_tune(
-            shanet,
+            eegnet,
             TrainLoader,
             2,
             EarlyStopper=Stopper,
@@ -157,6 +162,9 @@ class TestSSL(unittest.TestCase):
             verbose=False,
         )
         self.assertTrue(Stopper.earlystop)
+        self.assertEqual(
+            eegnet.Dense.bias.device.type,self.device.type
+        )
         print("   EarlyStopper OK")
 
     def test_SimCLR(self):
@@ -177,7 +185,7 @@ class TestSSL(unittest.TestCase):
         SelfMdl = SelfMdl.to(device="cpu")
         self.assertTrue(isinstance(loss_train, dict))
         self.assertTrue(SelfMdl(torch.randn(32, 8, 128)).shape == torch.Size([32, 32]))
-        loss_test = SelfMdl.test(self.valloader, augmenter=self.Augmenter, verbose=False)  # just
+        loss_test = SelfMdl.test(self.valloader, augmenter=self.Augmenter, verbose=False)
         print("   SimCLR OK")
 
     def test_MoCo(self):
@@ -244,7 +252,13 @@ class TestSSL(unittest.TestCase):
         loss = selfeeg.losses.BYOL_loss
         optimizer = torch.optim.Adam(SelfMdl.parameters(), lr=1e-4)
         scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
-        earlystop = selfeeg.ssl.EarlyStopping(patience=2, min_delta=1e-05, record_best_weights=True)
+        print(scheduler)
+        earlystop = selfeeg.ssl.EarlyStopping(
+            patience=2,
+            min_delta=1e-05,
+            record_best_weights=True,
+            device=self.device,
+        )
         loss_train = SelfMdl.fit(
             train_dataloader=self.trainloader,
             augmenter=self.Augmenter,
@@ -266,6 +280,7 @@ class TestSSL(unittest.TestCase):
         )
         self.assertTrue(SelfMdl(torch.randn(32, 8, 128)).shape == torch.Size([32, 32]))
         loss_test = SelfMdl.test(self.valloader, augmenter=self.Augmenter, verbose=False)
+        earlystop.restore_best_weights(SelfMdl)
         print("   BYOL OK")
 
     def test_SimSiam(self):

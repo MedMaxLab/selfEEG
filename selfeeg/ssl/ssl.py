@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 import copy
 import datetime
 import math
@@ -444,6 +445,12 @@ class EarlyStopping:
         if the training is stopped.
 
         Default = True
+    device: torch.device or str, optional
+            The device to use for model record. If given as a string, it will
+            be converted in a torch.device instance. If not given, 'cpu' device
+            will be used as default.
+
+            Device = None
 
     Note
     ----
@@ -492,7 +499,17 @@ class EarlyStopping:
         improvement: str = "decrease",
         monitored: str = "validation",
         record_best_weights: bool = True,
+        device: str or torch.device = None,
     ):
+        if device is None:
+            self.device = torch.device("cpu")
+        else:
+            if isinstance(device, str):
+                self.device = torch.device(device.lower())
+            elif isinstance(device, torch.device):
+                self.device = device
+            else:
+                raise ValueError("device must be a string or a torch.device instance")
 
         if patience < 0:
             self.patience = 0
@@ -547,7 +564,6 @@ class EarlyStopping:
             checks are not performed after each epoch.
 
         """
-
         # The function can be compressed with a big if.
         # This expansion is faster and better understandable
         if self.improvement == "decrease":
@@ -574,7 +590,8 @@ class EarlyStopping:
     def rec_best_weights(self, model):
         """
         Record model's best weights. The copy of the model is sent to
-        the cpu device to avoid increasing the GPU load.
+        the device set during EarlyStopping's initialization
+        (default is cpu). Original model will retain its device.
 
         Parameters
         ----------
@@ -582,7 +599,20 @@ class EarlyStopping:
             The model to record.
 
         """
-        self.best_model = copy.deepcopy(model).to(device="cpu").state_dict()
+        # Need to:
+        # 1- not move the original model to another device as this breaks training.
+        # 2- find a way to copy the model to another device without creating
+        #    a duplicate on the GPU
+        
+        # Original command: model is not moved but a copy is created on the gpu
+        # before being moved to another device (if set)
+        #self.best_model = copy.deepcopy(model).to(device=self.device).state_dict()
+
+        # new command: model is not moved and the OrderedDict is created directly
+        # with list comprehension
+        self.best_model = OrderedDict(
+            [(k, v.to(device=self.device, copy=True)) for k, v in model.state_dict().items()]
+        )
 
     def restore_best_weights(self, model):
         """
@@ -595,12 +625,12 @@ class EarlyStopping:
 
         Warnings
         --------
-        The model is moved to the CPU device before restoring weights.
-        Remember to move it again to the desired device if cpu is not
-        the selected one.
+        Before restoring its best weights, the model is moved to the device set 
+        during EarlyStopping's initialization. Remember to move it again to the
+        desired device if EarlyStop's one is not the same.
 
         """
-        model.to(device="cpu")
+        model.to(device=self.device)
         model.load_state_dict(self.best_model)
 
     def reset_counter(self):
@@ -2882,11 +2912,10 @@ class BYOL(SSL_Base):
                             f"train_loss={train_loss_tot/(batch_idx+1):.5f}, val_loss={val_loss_tot:.5f}"
                         )
                         pbar.update()
+                
                 train_loss_tot /= batch_idx + 1
-
                 if lr_scheduler != None:
                     lr_scheduler.step()
-
                 # Perform validation if validation dataloader were given
                 # Note that validation in moco can be misleading if there's a memory_bank
                 # since calculated keys cannot be added
