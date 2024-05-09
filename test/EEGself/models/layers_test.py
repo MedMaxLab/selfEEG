@@ -27,10 +27,10 @@ class TestModels(unittest.TestCase):
 
         if cls.device.type == "mps":
             try:
-                xx = torch.randn(2,2).to(device=cls.device)
+                xx = torch.randn(2, 2).to(device=cls.device)
             except Exception:
                 cls.device = torch.device("cpu")
-        
+
         print("\n----------------------------")
         print("TESTING MODELS.LAYERS MODULE")
         if cls.device.type != "cpu":

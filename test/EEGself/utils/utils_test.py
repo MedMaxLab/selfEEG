@@ -22,10 +22,10 @@ class TestUtils(unittest.TestCase):
 
         if cls.device.type == "mps":
             try:
-                xx = torch.randn(2,2).to(device=cls.device)
+                xx = torch.randn(2, 2).to(device=cls.device)
             except Exception:
                 cls.device = torch.device("cpu")
-        
+
         if cls.device.type != "cpu":
             print("Found gpu device: testing module with both cpu and gpu")
         else:
@@ -124,6 +124,7 @@ class TestUtils(unittest.TestCase):
         a, b = utils.count_parameters(mdl, True, True, True)
         self.assertEqual(b, 23760)  # should return True
         print("\n   count parameters OK")
+
 
 if __name__ == "__main__":
     unittest.main()
