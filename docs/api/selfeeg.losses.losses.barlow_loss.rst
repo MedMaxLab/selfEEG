@@ -1,6 +1,6 @@
-SimCLR_loss
+barlow_loss
 ===========
 
 .. currentmodule:: selfeeg.losses.losses
 
-.. autofunction:: SimCLR_loss
+.. autofunction:: barlow_loss

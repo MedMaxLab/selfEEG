@@ -1,9 +1,9 @@
-SSL_Base
-========
+SSLBase
+=======
 
 .. currentmodule:: selfeeg.ssl.ssl
 
-.. autoclass:: SSL_Base
+.. autoclass:: SSLBase
    :show-inheritance:
    :noindex:
 
@@ -11,12 +11,14 @@ SSL_Base
 
    .. autosummary::
 
-      ~SSL_Base.evaluate_loss
-      ~SSL_Base.get_encoder
-      ~SSL_Base.save_encoder
+      ~SSLBase.evaluate_loss
+      ~SSLBase.forward
+      ~SSLBase.get_encoder
+      ~SSLBase.save_encoder
 
    .. rubric:: Methods Documentation
 
    .. automethod:: evaluate_loss
+   .. automethod:: forward
    .. automethod:: get_encoder
    .. automethod:: save_encoder

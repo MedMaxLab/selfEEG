@@ -1,9 +1,9 @@
-Barlow_Twins
-============
+BarlowTwins
+===========
 
 .. currentmodule:: selfeeg.ssl.ssl
 
-.. autoclass:: Barlow_Twins
+.. autoclass:: BarlowTwins
    :show-inheritance:
    :noindex:
 
@@ -11,8 +11,8 @@ Barlow_Twins
 
    .. autosummary::
 
-      ~Barlow_Twins.fit
-      ~Barlow_Twins.test
+      ~BarlowTwins.fit
+      ~BarlowTwins.test
 
    .. rubric:: Methods Documentation
 

@@ -1,6 +1,6 @@
-BYOL_loss
+byol_loss
 =========
 
 .. currentmodule:: selfeeg.losses.losses
 
-.. autofunction:: BYOL_loss
+.. autofunction:: byol_loss

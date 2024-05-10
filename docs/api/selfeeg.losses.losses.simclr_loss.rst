@@ -1,6 +1,6 @@
-VICReg_loss
+simclr_loss
 ===========
 
 .. currentmodule:: selfeeg.losses.losses
 
-.. autofunction:: VICReg_loss
+.. autofunction:: simclr_loss

@@ -2,10 +2,9 @@ import itertools
 import os
 import sys
 import unittest
-
+import warnings
 import numpy as np
 import torch
-
 from selfeeg import models
 
 
@@ -19,6 +18,7 @@ class TestModels(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        warnings.filterwarnings("ignore", message="Using padding='same'", category=UserWarning)
         cls.device = (
             torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
         )

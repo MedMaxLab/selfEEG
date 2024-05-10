@@ -1,6 +1,6 @@
-Moco_loss
+moco_loss
 =========
 
 .. currentmodule:: selfeeg.losses.losses
 
-.. autofunction:: Moco_loss
+.. autofunction:: moco_loss

@@ -1,12 +1,12 @@
 from .ssl import (
     BYOL,
-    Barlow_Twins,
+    BarlowTwins,
     EarlyStopping,
     MoCo,
     SimCLR,
     SimSiam,
-    SSL_Base,
+    SSLBase,
     VICReg,
-    evaluateLoss,
+    evaluate_loss,
     fine_tune,
 )

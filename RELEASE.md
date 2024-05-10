@@ -2,18 +2,24 @@
 
 **Functionality**
 
+- **overall**:
+  - all functions have been aligned to the `lower_case_with_undersocres` format.
+  - all classes have been aligned to the `CapitalizedWords` format.
 - **dataloading module**:
-    - EEGdataset can preload the entire dataset.
+    - EEGDataset can preload the entire dataset.
     - Fixed bugs
-      (GetEEGPartitionNumber returns float values with some input arguments)
+      (get_eeg_partition_number returns float values with some input arguments)
 - **models module**:
     - custom layers were moved in a new models.layer submodule
     - layer constraints now include MaxNorm, MinMaxNorm, UnitNorm, with axis
       selection like in Keras.
     - added Conv1d layer with norm constraint and causal padding
+- **ssl module**:
+    - EarlyStopping now accepts a custom device to use during best weights recording
 
 **Maintenance**
 
+* Documentation notebooks have been fixed to the new naming format
 * fixed typos on model module unittest.
 * Added new tests for novel functionalities.
 

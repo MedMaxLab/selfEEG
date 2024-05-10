@@ -19,17 +19,18 @@ from torch.utils.data import Dataset, Sampler
 from ..utils.utils import get_subarray_closest_sum
 
 __all__ = [
-    "GetEEGPartitionNumber",
-    "GetEEGSplitTable",
-    "GetEEGSplitTableKfold",
+    "get_eeg_partition_number",
+    "get_eeg_split_table",
+    "get_eeg_split_table_kfold",
     "check_split",
-    "getsplit",
+    "get_split",
     "EEGDataset",
-    "EEGsampler",
+    "EEGSampler",
 ]
 
 
-def GetEEGPartitionNumber(
+# get_eeg_partition_number
+def get_eeg_partition_number(
     EEGpath: str,
     freq: int or float = 250,
     window: int or float = 2,
@@ -46,7 +47,7 @@ def GetEEGPartitionNumber(
     verbose: bool = False,
 ) -> pd.DataFrame:
     """
-    ``GetEEGPartitionNumber`` finds the number of unique partitions from the EEG signals
+    ``get_eeg_partition_number`` finds the number of unique partitions from the EEG signals
     stored inside a given input directory. Some default parameters are designed to work with
     the 'BIDSAlign' library. For more info, see [bids]_.
     To further check how to use this function see the introductory notebook provided
@@ -168,7 +169,7 @@ def GetEEGPartitionNumber(
     ...         EEG = pickle.load(handle)
     ...     x = EEG['data']
     ...     return x
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2,
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=2,
     ...                                   overlap=0.3, load_function=loadEEG )
     >>> EEGlen.head()
 
@@ -326,7 +327,7 @@ def GetEEGPartitionNumber(
     return EEGlen
 
 
-def GetEEGSplitTable(
+def get_eeg_split_table(
     partition_table: pd.DataFrame,
     test_ratio: float = 0.2,
     val_ratio: float = 0.2,
@@ -347,7 +348,7 @@ def GetEEGSplitTable(
     seed: int = None,
 ) -> pd.DataFrame:
     """
-    ``GetEEGSplitTable`` creates a table defining the files to use for train,
+    ``get_eeg_split_table`` creates a table defining the files to use for train,
     validation and test of the models.
 
     Split is done in the following way:
@@ -371,7 +372,7 @@ def GetEEGSplitTable(
                which can be extracted from the file
 
         This table can be automatically created with a custom setting with the provided
-        function ``GetEEGPartitionNumber()`` .
+        function ``get_eeg_partition_number()`` .
     test_ratio: float, optional
         The percentage of data with respect to the whole number of samples (partitions)
         of the dataset to be included in the test set. Must be a number in [0,1].
@@ -514,9 +515,9 @@ def GetEEGSplitTable(
     ...         EEG = pickle.load(handle)
     ...     x = EEG['data']
     ...     return x
-    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2,
+    >>>  EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=2,
     ...                                    overlap=0.3, load_function=loadEEG )
-    >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 split
+    >>>  EEGsplit = dl.get_eeg_split_table(EEGlen, seed=1234) #default 60/20/20 split
     >>>  dl.check_split(EEGlen,EEGsplit) #will return 60/20/20
 
     """
@@ -587,7 +588,7 @@ def GetEEGSplitTable(
             for i, n in enumerate(N_classes):
                 classIdx = [index_i for index_i, label_i in enumerate(labels) if label_i == n]
                 subClassTable = partition_table.iloc[classIdx]
-                classSplit[i] = GetEEGSplitTable(
+                classSplit[i] = get_eeg_split_table(
                     partition_table=subClassTable,
                     test_ratio=test_ratio,
                     val_ratio=val_ratio,
@@ -847,7 +848,7 @@ def GetEEGSplitTable(
     return EEGsplit
 
 
-def GetEEGSplitTableKfold(
+def get_eeg_split_table_kfold(
     partition_table: pd.DataFrame,
     kfold: int = 10,
     test_ratio: float = 0.2,
@@ -866,7 +867,7 @@ def GetEEGSplitTableKfold(
     seed: int = None,
 ) -> pd.DataFrame:
     """
-    ``GetEEGSplitTableKfold`` creates a table with multiple splits for cross-validation.
+    ``get_eeg_split_table_kfold`` creates a table with multiple splits for cross-validation.
     Test split, if calculated, is kept equal in every CV split.
     Split is done in the following way:
 
@@ -874,7 +875,7 @@ def GetEEGSplitTableKfold(
         2. train set is split in Train and Validation sets
 
     Test split is optional and can be done with the same modalities described
-    in the ``GetEEGSplitTable`` function, i.e. by giving specific ID or by giving a split ratio.
+    in the ``get_eeg_split_table`` function, i.e. by giving specific ID or by giving a split ratio.
     CV's train/validation split cannot be done in this way, since this does not
     guarantee the preservation of the split ratio, which is the core of cross validation.
 
@@ -888,7 +889,7 @@ def GetEEGSplitTableKfold(
                which can be extracted from the file
 
         This table can be automatically created with a custom setting with the provided
-        function ``GetEEGPartitionNumber()``.
+        function ``get_eeg_partition_number()``.
     Kfold: int, optional
         The number of folds to extract. Must be a number higher or equal than 2.
 
@@ -1008,7 +1009,7 @@ def GetEEGSplitTableKfold(
 
     See Also
     --------
-    getsplit : extract a specific split from the output dataframe.
+    get_split : extract a specific split from the output dataframe.
 
     Warnings
     --------
@@ -1028,16 +1029,16 @@ def GetEEGSplitTableKfold(
     ...         EEG = pickle.load(handle)
     ...     x = EEG['data']
     ...     return x
-    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2,
+    >>>  EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=2,
     ...                                    overlap=0.3, load_function=loadEEG )
-    >>>  EEGsplit = dl.GetEEGSplitTableKfold(EEGlen, seed=1234) #default 60/20 train/test split
-    >>>  dl.check_split(EEGlen,dl.getsplit(EEGsplit,1)) # will return 0.72/0.08/0.2 ratios
+    >>>  EEGsplit = dl.get_eeg_split_table_kfold(EEGlen, seed=1234) #default 60/20 train/test split
+    >>>  dl.check_split(EEGlen,dl.get_split(EEGsplit,1)) # will return 0.72/0.08/0.2 ratios
 
     """
     if kfold < 2:
         raise ValueError(
             "kfold must be greater than or equal to 2. "
-            "If you don't need multiple splits use the GetEEGSplitTable function"
+            "If you don't need multiple splits use the get_eeg_split_table function"
         )
     kfold = int(kfold)
     if (test_ratio is None) and (test_data_id is None):
@@ -1050,7 +1051,7 @@ def GetEEGSplitTableKfold(
     # the result of this function call will be an initialization of the split table
     # if no data need to be excluded or placed in a test set, the split_set column will
     # simply have all zeros.
-    EEGsplit = GetEEGSplitTable(
+    EEGsplit = get_eeg_split_table(
         partition_table=partition_table,
         test_ratio=test_ratio,
         val_ratio=0.0,
@@ -1077,7 +1078,7 @@ def GetEEGSplitTableKfold(
     # included in the test or any validation set will be excluded and the val_ratio is scaled according to
     # the remaining portions of the data
     for i in range(kfold - 1):
-        EEGsplit.iloc[idx2assign, i + 2] = GetEEGSplitTable(
+        EEGsplit.iloc[idx2assign, i + 2] = get_eeg_split_table(
             partition_table=partition_table.iloc[idx2assign],
             val_ratio=1 / (kfold - i),
             val_split_mode=val_split_mode,
@@ -1121,28 +1122,28 @@ def GetEEGSplitTableKfold(
     return EEGsplit
 
 
-def getsplit(split_table: pd.DataFrame, split: int) -> pd.DataFrame:
+def get_split(split_table: pd.DataFrame, split: int) -> pd.DataFrame:
     """
-    ``getsplit`` extracts a split from the output of the ``GetEEGSplitTableKfold`` .
+    ``get_split`` extracts a split from the output of the ``get_eeg_split_table_kfold`` .
     It also changes column names in order to make them equals to the output DataFrame
-    of the ``GetEEGSplitTable`` function.
+    of the ``get_eeg_split_table`` function.
 
     Parameters
     ----------
     split_table: pd.DataFrame
         The table with all the Cross Validation Splits. It is the output of the
-        ``GetEEGSplitTableKfold`` function. Such table has a first column named "file_name",
+        ``get_eeg_split_table_kfold`` function. Such table has a first column named "file_name",
         where the EEG file names are placed, and other sets of columns named "split_k",
         where the k-th is placed.
     split: int
         An integer indicating the specific split to extract. Note that the output of the
-        ``GetEEGSplitTableKfold`` function has split starting from 1, i.e. "split_0" doesn't
+        ``get_eeg_split_table_kfold`` function has split starting from 1, i.e. "split_0" doesn't
         exist.
 
     Returns
     -------
     new_table: pd.DataFrame
-        A 2 columns DataFrame with same format as GetEEGSplitTable, i.e. first column with file
+        A 2 columns DataFrame with same format as get_eeg_split_table, i.e. first column with file
         names and second their split ID.
 
     Example
@@ -1156,10 +1157,10 @@ def getsplit(split_table: pd.DataFrame, split: int) -> pd.DataFrame:
     ...         EEG = pickle.load(handle)
     ...     x = EEG['data']
     ...     return x
-    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2,
+    >>>  EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=2,
     ...                                    overlap=0.3, load_function=loadEEG )
-    >>>  EEGsplit = dl.GetEEGSplitTableKfold(EEGlen) #default 60/20 train/test split
-    >>>  EEGsplit1 = dl.getsplit(EEGsplit,1) #will extract first CV split
+    >>>  EEGsplit = dl.get_eeg_split_table_kfold(EEGlen) #default 60/20 train/test split
+    >>>  EEGsplit1 = dl.get_split(EEGsplit,1) #will extract first CV split
     >>>  EEGsplit1.head()
 
     """
@@ -1183,11 +1184,11 @@ def check_split(
     Parameters
     ----------
     EEGlen: pd.DataFrame
-        The output of the ``GetEEGPartitionNumber`` function.
+        The output of the ``get_eeg_partition_number`` function.
     EEGsplit: pd.DataFrame
-        The output of the ``GetEEGSplitTable`` function. If you have used the
-        ``GetEEGSplitTableKfold`` function, make sure to get a specific split by
-        calling the ``getsplit`` function.
+        The output of the ``get_eeg_split_table`` function. If you have used the
+        ``get_eeg_split_table_kfold`` function, make sure to get a specific split by
+        calling the ``get_split`` function.
     Labels: ArrayLike, optional
         A list or 1d array like objects with the label of each file listed in the
         partition table. It is the same object given to the called split function.
@@ -1218,9 +1219,9 @@ def check_split(
     ...         EEG = pickle.load(handle)
     ...     x = EEG['data']
     ...     return x
-    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2,
+    >>>  EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=2,
     ...                                    overlap=0.3, load_function=loadEEG )
-    >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen) #default 60/20/20 ratio
+    >>>  EEGsplit = dl.get_eeg_split_table(EEGlen) #default 60/20/20 ratio
     >>>  ratios = dl.check_split(EEGlen, EEGsplit, return_ratio=True) # will return 0.6/0.2/0.2
     >>>  print(ratios['train_ratio'], ratios['val_ratio'], ratios['test_ratio'])
 
@@ -1324,13 +1325,13 @@ class EEGDataset(Dataset):
     ----------
     EEGlen : DataFrame
         DataFrame with the number of partition per EEG record.
-        Must be the output of the ``GetEEGPartitionNumber()`` function.
+        Must be the output of the ``get_eeg_partition_number()`` function.
     EEGsplit : DataFrame
         DataFrame with the train/test split info. Must be the output of the
-        ``GetEEGSplitTable()`` or a split extracted from the ``GetEEGSplitTableKfold`` function
-        output with the ``getsplit`` function.
+        ``get_eeg_split_table()`` or a split extracted from the ``get_eeg_split_table_kfold`` function
+        output with the ``get_split`` function.
     EEGpartition_spec : list
-        3-element list with the input gave to ``GetEEGPartitionNumber()`` in
+        3-element list with the input gave to ``get_eeg_partition_number()`` in
         [sampling_rate, window_length, overlap_percentage] format.
     mode: string, optional
         If the dataset is intended for train, test or validation.
@@ -1357,7 +1358,7 @@ class EEGDataset(Dataset):
         Note that the assumed number of outputs is based on the parameter label_on_load.
         So if the function will return only the EEG remember to set label_on_load on False.
         Note also that this function must load the EEGs in the same way as during
-        ``GetEEGPartitionNumber`` call.
+        ``get_eeg_partition_number`` call.
 
         Default = None
     transform_function : 'function', optional
@@ -1367,7 +1368,7 @@ class EEGDataset(Dataset):
         file to transform (e.g. the function will be called in this way:
         transform_function(EEG, optional_arguments) ).
         Note that this function must transform the EEGs in the same way as during
-        ``GetEEGPartitionNumber`` call.
+        ``get_eeg_partition_number`` call.
 
         Default = None
     label_function : 'function', optional
@@ -1436,9 +1437,9 @@ class EEGDataset(Dataset):
     ...         EEG = pickle.load(handle)
     ...     x = EEG['data']
     ...     return x
-    >>>  EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2,
+    >>>  EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=2,
     ...                                    overlap=0.3, load_function=loadEEG )
-    >>>  EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 ratio
+    >>>  EEGsplit = dl.get_eeg_split_table(EEGlen, seed=1234) #default 60/20/20 ratio
     >>>  TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,2,0.3],load_function=loadEEG)
     >>>  print(len(TrainSet))
     >>>  print(TrainSet.__getitem__(10).shape) # will return torch.Size([8, 256])
@@ -1774,9 +1775,9 @@ class EEGDataset(Dataset):
             return sample
 
 
-class EEGsampler(Sampler):
+class EEGSampler(Sampler):
     """
-    ``EEGsampler`` is a custom pytorch Sampler designed to efficiently reduce the file
+    ``EEGSampler`` is a custom pytorch Sampler designed to efficiently reduce the file
     loading operations when combined with the ``EEGDataset`` class. To do that, it exploits the
     parallelization properties of the pytorch Dataloader and the buffer of EEGDataset.
     To further check how the custom iterator is created see image reported below and check
@@ -1831,11 +1832,11 @@ class EEGsampler(Sampler):
     ...     x = EEG['data']
     ...     return x
     >>> random.seed(1234)
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=2,
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=2,
     ...                                   overlap=0.3, load_function=loadEEG )
-    >>> EEGsplit = dl.GetEEGSplitTable(EEGlen, seed=1234) #default 60/20/20 ratio
+    >>> EEGsplit = dl.get_eeg_split_table(EEGlen, seed=1234) #default 60/20/20 ratio
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,2,0.3],load_function=loadEEG)
-    >>> smplr = EEGsampler(TrainSet, 16, 8)
+    >>> smplr = EEGSampler(TrainSet, 16, 8)
     >>> print([i for i in a][:8]) # will return [599, 1661, 1354, 1942, 1907, 495, 489, 1013]
 
 

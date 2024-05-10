@@ -12,7 +12,9 @@ StaticSingleAug
    .. autosummary::
 
       ~StaticSingleAug.PerformAugmentation
+      ~StaticSingleAug.__call__
 
    .. rubric:: Methods Documentation
 
    .. automethod:: PerformAugmentation
+   .. automethod:: __call__

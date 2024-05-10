@@ -12,9 +12,11 @@ BYOL
    .. autosummary::
 
       ~BYOL.fit
+      ~BYOL.forward
       ~BYOL.test
 
    .. rubric:: Methods Documentation
 
    .. automethod:: fit
+   .. automethod:: forward
    .. automethod:: test

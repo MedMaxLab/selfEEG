@@ -1,6 +1,6 @@
-SimSiam_loss
+simsiam_loss
 ============
 
 .. currentmodule:: selfeeg.losses.losses
 
-.. autofunction:: SimSiam_loss
+.. autofunction:: simsiam_loss

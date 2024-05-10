@@ -1,8 +1,8 @@
-EEGsampler
+EEGSampler
 ==========
 
 .. currentmodule:: selfeeg.dataloading.load
 
-.. autoclass:: EEGsampler
+.. autoclass:: EEGSampler
    :show-inheritance:
    :noindex:

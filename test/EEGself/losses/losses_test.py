@@ -60,12 +60,12 @@ class TestLoss(unittest.TestCase):
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
 
-    def test_barlowLoss(self):
+    def test_barlow_loss(self):
         print("Testing Barlow Loss...", end="", flush=True)
         Barlow_args = {"z1": [self.x], "z2": [self.y, None], "lambda_coeff": [0.005, 0.05, 0.5, 1]}
         Barlow_args = self.makeGrid(Barlow_args)
         for i in Barlow_args:
-            loss = losses.Barlow_loss(**i)
+            loss = losses.barlow_loss(**i)
             self.assertTrue(torch.isnan(loss).sum() == 0)
 
         if self.device.type != "cpu":
@@ -76,17 +76,17 @@ class TestLoss(unittest.TestCase):
             }
             Barlow_args = self.makeGrid(Barlow_args)
             for i in Barlow_args:
-                loss = losses.Barlow_loss(**i)
+                loss = losses.barlow_loss(**i)
                 self.assertTrue(torch.isnan(loss).sum() == 0)
 
         x = torch.sin(torch.linspace(0, 8 * torch.pi, self.Feat)) + (
             torch.arange(self.N) / self.N
         ).unsqueeze(1)
-        loss = losses.Barlow_loss(x)
+        loss = losses.barlow_loss(x)
         self.assertTrue((loss - 76.4043) < 1e-4)
         print("   Barlow Loss OK: tested", len(Barlow_args), "combinations of input arguments")
 
-    def test_BYOLLoss(self):
+    def test_byol_loss(self):
         print("Testing BYOL Loss...", end="", flush=True)
         BYOL_args = {
             "z1": [self.x],
@@ -97,7 +97,7 @@ class TestLoss(unittest.TestCase):
         }
         BYOL_args = self.makeGrid(BYOL_args)
         for i in BYOL_args:
-            loss = losses.BYOL_loss(**i)
+            loss = losses.byol_loss(**i)
             self.assertTrue(torch.isnan(loss).sum() == 0)
 
         if self.device.type != "cpu":
@@ -110,7 +110,7 @@ class TestLoss(unittest.TestCase):
             }
             BYOL_args = self.makeGrid(BYOL_args)
             for i in BYOL_args:
-                loss = losses.BYOL_loss(**i)
+                loss = losses.byol_loss(**i)
                 self.assertTrue(torch.isnan(loss).sum() == 0)
 
         x = torch.sin(torch.linspace(0, 8 * torch.pi, self.Feat) + torch.pi / 6) + (
@@ -125,11 +125,11 @@ class TestLoss(unittest.TestCase):
         z = torch.sin(torch.linspace(0, 8 * torch.pi, self.Feat) + torch.pi / 5) + (
             torch.arange(self.N) / self.N
         ).unsqueeze(1)
-        loss = losses.BYOL_loss(x, y, p, z)
+        loss = losses.byol_loss(x, y, p, z)
         self.assertTrue((loss - 0.0534) < 1e-4)
         print("   BYOL Loss OK: tested", len(BYOL_args), "combinations of input arguments")
 
-    def test_SimCLRLoss(self):
+    def test_simclr_loss(self):
         print("Testing SimCLR Loss...", end="", flush=True)
         SimCLR_args = {
             "projections": [self.x],
@@ -138,7 +138,7 @@ class TestLoss(unittest.TestCase):
         }
         SimCLR_args = self.makeGrid(SimCLR_args)
         for i in SimCLR_args:
-            loss = losses.SimCLR_loss(**i)
+            loss = losses.simclr_loss(**i)
             self.assertTrue(torch.isnan(loss).sum() == 0)
 
         if self.device.type != "cpu":
@@ -149,17 +149,17 @@ class TestLoss(unittest.TestCase):
             }
             SimCLR_args = self.makeGrid(SimCLR_args)
             for i in SimCLR_args:
-                loss = losses.SimCLR_loss(**i)
+                loss = losses.simclr_loss(**i)
                 self.assertTrue(torch.isnan(loss).sum() == 0)
 
         x = torch.sin(torch.linspace(0, 8 * torch.pi, self.Feat) + torch.pi / 6) + (
             torch.arange(self.N) / self.N
         ).unsqueeze(1)
-        loss = losses.SimCLR_loss(x)
+        loss = losses.simclr_loss(x)
         self.assertTrue((loss - 9.04887) < 1e-4)
         print("   SimCLR Loss OK: tested", len(SimCLR_args), "combinations of input arguments")
 
-    def test_SimSiamLoss(self):
+    def test_simsiam_loss(self):
         print("Testing SimSiam Loss...", end="", flush=True)
         Siam_args = {
             "z1": [self.x],
@@ -170,7 +170,7 @@ class TestLoss(unittest.TestCase):
         }
         Siam_args = self.makeGrid(Siam_args)
         for i in Siam_args:
-            loss = losses.SimSiam_loss(**i)
+            loss = losses.simsiam_loss(**i)
             self.assertTrue(torch.isnan(loss).sum() == 0)
 
         if self.device.type != "cpu":
@@ -183,7 +183,7 @@ class TestLoss(unittest.TestCase):
             }
             Siam_args = self.makeGrid(Siam_args)
             for i in Siam_args:
-                loss = losses.SimSiam_loss(**i)
+                loss = losses.simsiam_loss(**i)
                 self.assertTrue(torch.isnan(loss).sum() == 0)
         x = torch.sin(torch.linspace(0, 8 * torch.pi, self.Feat) + torch.pi / 6) + (
             torch.arange(self.N) / self.N
@@ -197,11 +197,11 @@ class TestLoss(unittest.TestCase):
         z = torch.sin(torch.linspace(0, 8 * torch.pi, self.Feat) + torch.pi / 5) + (
             torch.arange(self.N) / self.N
         ).unsqueeze(1)
-        loss = losses.SimSiam_loss(x, y, p, z)
+        loss = losses.simsiam_loss(x, y, p, z)
         self.assertTrue((loss - (-0.9867)) < 1e-4)
         print("   SimSiam Loss OK: tested", len(Siam_args), "combinations of input arguments")
 
-    def test_VICRegLoss(self):
+    def test_vicreg_loss(self):
         print("Testing VICReg Loss...", end="", flush=True)
         Vicreg_args = {
             "z1": [self.x],
@@ -212,7 +212,7 @@ class TestLoss(unittest.TestCase):
         }
         Vicreg_args = self.makeGrid(Vicreg_args)
         for i in Vicreg_args:
-            loss = losses.VICReg_loss(**i)
+            loss = losses.vicreg_loss(**i)
             self.assertTrue(torch.isnan(loss).sum() == 0)
 
         if self.device.type != "cpu":
@@ -225,17 +225,17 @@ class TestLoss(unittest.TestCase):
             }
             Vicreg_args = self.makeGrid(Vicreg_args)
             for i in Vicreg_args:
-                loss = losses.VICReg_loss(**i)
+                loss = losses.vicreg_loss(**i)
                 self.assertTrue(torch.isnan(loss).sum() == 0)
 
         x = torch.sin(torch.linspace(0, 8 * torch.pi, self.Feat)) + (
             torch.arange(self.N) / self.N
         ).unsqueeze(1)
-        loss = losses.VICReg_loss(x)
+        loss = losses.vicreg_loss(x)
         self.assertTrue((loss - 21.4443) < 1e-4)
         print("   VICReg Loss OK: tested", len(Vicreg_args), "combinations of input arguments")
 
-    def test_MoCoLoss(self):
+    def test_moco_loss(self):
         print("Testing MoCo Loss...", end="", flush=True)
         Moco_args = {
             "q": [self.x],
@@ -246,7 +246,7 @@ class TestLoss(unittest.TestCase):
         }
         Moco_args = self.makeGrid(Moco_args)
         for i in Moco_args:
-            loss = losses.Moco_loss(**i)
+            loss = losses.moco_loss(**i)
             self.assertTrue(torch.isnan(loss).sum() == 0)
 
         if self.device.type != "cpu":
@@ -259,7 +259,7 @@ class TestLoss(unittest.TestCase):
             }
             Moco_args = self.makeGrid(Moco_args)
             for i in Moco_args:
-                loss = losses.Moco_loss(**i)
+                loss = losses.moco_loss(**i)
                 self.assertTrue(torch.isnan(loss).sum() == 0)
 
         x = torch.sin(torch.linspace(0, 8 * torch.pi, self.Feat) + torch.pi / 6) + (
@@ -271,9 +271,9 @@ class TestLoss(unittest.TestCase):
         u = torch.sin(torch.linspace(0, 8 * torch.pi, 1024) + torch.pi / 3) + (
             torch.arange(self.Feat) / self.Feat
         ).unsqueeze(1)
-        loss = losses.Moco_loss(x, y, u)
+        loss = losses.moco_loss(x, y, u)
         self.assertTrue((loss - 108.6667) < 1e-4)
-        loss = losses.Moco_loss(x, y)
+        loss = losses.moco_loss(x, y)
         self.assertTrue((loss - 0.4952) < 1e-4)
         print("   MoCo Loss OK: tested", len(Moco_args), "combinations of input arguments")
 

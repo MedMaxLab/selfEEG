@@ -12,9 +12,11 @@ SimSiam
    .. autosummary::
 
       ~SimSiam.fit
+      ~SimSiam.forward
       ~SimSiam.test
 
    .. rubric:: Methods Documentation
 
    .. automethod:: fit
+   .. automethod:: forward
    .. automethod:: test

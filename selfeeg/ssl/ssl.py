@@ -13,24 +13,24 @@ import torch
 import torch.nn as nn
 import tqdm
 
-from ..dataloading import EEGsampler
+from ..dataloading import EEGSampler
 from ..losses import losses as Loss
 
 __all__ = [
-    "Barlow_Twins",
+    "BarlowTwins",
     "BYOL",
     "EarlyStopping",
-    "evaluateLoss",
+    "evaluate_loss",
     "fine_tune",
     "MoCo",
     "SimCLR",
     "SimSiam",
-    "SSL_Base",
+    "SSLBase",
     "VICReg",
 ]
 
 
-def Default_augmentation(x):
+def _default_augmentation(x):
     """
     simple default augmentation used when no data augmenter is given in SSL
     fit methods. It's just a programming choice to avoid putting the augmenter
@@ -50,15 +50,15 @@ def Default_augmentation(x):
     return x_noise
 
 
-def evaluateLoss(
+def evaluate_loss(
     loss_fun: "function",
     arguments: torch.Tensor or list[torch.Tensor],
     loss_arg: Union[list, dict] = None,
 ) -> "loss_fun output":
     """
-    ``evaluateLoss`` evaluate a custom loss function using `arguments`
+    ``evaluate_loss`` evaluate a custom loss function using `arguments`
     as required arguments and loss_arg as optional ones. It is simply
-    the ``SSL_Base's evaluate_loss`` method exported as a function.
+    the ``SSLBase's evaluate_loss`` method exported as a function.
 
     Parameters
     ----------
@@ -66,7 +66,8 @@ def evaluateLoss(
         The custom loss function. It can be any loss function which
         accepts as input:
 
-            1. the model's prediction (or predictions) and the true labels as required argument
+            1. the model's prediction (or predictions) and the true labels as
+               required argument
             2. any element included in loss_args as optional arguments.
 
         Note that for the ``fine_tune`` method the number of required
@@ -92,7 +93,7 @@ def evaluateLoss(
     >>> torch.manual_seed(1234)
     >>> ytrue = torch.randn(64, 1)
     >>> yhat  = torch.randn(64, 1)
-    >>> loss = ssl.evaluateLoss(torch.nn.functional.mse_loss, [yhat,ytrue])
+    >>> loss = ssl.evaluate_loss(torch.nn.functional.mse_loss, [yhat,ytrue])
     >>> print(loss) # will print 1.9893
 
     """
@@ -203,7 +204,7 @@ def fine_tune(
         be converted in a torch.device instance. If not given, 'cpu' device
         will be used.
 
-        Device = None
+        Default = None
     return_loss_info: bool, optional
         Whether to return the calculated training validation losses at
         each epoch.
@@ -236,8 +237,8 @@ def fine_tune(
     >>> def loss_fineTuning(yhat, ytrue):
     ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> random.seed(1234)
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
-    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> ratios = dl.check_split(EEGlen,EEGsplit, return_ratio=True)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit, [128,2,0.3], 'train', True, loadEEG,
     ...                              optional_load_fun_args=[True], label_on_load=True)
@@ -327,7 +328,7 @@ def fine_tune(
                     Ytrue = Ytrue.to(device=device)
 
                 Yhat = model(X)
-                train_loss = evaluateLoss(loss_func, [Yhat, Ytrue], loss_args)
+                train_loss = evaluate_loss(loss_func, [Yhat, Ytrue], loss_args)
 
                 train_loss.backward()
                 optimizer.step()
@@ -359,7 +360,7 @@ def fine_tune(
                             Ytrue = Ytrue.to(device=device)
 
                         Yhat = model(X)
-                        val_loss = evaluateLoss(loss_func, [Yhat, Ytrue], loss_args)
+                        val_loss = evaluate_loss(loss_func, [Yhat, Ytrue], loss_args)
                         val_loss_tot += val_loss.item()
                         if verbose:
                             pbar.set_description(
@@ -450,7 +451,7 @@ class EarlyStopping:
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used as default.
 
-            Device = None
+        Default = None
 
     Note
     ----
@@ -471,8 +472,8 @@ class EarlyStopping:
     ...     return (x, y) if return_label else x
     >>> def loss_fineTuning(yhat, ytrue):
     ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
-    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
+    >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> ratios = dl.check_split(EEGlen,EEGsplit, return_ratio=True)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit, [128,2,0.3], 'train', True, loadEEG,
     ...                              optional_load_fun_args=[True], label_on_load=True)
@@ -603,10 +604,10 @@ class EarlyStopping:
         # 1- not move the original model to another device as this breaks training.
         # 2- find a way to copy the model to another device without creating
         #    a duplicate on the GPU
-        
+
         # Original command: model is not moved but a copy is created on the gpu
         # before being moved to another device (if set)
-        #self.best_model = copy.deepcopy(model).to(device=self.device).state_dict()
+        # self.best_model = copy.deepcopy(model).to(device=self.device).state_dict()
 
         # new command: model is not moved and the OrderedDict is created directly
         # with list comprehension
@@ -625,7 +626,7 @@ class EarlyStopping:
 
         Warnings
         --------
-        Before restoring its best weights, the model is moved to the device set 
+        Before restoring its best weights, the model is moved to the device set
         during EarlyStopping's initialization. Remember to move it again to the
         desired device if EarlyStop's one is not the same.
 
@@ -645,7 +646,7 @@ class EarlyStopping:
         self.earlystop = False
 
 
-class SSL_Base(nn.Module):
+class SSLBase(nn.Module):
     """
     Baseline Self-Supervised Learning nn.Module. It is used as parent class
     by the other implemented SSL methods.
@@ -661,10 +662,10 @@ class SSL_Base(nn.Module):
     >>> import selfeeg
     >>> import torch
     >>> enc = selfeeg.models.ShallowNetEncoder(8)
-    >>> base = selfeeg.ssl.SSL_Base(enc)
+    >>> base = selfeeg.ssl.SSLBase(enc)
     >>> torch.manual_seed(1234)
     >>> a = torch.randn(64,32)
-    >>> print(base.evaluate_loss(losses.SimCLR_loss, [a])) # should return 9.4143
+    >>> print(base.evaluate_loss(losses.simclr_loss, [a])) # should return 9.4143
     >>> enc2 = base.get_encoder()
     >>> def check_models(model1, model2):
     ...     for p1, p2 in zip(model1.parameters(), model2.parameters()):
@@ -679,7 +680,7 @@ class SSL_Base(nn.Module):
     """
 
     def __init__(self, encoder: nn.Module):
-        super(SSL_Base, self).__init__()
+        super(SSLBase, self).__init__()
         self.encoder = encoder
 
     def forward(self, x):
@@ -785,7 +786,7 @@ class SSL_Base(nn.Module):
                 sslName = "_SimSiam"
             elif isinstance(self, VICReg):
                 sslName = "_VICreg"
-            elif isinstance(self, Barlow_Twins):
+            elif isinstance(self, BarlowTwins):
                 sslName = "_BarTw"
             elif isinstance(self, BYOL):
                 sslName = "_BYOL"
@@ -805,7 +806,7 @@ class SSL_Base(nn.Module):
         torch.save(self.encoder.state_dict(), save_path)
 
 
-class SimCLR(SSL_Base):
+class SimCLR(SSLBase):
     """
     Implementation of the SimCLR SSL method. To check
     how SimCLR works, read the following paper [NTXent1]_ .
@@ -859,9 +860,9 @@ class SimCLR(SSL_Base):
     >>> def loss_fineTuning(yhat, ytrue):
     ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1,
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=1,
     ...                              overlap=0.3, load_function=loadEEG)
-    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> enc = selfeeg.models.ShallowNetEncoder(8)
@@ -962,7 +963,7 @@ class SimCLR(SSL_Base):
             accepts as input only the model's predictions as required arguments
             and loss_args as optional arguments.
             If not given SimCLR loss will be automatically used. Check the input
-            arguments of ``SimCLR_loss`` to check how to design custom loss functions
+            arguments of ``simclr_loss`` to check how to design custom loss functions
             to give to this method
 
             Default = None
@@ -995,7 +996,7 @@ class SimCLR(SSL_Base):
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
 
-            Device = None
+            Default = None
         cat_augmentations: bool, optional
             Whether to calculate the loss on the cat version of the two
             projection's or not. It might affect some statistical layers.
@@ -1050,9 +1051,9 @@ class SimCLR(SSL_Base):
             optimizer = torch.optim.Adam(self.parameters())
         if augmenter is None:
             print("augmenter not given. Using a basic one with with flip + random noise")
-            augmenter = Default_augmentation
+            augmenter = _default_augmentation
         if loss_func is None:
-            loss_func = Loss.SimCLR_loss
+            loss_func = Loss.simclr_loss
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
             raise ValueError(
                 "loss_args must be a list or a dict with all"
@@ -1079,7 +1080,7 @@ class SimCLR(SSL_Base):
         # calculate some variables for training
         loss_info = {i: [None, None] for i in range(epochs)}
         N_train = len(train_dataloader)
-        if isinstance(train_dataloader.sampler, EEGsampler):
+        if isinstance(train_dataloader.sampler, EEGSampler):
             if train_dataloader.sampler.Keep_only_ratio != 1:
                 if train_dataloader.drop_last:
                     N_train = math.floor(
@@ -1093,7 +1094,7 @@ class SimCLR(SSL_Base):
                     )
 
         N_val = 0 if validation_dataloader is None else len(validation_dataloader)
-        if perform_validation and isinstance(validation_dataloader.sampler, EEGsampler):
+        if perform_validation and isinstance(validation_dataloader.sampler, EEGSampler):
             if validation_dataloader.sampler.Keep_only_ratio != 1:
                 if validation_dataloader.drop_last:
                     N_val = math.floor(
@@ -1254,9 +1255,9 @@ class SimCLR(SSL_Base):
             )
         if augmenter == None:
             print("augmenter not given. Using a basic one with with flip + random noise")
-            augmenter = Default_augmentation
+            augmenter = _default_augmentation
         if loss_func == None:
-            loss_func = Loss.SimCLR_loss
+            loss_func = Loss.simclr_loss
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
             raise ValueError(
                 "loss_args must be a list or a dict with all optional"
@@ -1265,7 +1266,7 @@ class SimCLR(SSL_Base):
 
         self.eval()
         N_test = len(test_dataloader)
-        if isinstance(test_dataloader.sampler, EEGsampler):
+        if isinstance(test_dataloader.sampler, EEGSampler):
             if test_dataloader.sampler.Keep_only_ratio != 1:
                 if test_dataloader.drop_last:
                     N_test = math.floor(
@@ -1311,7 +1312,7 @@ class SimCLR(SSL_Base):
         return test_loss_tot
 
 
-class SimSiam(SSL_Base):
+class SimSiam(SSLBase):
     """
     Implementation of the SimSiam SSL method. To check
     how SimSIam works, read the following paper [simsiam1]_ .
@@ -1362,9 +1363,9 @@ class SimSiam(SSL_Base):
     >>> def loss_fineTuning(yhat, ytrue):
     >>>     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1,
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=1,
     ...                              overlap=0.3, load_function=loadEEG)
-    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> enc = selfeeg.models.ShallowNetEncoder(8)
@@ -1479,7 +1480,7 @@ class SimSiam(SSL_Base):
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions (4 torch Tensor) as
             required arguments and loss_args as optional arguments. Check the input
-            arguments of ``SimSiam_loss`` to check how to design custom loss functions
+            arguments of ``simsiam_loss`` to check how to design custom loss functions
             to give to this method.
 
             Default = None
@@ -1512,7 +1513,7 @@ class SimSiam(SSL_Base):
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
 
-            Device = None
+            Default = None
         return_loss_info: bool, optional
             Whether to return the calculated training validation losses at
             each epoch.
@@ -1561,9 +1562,9 @@ class SimSiam(SSL_Base):
             optimizer = torch.optim.Adam(self.parameters())
         if augmenter == None:
             print("augmenter not given. Using a basic one with with flip + random noise")
-            augmenter = Default_augmentation
+            augmenter = _default_augmentation
         if loss_func == None:
-            loss_func = Loss.SimSiam_loss
+            loss_func = Loss.simsiam_loss
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
             raise ValueError(
                 "loss_args must be a list or a dict with all"
@@ -1589,7 +1590,7 @@ class SimSiam(SSL_Base):
 
         loss_info = {i: [None, None] for i in range(epochs)}
         N_train = len(train_dataloader)
-        if isinstance(train_dataloader.sampler, EEGsampler):
+        if isinstance(train_dataloader.sampler, EEGSampler):
             if train_dataloader.sampler.Keep_only_ratio != 1:
                 if train_dataloader.drop_last:
                     N_train = math.floor(
@@ -1603,7 +1604,7 @@ class SimSiam(SSL_Base):
                     )
 
         N_val = 0 if validation_dataloader is None else len(validation_dataloader)
-        if perform_validation and isinstance(validation_dataloader.sampler, EEGsampler):
+        if perform_validation and isinstance(validation_dataloader.sampler, EEGSampler):
             if validation_dataloader.sampler.Keep_only_ratio != 1:
                 if validation_dataloader.drop_last:
                     N_val = math.floor(
@@ -1769,9 +1770,9 @@ class SimSiam(SSL_Base):
             )
         if augmenter == None:
             print("augmenter not given. Using a basic one with with flip + random noise")
-            augmenter = Default_augmentation
+            augmenter = _default_augmentation
         if loss_func == None:
-            loss_func = Loss.SimSiam_loss
+            loss_func = Loss.simsiam_loss
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
             raise ValueError(
                 "loss_args must be a list or a dict with all "
@@ -1779,7 +1780,7 @@ class SimSiam(SSL_Base):
             )
 
         N_test = len(test_dataloader)
-        if isinstance(test_dataloader.sampler, EEGsampler):
+        if isinstance(test_dataloader.sampler, EEGSampler):
             if test_dataloader.sampler.Keep_only_ratio != 1:
                 if test_dataloader.drop_last:
                     N_test = math.floor(
@@ -1830,7 +1831,7 @@ class SimSiam(SSL_Base):
         return test_loss_tot
 
 
-class MoCo(SSL_Base):
+class MoCo(SSLBase):
     """
     Implementation of the MoCo SSL method. To check
     how MoCo works, read the following paper [moco21]_ [moco31]_ .
@@ -1906,9 +1907,9 @@ class MoCo(SSL_Base):
     >>> def loss_fineTuning(yhat, ytrue):
     ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1,
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=1,
     ...                              overlap=0.3, load_function=loadEEG)
-    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> Loader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> enc = selfeeg.models.ShallowNetEncoder(8)
@@ -2118,7 +2119,7 @@ class MoCo(SSL_Base):
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions (2 torch Tensor) as
             required arguments and loss_args as optional arguments. Check the input
-            arguments of ``Moco_loss`` to check how to design custom loss functions
+            arguments of ``moco_loss`` to check how to design custom loss functions
             to give to this method.
 
             Default = None
@@ -2156,7 +2157,7 @@ class MoCo(SSL_Base):
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
 
-            Device = None
+            Default = None
         return_loss_info: bool, optional
             Whether to return the calculated training validation losses at
             each epoch.
@@ -2208,9 +2209,9 @@ class MoCo(SSL_Base):
                 optimizer = torch.optim.Adam(self.parameters(), 0.001)
         if augmenter == None:
             print("augmenter not given. Using a basic one with with flip + random noise")
-            augmenter = Default_augmentation
+            augmenter = _default_augmentation
         if loss_func == None:
-            loss_func = Loss.Moco_loss
+            loss_func = Loss.moco_loss
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
             raise ValueError(
                 "loss_args must be a list or a dict with all"
@@ -2236,7 +2237,7 @@ class MoCo(SSL_Base):
 
         loss_info = {i: [None, None] for i in range(epochs)}
         N_train = len(train_dataloader)
-        if isinstance(train_dataloader.sampler, EEGsampler):
+        if isinstance(train_dataloader.sampler, EEGSampler):
             if train_dataloader.sampler.Keep_only_ratio != 1:
                 if train_dataloader.drop_last:
                     N_train = math.floor(
@@ -2250,7 +2251,7 @@ class MoCo(SSL_Base):
                     )
 
         N_val = 0 if validation_dataloader is None else len(validation_dataloader)
-        if perform_validation and isinstance(validation_dataloader.sampler, EEGsampler):
+        if perform_validation and isinstance(validation_dataloader.sampler, EEGSampler):
             if validation_dataloader.sampler.Keep_only_ratio != 1:
                 if validation_dataloader.drop_last:
                     N_val = math.floor(
@@ -2447,9 +2448,9 @@ class MoCo(SSL_Base):
             )
         if augmenter == None:
             print("augmenter not given. Using a basic one with with flip + random noise")
-            augmenter = Default_augmentation
+            augmenter = _default_augmentation
         if loss_func == None:
-            loss_func = Loss.Moco_loss
+            loss_func = Loss.moco_loss
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
             raise ValueError(
                 "loss_args must be a list or a dict with all"
@@ -2457,7 +2458,7 @@ class MoCo(SSL_Base):
             )
 
         N_test = len(test_dataloader)
-        if isinstance(test_dataloader.sampler, EEGsampler):
+        if isinstance(test_dataloader.sampler, EEGSampler):
             if test_dataloader.sampler.Keep_only_ratio != 1:
                 if test_dataloader.drop_last:
                     N_test = math.floor(
@@ -2520,7 +2521,7 @@ class MoCo(SSL_Base):
         return test_loss_tot
 
 
-class BYOL(SSL_Base):
+class BYOL(SSLBase):
     """
     Implementation of the BYOL SSL method. To check
     how BYOL works, read the following paper [BYOL1]_ .
@@ -2577,9 +2578,9 @@ class BYOL(SSL_Base):
     ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> # usual pipeline to construct the dataloader
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1,
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=1,
     ...                              overlap=0.3, load_function=loadEEG)
-    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> enc = selfeeg.models.ShallowNetEncoder(8)
@@ -2724,7 +2725,7 @@ class BYOL(SSL_Base):
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions (4 torch Tensor) as
             required arguments and loss_args as optional arguments. Check the input
-            arguments of ``BYOL_loss`` to check how to design custom loss functions
+            arguments of ``byol_loss`` to check how to design custom loss functions
             to give to this method.
 
             Default = None
@@ -2757,7 +2758,7 @@ class BYOL(SSL_Base):
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
 
-            Device = None
+            Default = None
         return_loss_info: bool, optional
             Whether to return the calculated training validation losses at
             each epoch.
@@ -2806,9 +2807,9 @@ class BYOL(SSL_Base):
             optimizer = torch.optim.Adam(self.parameters())
         if augmenter == None:
             print("augmenter not given. Using a basic one with with flip + random noise")
-            augmenter = Default_augmentation
+            augmenter = _default_augmentation
         if loss_func == None:
-            loss_func = Loss.BYOL_loss
+            loss_func = Loss.byol_loss
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
             raise ValueError(
                 "loss_args must be a list or a dict with all"
@@ -2834,7 +2835,7 @@ class BYOL(SSL_Base):
 
         loss_info = {i: [None, None] for i in range(epochs)}
         N_train = len(train_dataloader)
-        if isinstance(train_dataloader.sampler, EEGsampler):
+        if isinstance(train_dataloader.sampler, EEGSampler):
             if train_dataloader.sampler.Keep_only_ratio != 1:
                 if train_dataloader.drop_last:
                     N_train = math.floor(
@@ -2848,7 +2849,7 @@ class BYOL(SSL_Base):
                     )
 
         N_val = 0 if validation_dataloader is None else len(validation_dataloader)
-        if perform_validation and isinstance(validation_dataloader.sampler, EEGsampler):
+        if perform_validation and isinstance(validation_dataloader.sampler, EEGSampler):
             if validation_dataloader.sampler.Keep_only_ratio != 1:
                 if validation_dataloader.drop_last:
                     N_val = math.floor(
@@ -2912,7 +2913,7 @@ class BYOL(SSL_Base):
                             f"train_loss={train_loss_tot/(batch_idx+1):.5f}, val_loss={val_loss_tot:.5f}"
                         )
                         pbar.update()
-                
+
                 train_loss_tot /= batch_idx + 1
                 if lr_scheduler != None:
                     lr_scheduler.step()
@@ -3016,16 +3017,16 @@ class BYOL(SSL_Base):
             )
         if augmenter == None:
             print("augmenter not given. Using a basic one with with flip + random noise")
-            augmenter = Default_augmentation
+            augmenter = _default_augmentation
         if loss_func == None:
-            loss_func = Loss.BYOL_loss
+            loss_func = Loss.byol_loss
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
             raise ValueError(
                 "loss_args must be a list or a dict with all optional arguments of the loss function"
             )
 
         N_test = len(test_dataloader)
-        if isinstance(test_dataloader.sampler, EEGsampler):
+        if isinstance(test_dataloader.sampler, EEGSampler):
             if test_dataloader.sampler.Keep_only_ratio != 1:
                 if test_dataloader.drop_last:
                     N_test = math.floor(
@@ -3077,7 +3078,7 @@ class BYOL(SSL_Base):
         return test_loss_tot
 
 
-class Barlow_Twins(SimCLR):
+class BarlowTwins(SimCLR):
     """
     Implementation of the Barlow twins SSL method. To check
     how Barlow Twins works, read the following paper [barlow1]_ .
@@ -3125,13 +3126,13 @@ class Barlow_Twins(SimCLR):
     ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> # usual pipeline to construct the dataloader
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1,
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=1,
     ...                              overlap=0.3, load_function=loadEEG)
-    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> enc = selfeeg.models.ShallowNetEncoder(8)
-    >>> barl = selfeeg.ssl.Barlow_Twins(enc, [16,32,32])
+    >>> barl = selfeeg.ssl.BarlowTwins(enc, [16,32,32])
     >>> print( barl(torch.randn(32,8,128)).shape) # should return [32,32])
     >>> loss_train = barl.fit(TrainLoader, 1, return_loss_info=True)
     >>> print(loss_train[0][0]) # will return 3.8910
@@ -3145,7 +3146,7 @@ class Barlow_Twins(SimCLR):
         encoder: nn.Module,
         projection_head: Union[list[int], nn.Module],
     ):
-        super(Barlow_Twins, self).__init__(encoder, projection_head)
+        super(BarlowTwins, self).__init__(encoder, projection_head)
 
     def fit(
         self,
@@ -3198,7 +3199,7 @@ class Barlow_Twins(SimCLR):
             accepts as input only the model's predictions as required arguments
             and loss_args as optional arguments.
             If not given Barlow's loss will be automatically used. Check the input
-            arguments of ``Barlow_loss`` to check how to design custom loss functions
+            arguments of ``barlow_loss`` to check how to design custom loss functions
             to give to this method.
 
             Default = None
@@ -3231,7 +3232,7 @@ class Barlow_Twins(SimCLR):
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
 
-            Device = None
+            Default = None
         cat_augmentations: bool, optional
             Whether to calculate the loss on the cat version of the two
             projection's or not. It might affect some statistical layers.
@@ -3259,7 +3260,7 @@ class Barlow_Twins(SimCLR):
         """
 
         if loss_func == None:
-            loss_func = Loss.Barlow_loss
+            loss_func = Loss.barlow_loss
             loss_args = [None]
         loss_info = super().fit(
             train_dataloader,
@@ -3289,7 +3290,7 @@ class Barlow_Twins(SimCLR):
         device: str = None,
     ):
         if loss_func == None:
-            loss_func = Loss.Barlow_loss
+            loss_func = Loss.barlow_loss
             loss_args = [None]
         loss_info = super().test(test_dataloader, augmenter, loss_func, loss_args, verbose, device)
         return loss_info
@@ -3345,9 +3346,9 @@ class VICReg(SimCLR):
     ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> torch.manual_seed(1234)
     >>> # usual pipeline to construct the dataloader
-    >>> EEGlen = dl.GetEEGPartitionNumber('Simulated_EEG',freq=128, window=1,
+    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',freq=128, window=1,
     ...                              overlap=0.3, load_function=loadEEG)
-    >>> EEGsplit = dl.GetEEGSplitTable (EEGlen, seed=1234)
+    >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit,[128,1,0.3],'train',False,loadEEG)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> enc = selfeeg.models.ShallowNetEncoder(8)
@@ -3418,7 +3419,7 @@ class VICReg(SimCLR):
             accepts as input only the model's predictions as required arguments
             and loss_args as optional arguments.
             If not given VICReg loss will be automatically used. Check the input
-            arguments of ``VICReg_loss`` to check how to design custom loss functions
+            arguments of ``vicreg_loss`` to check how to design custom loss functions
             to give to this method
 
             Default = None
@@ -3451,7 +3452,7 @@ class VICReg(SimCLR):
             be converted in a torch.device instance. If not given, 'cpu' device
             will be used.
 
-            Device = None
+            Default = None
         cat_augmentations: bool, optional
             Whether to calculate the loss on the cat version of the two
             projection's or not. It might affect some statistical layers.
@@ -3479,7 +3480,7 @@ class VICReg(SimCLR):
         """
 
         if loss_func == None:
-            loss_func = Loss.VICReg_loss
+            loss_func = Loss.vicreg_loss
             loss_args = []
         loss_info = super().fit(
             train_dataloader,
@@ -3510,7 +3511,7 @@ class VICReg(SimCLR):
     ):
 
         if loss_func == None:
-            loss_func = Loss.VICReg_loss
+            loss_func = Loss.vicreg_loss
             loss_args = []
         loss_info = super().test(test_dataloader, augmenter, loss_func, loss_args, verbose, device)
         return loss_info

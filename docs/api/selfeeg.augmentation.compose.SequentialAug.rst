@@ -12,7 +12,9 @@ SequentialAug
    .. autosummary::
 
       ~SequentialAug.PerformAugmentation
+      ~SequentialAug.__call__
 
    .. rubric:: Methods Documentation
 
    .. automethod:: PerformAugmentation
+   .. automethod:: __call__
