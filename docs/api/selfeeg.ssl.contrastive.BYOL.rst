@@ -1,7 +1,7 @@
 BYOL
 ====
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.contrastive
 
 .. autoclass:: BYOL
    :show-inheritance:

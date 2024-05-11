@@ -1,6 +1,6 @@
 fine_tune
 =========
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.base
 
 .. autofunction:: fine_tune

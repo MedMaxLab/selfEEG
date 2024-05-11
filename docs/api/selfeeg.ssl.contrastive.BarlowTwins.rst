@@ -1,9 +1,9 @@
-VICReg
-======
+BarlowTwins
+===========
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.contrastive
 
-.. autoclass:: VICReg
+.. autoclass:: BarlowTwins
    :show-inheritance:
    :noindex:
 
@@ -11,8 +11,8 @@ VICReg
 
    .. autosummary::
 
-      ~VICReg.fit
-      ~VICReg.test
+      ~BarlowTwins.fit
+      ~BarlowTwins.test
 
    .. rubric:: Methods Documentation
 

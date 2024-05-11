@@ -1,9 +1,9 @@
-BarlowTwins
-===========
+SimSiam
+=======
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.contrastive
 
-.. autoclass:: BarlowTwins
+.. autoclass:: SimSiam
    :show-inheritance:
    :noindex:
 
@@ -11,10 +11,12 @@ BarlowTwins
 
    .. autosummary::
 
-      ~BarlowTwins.fit
-      ~BarlowTwins.test
+      ~SimSiam.fit
+      ~SimSiam.forward
+      ~SimSiam.test
 
    .. rubric:: Methods Documentation
 
    .. automethod:: fit
+   .. automethod:: forward
    .. automethod:: test

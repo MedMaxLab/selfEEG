@@ -1,7 +1,7 @@
 SimCLR
 ======
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.contrastive
 
 .. autoclass:: SimCLR
    :show-inheritance:

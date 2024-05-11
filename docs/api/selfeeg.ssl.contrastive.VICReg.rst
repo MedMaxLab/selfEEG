@@ -1,9 +1,9 @@
-SimSiam
-=======
+VICReg
+======
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.contrastive
 
-.. autoclass:: SimSiam
+.. autoclass:: VICReg
    :show-inheritance:
    :noindex:
 
@@ -11,12 +11,10 @@ SimSiam
 
    .. autosummary::
 
-      ~SimSiam.fit
-      ~SimSiam.forward
-      ~SimSiam.test
+      ~VICReg.fit
+      ~VICReg.test
 
    .. rubric:: Methods Documentation
 
    .. automethod:: fit
-   .. automethod:: forward
    .. automethod:: test

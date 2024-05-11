@@ -1,7 +1,7 @@
 SSLBase
 =======
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.base
 
 .. autoclass:: SSLBase
    :show-inheritance:

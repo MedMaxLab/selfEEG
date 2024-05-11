@@ -1,6 +1,6 @@
 evaluate_loss
 =============
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.base
 
 .. autofunction:: evaluate_loss

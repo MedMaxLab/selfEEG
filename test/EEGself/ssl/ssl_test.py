@@ -40,11 +40,17 @@ class TestSSL(unittest.TestCase):
     def setUpClass(cls):
         warnings.filterwarnings("ignore", message="Using padding='same'", category=UserWarning)
         cls.seed = 1234
-        cls.device = (
-            torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
-        )
+
+        if torch.backends.mps.is_available():
+            cls.device = torch.device("mps")
+        else:
+            cls.device = torch.device("cpu")
+
         if cls.device.type == "cpu":
-            cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+            if torch.cuda.is_available():
+                cls.device = torch.device("cuda")
+            else:
+                cls.device = torch.device("cpu")
 
         if cls.device.type == "mps":
             try:
@@ -349,6 +355,7 @@ class TestSSL(unittest.TestCase):
         SelfMdl = selfeeg.ssl.BarlowTwins(encoder=self.enc, projection_head=self.head_size).to(
             device=self.device
         )
+
         loss_train = SelfMdl.fit(
             train_dataloader=self.trainloader,
             augmenter=self.Augmenter,

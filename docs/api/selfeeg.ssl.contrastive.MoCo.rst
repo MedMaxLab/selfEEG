@@ -1,7 +1,7 @@
 MoCo
 ====
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.contrastive
 
 .. autoclass:: MoCo
    :show-inheritance:

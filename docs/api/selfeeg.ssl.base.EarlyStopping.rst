@@ -1,7 +1,7 @@
 EarlyStopping
 =============
 
-.. currentmodule:: selfeeg.ssl.ssl
+.. currentmodule:: selfeeg.ssl.base
 
 .. autoclass:: EarlyStopping
    :show-inheritance:
