@@ -1,5 +1,5 @@
 selfeeg.models
-==============
+****************
 
 This module collects various Deep Learning models and custom layers.
 It is divided in two submodules:
@@ -8,19 +8,51 @@ It is divided in two submodules:
 - **zoo**: a collection of deep learning models proposed for EEG applications.
 
 models.layers module
---------------------
+======================
 
-.. automodapi:: selfeeg.models.layers
-  :no-inheritance-diagram:
-  :no-main-docstr:
-  :noindex:
-  :no-heading:
+Classes
+-----------
+
+.. currentmodule:: selfeeg.models.layers
+.. autosummary::
+    :toctree: api
+    :nosignatures:
+    :template: classtemplate.rst
+
+    ConstrainedConv1d
+    ConstrainedConv2d
+    ConstrainedDense
+    DepthwiseConv2d
+    SeparableConv2d
+
 
 models.zoo module
------------------
+===================
 
-.. automodapi:: selfeeg.models.zoo
-  :no-inheritance-diagram:
-  :no-main-docstr:
-  :noindex:
-  :no-heading:
+Classes
+---------
+
+.. currentmodule:: selfeeg.models.zoo
+.. autosummary::
+    :toctree: api
+    :nosignatures:
+    :template: classtemplate.rst
+
+    DeepConvNet
+    DeepConvNetEncoder
+    EEGInception
+    EEGInceptionEncoder
+    EEGNet
+    EEGNetEncoder
+    EEGSym
+    EEGSymEncoder
+    ResNet1D
+    ResNet1DEncoder
+    ShallowNet
+    ShallowNetEncoder
+    StagerNet
+    StagerNetEncoder
+    STNet
+    STNetEncoder
+    TinySleepNet
+    TinySleepNetEncoder

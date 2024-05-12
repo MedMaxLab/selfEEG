@@ -6,7 +6,6 @@
    Self-Supervised Learning <SelfSupervisedLearning>
    Contrastive Learning <Contrastive>
 
-
 .. toctree::
    :maxdepth: 1
    :caption: Tutorials
@@ -20,7 +19,7 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: API
+   :caption: API reference
    :hidden:
 
    selfeeg
@@ -47,19 +46,35 @@
 What is selfEEG?
 ================
 
-selfEEG is a PyTorch-based library designed to support Self-Supervised Learning (SSL) on EEG data. In selfEEG, you can find different functions and classes which help you build an SSL pipeline, from the creation of the dataloaders, to the model's fine-tuning, passing through the design of custom data augmenters, models, and pretraining strategies.
+selfEEG is a PyTorch-based library designed to support Self-Supervised Learning (SSL)
+on EEG data. In selfEEG, you can find different functions and classes which help you
+build an SSL pipeline, from the creation of the dataloaders, to the model's
+fine-tuning, passing through the design of custom data augmenters, models, and
+pretraining strategies.
 SelfEEG comprises the following modules:
 
-1. **dataloading**, where you can find a collection of functions and classes designed to support data splitting and the construction of efficient PyTorch dataloaders.
-2. **augmentation**, where you can find lots of already implemented data augmentations with full GPU support, as well asother classes designed to combine them in more complex patterns
-3. **models**, where you can find lots of already implemented models widely used in EEG analysis (DeepConvNet, EEGNet, ResNet, TinySleepNet, STNet, etc. )
-4. **ssl**, where you can find already implemented self-supervised learning algorhitms (e.g. SimCLR, SimSiam, MoCo, BYOL, etc) with a highly customizable fit method as well as a function for fine-tuning.
+1. **dataloading**, where you can find a collection of functions and classes
+   designed to support data splitting and the construction of efficient PyTorch
+   dataloaders.
+2. **augmentation**, where you can find lots of already implemented datamaugmentations
+   with full GPU support, as well asother classes designed to combine them in more
+   complex patterns
+3. **models**, where you can find lots of already implemented models widely used in
+   EEG analysis (DeepConvNet, EEGNet, ResNet, TinySleepNet, STNet, etc. )
+4. **ssl**, where you can find already implemented self-supervised learning algorhitms
+   (e.g. SimCLR, SimSiam, MoCo, BYOL, etc) with a highly customizable fit method as
+   well as a function for fine-tuning.
 5. **losses**, where you can find the implementation of the SSL losses.
-6. **utils**, where you can find a collection of utility functions and classes for various purposes, such as a PyTorch compatible EEG sampler and scaler.
+6. **utils**, where you can find a collection of utility functions and classes for
+   various purposes, such as a PyTorch compatible EEG sampler and scaler.
 
-What makes selfEEG good? We have designed some modules keeping in mind EEG applications, but lots of functionalities can be easily exported on other types of signal data often coupled with EEG data!
+What makes selfEEG good? We have designed some modules keeping in mind EEG
+applications, but lots of functionalities can be easily exported on other types
+of signal data often coupled with EEG data!
 
-What you will not (currently) find in selfEEG? In selfEEG you will not find functions to effectively preprocess EEG data (although filtering and resampling can be performed with some of our functions).
+What you will not (currently) find in selfEEG? In selfEEG you will not find
+functions to effectively preprocess EEG data (although filtering and resampling
+can be performed with some of our functions).
 If you want to preprocess EEG data in a really good way, take a look at:
 
 - `MNE <https://mne.tools>`_ (python based)
@@ -72,7 +87,10 @@ Getting Started
 
 About Self-Supervised Learning
 ------------------------------
-If you are new to the concept of self-supervised learning, we suggest taking a look at the following content, which provides a brief introduction to the **self-supervised learning** paradigm and the family of **contrastive learning** pretext tasks.
+If you are new to the concept of self-supervised learning, we suggest taking a look
+at the following content, which provides a brief introduction to the
+**self-supervised learning** paradigm and the family of **contrastive learning**
+pretext tasks.
 
 :doc:`SelfSupervisedLearning`
 
@@ -85,7 +103,9 @@ SelfEEG can be installed via pip::
 
     pip install selfeeg
 
-Additionally, optional but useful packages which we suggest to include in your environment, especially if you plan to work with jupyter, can be automatically installed with the following pip command::
+Additionally, optional but useful packages which we suggest to include in your
+environment, especially if you plan to work with jupyter, can be automatically
+installed with the following pip command::
 
     pip install selfeeg[interactive]
 
@@ -97,18 +117,25 @@ SelfEEG can be also installed via conda by running the following command::
 
 **Good practice**
 
-Although the dependency list is pretty short, it is strongly suggested to install selfEEG in a fresh environment. The following links provide a guide for creating a new Python virtual environment or a new conda environment:
+Although the dependency list is pretty short, it is strongly suggested to install
+selfEEG in a fresh environment. The following links provide a guide for creating
+a new Python virtual environment or a new conda environment:
 
 1. `new virtual environment <https://docs.python.org/3/library/venv.html>`_
 2. `new conda environment <https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands>`_
 
-In addition, if PyTorch, Torchvision and Torchaudio are not present in your environment, the previous commands will install the CPU_only versions of such packages.
-If you have CUDA installed on your system, we strongly encourage you to first install PyTorch, Torchvision and Torchaudio by choosing the
-right configuration, which varies depending on your OS and CUDA versions; then install selfEEG. The official PyTorch documentation provides an installation command selector, which is available at the following `link <https://pytorch.org/get-started/locally/>`_.
+In addition, if PyTorch, Torchvision and Torchaudio are not present in your
+environment, the previous commands will install the CPU_only versions of such
+packages. If you have CUDA installed on your system, we strongly encourage you to
+first install PyTorch, Torchvision and Torchaudio by choosing the right configuration,
+which varies depending on your OS and CUDA versions; then install selfEEG.
+The official PyTorch documentation provides an installation command selector, which
+is available at the following `link <https://pytorch.org/get-started/locally/>`_.
 
 Dependencies
 ------------
-selfEEG requires the following packages to correctly work. If you want to use selfEEG by forking and cloning the project, be sure to install them:
+selfEEG requires the following packages to correctly work. If you want to use
+selfEEG by forking and cloning the project, be sure to install them:
 
 - pandas
 - scipy
@@ -118,7 +145,9 @@ selfEEG requires the following packages to correctly work. If you want to use se
 - tqdm
 
 The following list was extracted via ``pipdeptree`` (`github repo
-<https://github.com/tox-dev/pipdeptree/tree/main>`_). Packages like ``numpy`` does not appear because they are dependencies of other listed packages.
+<https://github.com/tox-dev/pipdeptree/tree/main>`_).
+Packages like ``numpy`` does not appear because they are dependencies of other
+listed packages.
 
 Optional packages which we suggest to include in your environment are listed as follows:
 
@@ -131,7 +160,9 @@ Optional packages which we suggest to include in your environment are listed as 
 Tutorial Notebooks
 ==================
 
-The following notebook-style pages include a detailed guide on how to use some library functionalities that we believe require further explanation in addition to the examples provided in the documentation API.
+The following notebook-style pages include a detailed guide on how to use some
+library functionalities that we believe require further explanation in addition
+to the examples provided in the documentation API.
 
 :doc:`Dataload_guide`
    learn how to use the dataloading module for creating PyTorch dataloaders
@@ -177,11 +208,14 @@ About
 
 Contribution Guidelines
 -----------------------
-If you'd like to **contribute** to selfEEG, please take a look at our contributing guidelines.
+If you'd like to **contribute** to selfEEG, please take a look at our contributing
+guidelines.
 
 :doc:`CONTRIBUTING`
 
-If you also have **suggestions** regarding novel features to add, or simply want some **support** on how to exploit this library in your SSL experiments, please consider writing to our research team.
+If you also have **suggestions** regarding novel features to add, or simply want
+some **support** on how to exploit this library in your SSL experiments, please
+consider writing to our research team.
 
 `MedMax Team <mailto:manfredo.atzori@unipd.it,federico.delpup@studenti.unipd.it,andrea.zanola@studenti.unipd.it,louisfabrice.tshimanga@unipd.it>`_
 
@@ -190,11 +224,13 @@ We are really open to new collaborations!
 Requests and bug tracker
 ------------------------
 If you have some requests or you have noticed some bugs, use the `Issue
-<https://github.com/MedMaxLab/selfEEG/issues>`_ page to report them. We will try to solve reported bugs as fast as possible.
+<https://github.com/MedMaxLab/selfEEG/issues>`_ page to report them.
+We will try to solve reported bugs as fast as possible.
 
 Authors and Citation
 --------------------
-We have worked really hard to develop this library. If you use selfEEG during your research, please cite our work. It will help us to continue doing our research.
+We have worked really hard to develop this library. If you use selfEEG during your
+research, please cite our work. It will help us to continue doing our research.
 
 Contributors:
 

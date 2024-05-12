@@ -1421,11 +1421,6 @@ class EEGDataset(Dataset):
         to change the default float32 only if there are specific requirements since
         float32 are faster on GPU devices.
 
-    Methods
-    -------
-    preload_dataset()
-        Eagerly load the entire dataset.
-
     Example
     -------
     >>> import pickle
