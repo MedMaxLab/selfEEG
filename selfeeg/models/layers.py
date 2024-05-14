@@ -1,21 +1,26 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchaudio.functional import filtfilt
+from selfeeg.augmentation.functional import get_filter_coeff
 
 __all__ = [
     "ConstrainedConv1d",
     "ConstrainedConv2d",
     "ConstrainedDense",
     "DepthwiseConv2d",
+    "FilterBank",
     "SeparableConv2d",
 ]
 
 
 class ConstrainedDense(nn.Linear):
     """
-    Pytorch implementation of the Dense layer with the possibility of adding a
-    MaxNorm, MinMaxNorm, or a UnitNorm constraint. Most of the parameters are
-    the same as described in torch.nn.Linear help.
+    nn.Linear layer with norm constraints.
+
+    This is a Pytorch implementation of the Dense layer with the possibility
+    of adding a MaxNorm, MinMaxNorm, or a UnitNorm constraint. Most of the
+    parameters are the same as described in torch.nn.Linear help.
 
     Parameters
     ----------
@@ -30,7 +35,8 @@ class ConstrainedDense(nn.Linear):
     device: torch.device or str, optional
         The torch device.
     dtype: torch dtype, optional
-        layer dtype, i.e., the data type of the torch.Tensor defining the layer weights.
+        layer dtype, i.e., the data type of the torch.Tensor defining
+        the layer weights.
     max_norm: float, optional
         The maximum norm each hidden unit can have.
         If None no constraint will be added.
@@ -43,16 +49,16 @@ class ConstrainedDense(nn.Linear):
 
         Default = None
     axis_norm: Union[int, list, tuple], optional
-        The axis along weights are constrained. It behaves like Keras. So, considering
-        that a Conv2D layer has shape (output_depth, input_depth), set axis
-        to 1 will constrain the weights of each filter tensor of size
+        The axis along weights are constrained. It behaves like Keras.
+        So, considering that a Conv2D layer has shape (output_depth, input_depth),
+        set axis to 1 will constrain the weights of each filter tensor of size
         (input_depth,).
 
         Default = 1
     minmax_rate: float, optional
-        A constraint for MinMaxNorm setting how weights will be rescaled at each step.
-        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using
-        minmax_rate = 1 will set a strict enforcement of the constraint,
+        A constraint for MinMaxNorm setting how weights will be rescaled at each
+        step. It behaves like Keras `rate` argument of MinMaxNorm contraint.
+        So, using minmax_rate = 1 will set a strict enforcement of the constraint,
         while rate<1.0 will slowly rescale layer's hidden units at each step.
 
         Default = 1.0
@@ -152,7 +158,7 @@ class ConstrainedDense(nn.Linear):
 
     def scale_norm(self, eps=1e-9):
         """
-        ``scale_norm`` applies the desired constraint on the Layer.
+        applies the desired constraint on the Layer.
         It is highly based on the Keras implementation, but here
         MaxNorm, MinMaxNorm and UnitNorm are all implemented inside
         this function.
@@ -192,9 +198,12 @@ class ConstrainedDense(nn.Linear):
 
 class ConstrainedConv1d(nn.Conv1d):
     """
-    Pytorch implementation of the 1D Convolutional layer with the possibility
-    to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along the given axis.
-    Most of the parameters are the same as described in pytorch Conv2D help.
+    nn.Conv1d layer with norm constraints.
+
+    This is a Pytorch implementation of the 1D Convolutional layer with the
+    possibility to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along
+    the given axis. Most of the parameters are the same as described in
+    pytorch Conv1d help.
 
     Parameters
     ----------
@@ -232,7 +241,8 @@ class ConstrainedConv1d(nn.Conv1d):
     device: torch.device or str, optional
         The torch device.
     dtype: torch.dtype, optional
-        Layer dtype, i.e., the data type of the torch.Tensor defining the layer weights.
+        Layer dtype, i.e., the data type of the torch.Tensor defining
+        the layer weights.
     max_norm: float, optional
         The maximum norm each hidden unit can have.
         If None no constraint will be added.
@@ -245,17 +255,19 @@ class ConstrainedConv1d(nn.Conv1d):
 
         Default = None
     axis_norm: Union[int, list, tuple], optional
-        The axis along weights are constrained. It behaves like Keras. So, considering
-        that a Conv2D layer has shape (output_depth, input_depth, length), set axis
+        The axis along weights are constrained. It behaves like Keras.
+        So, considering that a Conv1D layer has shape
+        (output_depth, input_depth, length), set axis
         to [1, 2] will constrain the weights of each filter tensor of size
         (input_depth, length).
 
         Default = [1,2]
     minmax_rate: float, optional
-        A constraint for MinMaxNorm setting how weights will be rescaled at each step.
-        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using
-        minmax_rate = 1 will set a strict enforcement of the constraint,
-        while rate<1.0 will slowly rescale layer's hidden units at each step.
+        A constraint for MinMaxNorm setting how weights will be rescaled
+        at each step. It behaves like Keras `rate` argument of MinMaxNorm
+        contraint. So, using minmax_rate = 1 will set a strict enforcement
+        of the constraint, while rate<1.0 will slowly rescale layer's hidden
+        units at each step.
 
         Default = 1.0
 
@@ -391,7 +403,7 @@ class ConstrainedConv1d(nn.Conv1d):
 
     def scale_norm(self, eps=1e-9):
         """
-        ``scale_norm`` applies the desired constraint on the Layer.
+        applies the desired constraint on the Layer.
         It is highly based on the Keras implementation, but here
         MaxNorm, MinMaxNorm and UnitNorm are all implemented inside
         this function.
@@ -434,9 +446,12 @@ class ConstrainedConv1d(nn.Conv1d):
 
 class ConstrainedConv2d(nn.Conv2d):
     """
-    Pytorch implementation of the 2D Convolutional layer with the possibility
-    to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along the given axis.
-    Most of the parameters are the same as described in pytorch Conv2D help.
+    nn.conv2d layer with norm constraints.
+
+    This is a Pytorch implementation of the 2D Convolutional layer with
+    the possibility to add a MaxNorm, MinMaxNorm, or UnitNorm constraint
+    along the given axis. Most of the parameters are the same as described
+    in pytorch Conv2D help.
 
     Parameters
     ----------
@@ -473,7 +488,8 @@ class ConstrainedConv2d(nn.Conv2d):
     device: torch.device or str, optional
         The torch device.
     dtype: torch.dtype, optional
-        Layer dtype, i.e., the data type of the torch.Tensor defining the layer weights.
+        Layer dtype, i.e., the data type of the torch.Tensor defining the
+        layer weights.
     max_norm: float, optional
         The maximum norm each hidden unit can have.
         If None no constraint will be added.
@@ -486,17 +502,19 @@ class ConstrainedConv2d(nn.Conv2d):
 
         Default = None
     axis_norm: Union[int, list, tuple], optional
-        The axis along weights are constrained. It behaves like Keras. So, considering
-        that a Conv2D layer has shape (output_depth, input_depth, rows, cols), set axis
+        The axis along weights are constrained. It behaves like Keras.
+        So, considering that a Conv2D layer has shape
+        (output_depth, input_depth, rows, cols), set axis
         to [1, 2, 3] will constrain the weights of each filter tensor of size
         (input_depth, rows, cols).
 
         Default = [1,2,3]
     minmax_rate: float, optional
-        A constraint for MinMaxNorm setting how weights will be rescaled at each step.
-        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using
-        minmax_rate = 1 will set a strict enforcement of the constraint,
-        while rate<1.0 will slowly rescale layer's hidden units at each step.
+        A constraint for MinMaxNorm setting how weights will be rescaled
+        at each step. It behaves like Keras `rate` argument of MinMaxNorm
+        contraint. So, using minmax_rate = 1 will set a strict enforcement
+        of the constraint, while rate<1.0 will slowly rescale layer's hidden
+        units at each step.
 
         Default = 1.0
 
@@ -614,7 +632,7 @@ class ConstrainedConv2d(nn.Conv2d):
 
     def scale_norm(self, eps=1e-9):
         """
-        ``scale_norm`` applies the desired constraint on the Layer.
+        applies the desired constraint on the Layer.
         It is highly based on the Keras implementation, but here
         MaxNorm, MinMaxNorm and UnitNorm are all implemented inside
         this function.
@@ -654,6 +672,8 @@ class ConstrainedConv2d(nn.Conv2d):
 
 class DepthwiseConv2d(nn.Conv2d):
     """
+    Depthwise 2D layer with norm constraints.
+
     Pytorch implementation of the Depthwise Convolutional layer with
     the possibility to add a MaxNorm, MinMaxNorm, or UnitNorm constraint along
     the given axis. Most of the parameters are the same as described in pytorch
@@ -695,17 +715,19 @@ class DepthwiseConv2d(nn.Conv2d):
 
         Default = None
     axis_norm: Union[int, list, tuple], optional
-        The axis along weights are constrained. It behaves like Keras. So, considering
-        that a Conv2D layer has shape (output_depth, input_depth, rows, cols), set axis
+        The axis along weights are constrained. It behaves like Keras.
+        So, considering that a Conv2D layer has shape
+        (output_depth, input_depth, rows, cols), set axis
         to [1, 2, 3] will constrain the weights of each filter tensor of size
         (input_depth, rows, cols).
 
         Default = [1,2,3]
     minmax_rate: float, optional
-        A constraint for MinMaxNorm setting how weights will be rescaled at each step.
-        It behaves like Keras `rate` argument of MinMaxNorm contraint. So, using
-        minmax_rate = 1 will set a strict enforcement of the constraint,
-        while rate<1.0 will slowly rescale layer's hidden units at each step.
+        A constraint for MinMaxNorm setting how weights will be rescaled
+        at each step. It behaves like Keras `rate` argument of MinMaxNorm
+        contraint. So, using minmax_rate = 1 will set a strict enforcement
+        of the constraint, while rate<1.0 will slowly rescale layer's hidden
+        units at each step.
 
         Default = 1.0
 
@@ -816,7 +838,7 @@ class DepthwiseConv2d(nn.Conv2d):
 
     def scale_norm(self, eps=1e-9):
         """
-        ``scale_norm`` applies the desired constraint on the Layer.
+        applies the desired constraint on the Layer.
         It is highly based on the Keras implementation, but here
         MaxNorm, MinMaxNorm and UnitNorm are all implemented inside
         this function.
@@ -856,9 +878,12 @@ class DepthwiseConv2d(nn.Conv2d):
 
 class SeparableConv2d(nn.Module):
     """
-    Pytorch implementation of the Separable Convolutional layer with the possibility of
-    adding a norm constraint on the depthwise filters (feature) dimension.
-    The layer applies first a depthwise conv2d, then a pointwise conv2d (kernel size = 1)
+    Separable Convolutional layer with norm constraints.
+
+    Pytorch implementation of the Separable Convolutional layer with the
+    possibility of adding a norm constraint on both the depthwise and pointwise
+    filters (feature) dimension. The layer applies first a depthwise conv2d,
+    then a pointwise conv2d (kernel size = 1)
     Most of the parameters are the same as described in pytorch conv2D help.
 
     Parameters
@@ -908,9 +933,9 @@ class SeparableConv2d(nn.Module):
 
         Default = 1.0
     axis_norm: Union[int, list, tuple], optional
-        The axis along weights are constrained. It behaves like Keras. So, considering
-        that a Conv2D layer has shape (output_depth, input_depth), set axis
-        to 1 will constrain the weights of each filter tensor of size
+        The axis along weights are constrained. It behaves like Keras.
+        So, considering that a Conv2D layer has shape (output_depth, input_depth),
+        set axis to 1 will constrain the weights of each filter tensor of size
         (input_depth,).
 
         Default = 1
@@ -989,3 +1014,154 @@ class SeparableConv2d(nn.Module):
         out = self.depthwise(input)
         out = self.pointwise(out)
         return out
+
+
+class FilterBank(nn.Module):
+    """
+    Filter bank layer of the FBCNet model.
+
+    Pytorch implementation of the Filter Bank layer used in the FBCNet model
+    The layer applies a sequence of filters with different bandwidth;
+    then, it concatenates each generated signal in the convolutional channel
+    dimension. The expected **input** is a **3D tensor** with size
+    (Batch x Channels x Samples). The generated output is a a **4D tensor**
+    with size (Batch x Filters x Channels x Samples).
+
+    See the original paper for more info
+
+    Parameters
+    ----------
+    Fs: int or float
+        The EEG sampling rate.
+    Bands: int, optional
+        The number of filters to apply to the original signal.
+
+        Default = 9
+    Range: int or float, optional
+        The passband of each filter, given in Hz.
+
+        Default = 4
+    Type: str, optional
+        The type of filter to use. Allowed arguments are the same as described
+        in the `get_filter_coeff()` function of the
+        `selfeeg.augmentation.functional` submodule
+        ('butter', 'ellip', 'cheby1', 'cheby2')
+
+        Default = 'cheby1'
+    StopRipple: int or float, optional
+        Ripple at stopband in decibel.
+
+        Default = 30
+    PassRipple: int or float, optional
+        Ripple at passband in decibel.
+
+        Default = 3
+    RangeTol: int or float, optional
+        The filter transition bandwidth in Hz.
+
+        Default = 2
+    SkipFirst: bool, optional
+        If True, skips the first filter with passband equal to [0, Range] Hz.
+        The number of filters specified in Bands will still be preserved.
+
+        Default = True
+
+    Warnings
+    --------
+    Do not use too strict filter specs (e.g. narrow transition bandwidths,
+    high stopband ripple, low passband ripple) as this can generate undesired
+    outputs (nan values or incredibly high values).
+
+    Example
+    -------
+    >>> from selfeeg.models import FilterBank
+    >>> import torch
+    >>> x = torch.randn(4, 8, 512)
+    >>> mdl = FilterBank(128)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 9, 8, 512])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
+    """
+
+    def __init__(
+        self,
+        Fs,
+        Bands=9,
+        Range=4,
+        Type="Cheby2",
+        StopRipple=30,
+        PassRipple=3,
+        RangeTol=2,
+        SkipFirst=True,
+    ):
+
+        self.Bands = Bands
+        super(FilterBank, self).__init__()
+
+        A_list = [None] * Bands
+        B_list = [None] * Bands
+        max_b, max_a = 0, 0
+        NStart = 1 if SkipFirst else 0
+        NEnd = Bands + 1 if SkipFirst else 0
+        for i in range(NStart, NEnd):
+            if i == 0:
+                b, a = get_filter_coeff(
+                    Fs,
+                    Range,
+                    Range + RangeTol,
+                    btype="lowpass",
+                    filter_type=Type,
+                    rp=PassRipple,
+                    rs=StopRipple,
+                )
+            elif (Range * (i + 1)) + RangeTol < Fs / 2:
+                b, a = get_filter_coeff(
+                    Fs,
+                    [Range * i, Range * (i + 1)],
+                    [Range * i - RangeTol, Range * (i + 1) + RangeTol],
+                    btype="bandpass",
+                    filter_type=Type,
+                    rp=PassRipple,
+                    rs=StopRipple,
+                )
+            else:
+                b, a = get_filter_coeff(
+                    Fs,
+                    Range * i,
+                    Range * i - RangeTol,
+                    btype="highpass",
+                    filter_type=Type,
+                    rp=PassRipple,
+                    rs=StopRipple,
+                )
+            if SkipFirst:
+                A_list[i - 1] = a
+                B_list[i - 1] = b
+            else:
+                A_list[i - 1] = a
+                B_list[i - 1] = b
+            max_b = max_b if b.shape[0] < max_b else b.shape[0]
+            max_a = max_a if a.shape[0] < max_a else a.shape[0]
+
+        self.A_coeffs = torch.zeros(Bands, max_a)
+        self.B_coeffs = torch.zeros(Bands, max_b)
+
+        for i in range(Bands):
+            self.A_coeffs[i, : A_list[i].shape[0]] = torch.from_numpy(A_list[i])
+            self.B_coeffs[i, : B_list[i].shape[0]] = torch.from_numpy(B_list[i])
+
+        self.A_coeffs = self.A_coeffs.to(dtype=torch.float32)
+        self.B_coeffs = self.B_coeffs.to(dtype=torch.float32)
+
+        self.A_coeffs = torch.nn.Parameter(self.A_coeffs, requires_grad=False)
+        self.B_coeffs = torch.nn.Parameter(self.B_coeffs, requires_grad=False)
+
+    def forward(self, x):
+        """
+        :meta private:
+        """
+        x = x.unsqueeze(2).repeat(1, 1, self.Bands, 1)
+        x = filtfilt(x, self.A_coeffs, self.B_coeffs, clamp=False)
+        x = torch.permute(x, [0, 2, 1, 3])
+        return x

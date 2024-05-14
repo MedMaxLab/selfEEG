@@ -50,9 +50,10 @@ def evaluate_loss(
     loss_arg: Union[list, dict] = None,
 ) -> "loss_fun output":
     """
-    ``evaluate_loss`` evaluate a custom loss function using `arguments`
-    as required arguments and loss_arg as optional ones. It is simply
-    the ``SSLBase's evaluate_loss`` method exported as a function.
+    evaluates a custom loss function.
+
+    It requires `arguments` as required arguments and loss_arg as optional one.
+    It is simply the ``SSLBase's evaluate_loss`` method exported as a function.
 
     Parameters
     ----------
@@ -126,8 +127,7 @@ def fine_tune(
     return_loss_info: bool = False,
 ) -> Optional[dict]:
     """
-    ``fine_tune`` is a custom fit function designed to perform
-    fine tuning on a given model with the given dataloader.
+    performs fine-tuning of a given model.
 
     Parameters
     ----------
@@ -398,7 +398,8 @@ def fine_tune(
 
 class EarlyStopping:
     """
-    Simple implementation of an early stopping class for pytorch.
+    Pytorch implementation of an early stopper.
+
     It can monitor the validation or the training loss (no other metrics
     are currently supported).
 
@@ -641,8 +642,9 @@ class EarlyStopping:
 
 class SSLBase(nn.Module):
     """
-    Baseline Self-Supervised Learning nn.Module. It is used as parent class
-    by the other implemented SSL methods.
+    Baseline Self-Supervised Learning nn.Module.
+
+    It is used as parent class by the other implemented SSL methods.
 
     Parameters
     ----------

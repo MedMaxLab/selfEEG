@@ -24,7 +24,7 @@ __all__ = [
 
 def subarray_closest_sum(arr: list, n: int, k: float) -> list:
     """
-    ``subarrat_closest_sum`` returns a subarray whose element sum is closest to k.
+    returns a subarray whose element sum is closest to k.
 
     This function is taken from geeksforgeeks at the following link [link1]_
 
@@ -106,9 +106,10 @@ def get_subarray_closest_sum(
     return_subarray: bool = True,
 ) -> tuple[list, Optional[list]]:
     """
-    ``get_subarray_closest_sum`` find the subarray of whose values sum is
-    closer to a target up to a specified tolerance (if possible) and return
-    the index of the selected values in the original array.
+    find the subarray whose values sum is closer to a target.
+
+    The solution found is the first inside a specified tolerance (if possible)
+    and return the index of the selected values in the original array.
 
     To find the subarray, get_subarray_closest_sum calls multiple times the
     ``subarray_closest_sum`` function until the subarray has the sum within
@@ -196,7 +197,8 @@ def scale_range_soft_clip(
     x: ArrayLike, Range: float = 200, asintote: float = 1.2, scale: str = "mV", exact: bool = True
 ) -> ArrayLike:
     """
-    ``scale_range_soft_clip`` rescale the EEG data.
+    soft version of the range scaler.
+
     The function will rescale the data in the following way:
 
         1. values in Range will be rescaled in the range [-1,1] linearly
@@ -318,8 +320,8 @@ def scale_range_soft_clip(
 
 class RangeScaler:
     """
-    ``RangeScaler`` is the class adaptation of the
-    ``scale_range_with_soft_clip`` function.
+    class adaptation of the ``scale_range_with_soft_clip`` function.
+
     Upon call, RangeScaler rescales the given EEG data in the following way:
 
         1. values in Range will be linearly rescaled in the range [-1,1].
@@ -403,8 +405,7 @@ def torch_pchip(
     new_y_max_numel: int = 4194304,
 ) -> torch.Tensor:
     """
-    ``torch_pchip`` performs the pchip interpolation on the last dimension of
-    the input tensor y.
+    performs the pchip interpolation on the last dimension of the input tensor.
 
     This function is a pytorch adaptation of the scipy's pchip_interpolate [pchip]_
     . It performs sp-pchip interpolation (Shape Preserving Piecewise Cubic Hermite
@@ -566,8 +567,9 @@ def create_dataset(
     seed: int = 1234,
 ) -> Optional[np.ndarray]:
     """
-    ``create_dataset`` creates a simulated EEG dataset for normal abnormal
-    binary classification, with samples having random length within a given range.
+    creates a simulated EEG dataset for normal abnormal binary classification.
+
+    Samples have random length within a given range.
 
     Once called, the function will generate 1000 files in a new directory.
     Samples will have name 'A_B_C_D.pickle' with:
@@ -688,7 +690,7 @@ def create_dataset(
 
 def check_models(model1: torch.nn.Module, model2: torch.nn.Module) -> bool:
     """
-    ``check_models`` checks that two nn.Modules are equal.
+    checks that two nn.Modules are equal.
 
     Parameters
     ----------
@@ -725,8 +727,10 @@ def count_parameters(
     add_not_trainable=False,
 ) -> [int, Optional[pd.DataFrame]]:
     """
-    ``count_parameters`` counts the number of **trainable parameters** of a
-    Pytorch's nn.Module. It can additionally create a two column dataframe
+    counts the number of **trainable parameters** of a
+    Pytorch's nn.Module.
+
+    It can additionally create a two column dataframe
     with module's name and number of trainable parameters.
     Not trainable parameters can be also added to the table if specified.
 
@@ -760,7 +764,7 @@ def count_parameters(
 
     References
     ----------
-    .. [stacko1] https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model
+    .. [stacko1] https://stackoverflow.com/questions/49201236
     .. [stacko2] https://discuss.pytorch.org/t/how-do-i-check-the-number-of-parameters-of-a-model/4325/9
 
     Example

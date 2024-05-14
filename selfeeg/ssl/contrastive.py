@@ -24,8 +24,9 @@ __all__ = [
 
 class SimCLR(SSLBase):
     """
-    Implementation of the SimCLR SSL method. To check
-    how SimCLR works, read the following paper [NTXent1]_ .
+    Implementation of the SimCLR SSL method.
+
+    To check how SimCLR works, read the following paper [NTXent1]_ .
     Official repository at [simgit1]_ .
 
     Parameters
@@ -425,8 +426,9 @@ class SimCLR(SSLBase):
 
 class SimSiam(SSLBase):
     """
-    Implementation of the SimSiam SSL method. To check
-    how SimSIam works, read the following paper [simsiam1]_ .
+    Implementation of the SimSiam SSL method.
+
+    To check how SimSIam works, read the following paper [simsiam1]_ .
     Official repo at [siamgit1]_ .
 
     Parameters
@@ -837,8 +839,9 @@ class SimSiam(SSLBase):
 
 class MoCo(SSLBase):
     """
-    Implementation of the MoCo SSL method. To check
-    how MoCo works, read the following paper [moco21]_ [moco31]_ .
+    Implementation of the MoCo SSL method.
+
+    To check how MoCo works, read the following paper [moco21]_ [moco31]_ .
 
     Parameters
     ----------
@@ -1423,8 +1426,9 @@ class MoCo(SSLBase):
 
 class BYOL(SSLBase):
     """
-    Implementation of the BYOL SSL method. To check
-    how BYOL works, read the following paper [BYOL1]_ .
+    Implementation of the BYOL SSL method.
+
+    To check how BYOL works, read the following paper [BYOL1]_ .
 
     Parameters
     ----------
@@ -1872,8 +1876,9 @@ class BYOL(SSLBase):
 
 class BarlowTwins(SimCLR):
     """
-    Implementation of the Barlow twins SSL method. To check
-    how Barlow Twins works, read the following paper [barlow1]_ .
+    Implementation of the Barlow twins SSL method.
+
+    To check how Barlow Twins works, read the following paper [barlow1]_ .
 
     Parameters
     ----------
@@ -2084,8 +2089,9 @@ class BarlowTwins(SimCLR):
 
 class VICReg(SimCLR):
     """
-    Implementation of the VICReg SSL method. To check
-    how VICReg works, read the following paper [VIC1]_ .
+    Implementation of the VICReg SSL method.
+
+    To check how VICReg works, read the following paper [VIC1]_ .
 
     Parameters
     ----------

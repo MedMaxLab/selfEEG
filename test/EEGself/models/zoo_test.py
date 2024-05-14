@@ -52,6 +52,41 @@ class TestModels(unittest.TestCase):
     def setUp(self):
         torch.manual_seed(1234)
 
+    def test_ATCNet(self):
+        print("Testing ATCNet...", end="", flush=True)
+
+        DCN_args = {
+            "nb_classes": [2, 4],
+            "Chans": [self.Chan],
+            "Samples": [self.Samples],
+            "Fs": [128],
+            "num_windows": [4],
+            "mha_heads": [2, 4],
+            "tcn_depth": [2, 3],
+            "F1": [12, 8],
+            "D": [2, 3],
+            "return_logits": [True, False],
+        }
+        DCN_grid = self.makeGrid(DCN_args)
+        for i in DCN_grid:
+            model = models.ATCNet(**i)
+            out = model(self.x)
+            self.assertEqual(torch.isnan(out).sum(), 0)
+            self.assertEqual(out.shape[1], i["nb_classes"] if i["nb_classes"] > 2 else 1)
+            if not (i["return_logits"]):
+                self.assertLessEqual(out.max(), 1)
+                self.assertGreaterEqual(out.min(), 0)
+        if self.device.type != "cpu":
+            for i in DCN_grid:
+                model = models.ATCNet(**i).to(device=self.device)
+                out = model(self.x2)
+                self.assertEqual(torch.isnan(out).sum(), 0)
+                self.assertEqual(out.shape[1], i["nb_classes"] if i["nb_classes"] > 2 else 1)
+                if not (i["return_logits"]):
+                    self.assertLessEqual(out.max(), 1)
+                    self.assertGreaterEqual(out.min(), 0)
+        print("   ATCNet OK: tested ", len(DCN_grid), " combinations of input arguments")
+
     def test_DeepConvNet(self):
         print("Testing DeepConvNet...", end="", flush=True)
         DCN_args = {
@@ -197,6 +232,40 @@ class TestModels(unittest.TestCase):
                     self.assertLessEqual(out.max(), 1)
                     self.assertGreaterEqual(out.min(), 0)
         print("   EEGsym OK: tested", len(EEGsym_args), " combinations of input arguments")
+
+    def test_FBCNet(self):
+        print("Testing FBCNet...", end="", flush=True)
+
+        DCN_args = {
+            "nb_classes": [2, 4],
+            "Chans": [self.Chan],
+            "Samples": [self.Samples],
+            "Fs": [128],
+            "FilterBands": [4, 8],
+            "FilterRange": [4, 5],
+            "FilterType": ["Cheby2", "ellip"],
+            "TemporalType": ["var", "max", "mean", "std", "logvar"],
+            "return_logits": [True, False],
+        }
+        DCN_grid = self.makeGrid(DCN_args)
+        for i in DCN_grid:
+            model = models.FBCNet(**i)
+            out = model(self.x)
+            self.assertEqual(torch.isnan(out).sum(), 0)
+            self.assertEqual(out.shape[1], i["nb_classes"] if i["nb_classes"] > 2 else 1)
+            if not (i["return_logits"]):
+                self.assertLessEqual(out.max(), 1)
+                self.assertGreaterEqual(out.min(), 0)
+        if self.device.type != "cpu":
+            for i in DCN_grid:
+                model = models.FBCNet(**i).to(device=self.device)
+                out = model(self.x2)
+                self.assertEqual(torch.isnan(out).sum(), 0)
+                self.assertEqual(out.shape[1], i["nb_classes"] if i["nb_classes"] > 2 else 1)
+                if not (i["return_logits"]):
+                    self.assertLessEqual(out.max(), 1)
+                    self.assertGreaterEqual(out.min(), 0)
+        print("   FBCNet OK: tested ", len(DCN_grid), " combinations of input arguments")
 
     def test_ResNet(self):
         print("Testing ResNet...", end="", flush=True)

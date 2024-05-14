@@ -23,7 +23,32 @@ Classes
     ConstrainedConv2d
     ConstrainedDense
     DepthwiseConv2d
+    FilterBank
     SeparableConv2d
+
+
+models.encoders module
+========================
+
+Classes
+---------
+
+.. currentmodule:: selfeeg.models.encoders
+.. autosummary::
+    :toctree: api
+    :nosignatures:
+    :template: classtemplate.rst
+
+    DeepConvNetEncoder
+    EEGInceptionEncoder
+    EEGNetEncoder
+    EEGSymEncoder
+    FBCNetEncoder
+    ResNet1DEncoder
+    ShallowNetEncoder
+    StagerNetEncoder
+    STNetEncoder
+    TinySleepNetEncoder
 
 
 models.zoo module
@@ -38,21 +63,14 @@ Classes
     :nosignatures:
     :template: classtemplate.rst
 
+    ATCNet
     DeepConvNet
-    DeepConvNetEncoder
     EEGInception
-    EEGInceptionEncoder
     EEGNet
-    EEGNetEncoder
     EEGSym
-    EEGSymEncoder
+    FBCNet
     ResNet1D
-    ResNet1DEncoder
     ShallowNet
-    ShallowNetEncoder
     StagerNet
-    StagerNetEncoder
     STNet
-    STNetEncoder
     TinySleepNet
-    TinySleepNetEncoder
