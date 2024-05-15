@@ -156,6 +156,7 @@ class ConstrainedDense(nn.Linear):
         else:
             self.constraint_type = 0
 
+    @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
         applies the desired constraint on the Layer.
@@ -169,7 +170,7 @@ class ConstrainedDense(nn.Linear):
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
             desired = torch.clamp(norms, 0, self.max_norm)
-            self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
+            self.weight.data *= desired / (eps + norms)
 
         elif self.constraint_type == 2:
             norms = torch.sqrt(
@@ -179,13 +180,13 @@ class ConstrainedDense(nn.Linear):
                 self.minmax_rate * torch.clamp(norms, self.min_norm, self.max_norm)
                 + (1 - self.minmax_rate) * norms
             )
-            self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
+            self.weight.data *= desired / (eps + norms)
 
         elif self.constraint_type == 3:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
-            self.weight = torch.nn.Parameter(self.weight / (eps + norms))
+            self.weight.data /= eps + norms
 
     def forward(self, input):
         """
@@ -401,6 +402,7 @@ class ConstrainedConv1d(nn.Conv1d):
         else:
             self.constraint_type = 0
 
+    @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
         applies the desired constraint on the Layer.
@@ -414,7 +416,7 @@ class ConstrainedConv1d(nn.Conv1d):
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
             desired = torch.clamp(norms, 0, self.max_norm)
-            self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
+            self.weight.data *= desired / (eps + norms)
 
         elif self.constraint_type == 2:
             norms = torch.sqrt(
@@ -424,13 +426,13 @@ class ConstrainedConv1d(nn.Conv1d):
                 self.minmax_rate * torch.clamp(norms, self.min_norm, self.max_norm)
                 + (1 - self.minmax_rate) * norms
             )
-            self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
+            self.weight.data *= desired / (eps + norms)
 
         elif self.constraint_type == 3:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
-            self.weight = torch.nn.Parameter(self.weight / (eps + norms))
+            self.weight.data /= eps + norms
 
     def forward(self, input):
         """
@@ -630,6 +632,7 @@ class ConstrainedConv2d(nn.Conv2d):
         else:
             self.constraint_type = 0
 
+    @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
         applies the desired constraint on the Layer.
@@ -643,7 +646,7 @@ class ConstrainedConv2d(nn.Conv2d):
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
             desired = torch.clamp(norms, 0, self.max_norm)
-            self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
+            self.weight.data *= desired / (eps + norms)
 
         elif self.constraint_type == 2:
             norms = torch.sqrt(
@@ -653,13 +656,13 @@ class ConstrainedConv2d(nn.Conv2d):
                 self.minmax_rate * torch.clamp(norms, self.min_norm, self.max_norm)
                 + (1 - self.minmax_rate) * norms
             )
-            self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
+            self.weight.data *= desired / (eps + norms)
 
         elif self.constraint_type == 3:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
-            self.weight = torch.nn.Parameter(self.weight / (eps + norms))
+            self.weight.data /= eps + norms
 
     def forward(self, input):
         """
@@ -836,6 +839,7 @@ class DepthwiseConv2d(nn.Conv2d):
         else:
             self.constraint_type = 0
 
+    @torch.no_grad()
     def scale_norm(self, eps=1e-9):
         """
         applies the desired constraint on the Layer.
@@ -849,7 +853,7 @@ class DepthwiseConv2d(nn.Conv2d):
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
             desired = torch.clamp(norms, 0, self.max_norm)
-            self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
+            self.weight.data *= desired / (eps + norms)
 
         elif self.constraint_type == 2:
             norms = torch.sqrt(
@@ -859,13 +863,13 @@ class DepthwiseConv2d(nn.Conv2d):
                 self.minmax_rate * torch.clamp(norms, self.min_norm, self.max_norm)
                 + (1 - self.minmax_rate) * norms
             )
-            self.weight = torch.nn.Parameter(self.weight * (desired / (eps + norms)))
+            self.weight.data *= desired / (eps + norms)
 
         elif self.constraint_type == 3:
             norms = torch.sqrt(
                 torch.sum(torch.square(self.weight), axis=self.axis_norm, keepdims=True)
             )
-            self.weight = torch.nn.Parameter(self.weight / (eps + norms))
+            self.weight.data /= eps + norms
 
     def forward(self, input):
         """
