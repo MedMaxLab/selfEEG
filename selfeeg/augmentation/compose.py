@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import inspect
 import random
 from typing import Any, Dict
@@ -45,7 +46,7 @@ class StaticSingleAug:
             4. a list of dicts or lists. This is a particular case where multiple
             combinations of arguments are given. Each element of the list must be a
             list or a dict with the specific argument combination.
-            Every time ``PerformAugmentation`` is called, one of the given
+            Every time ``perform_augmentation`` is called, one of the given
             combinations is used to perform the data augmentation. The list
             is followed sequentially with repetition, meaning that the first call
             uses the first set of arguments of the list, the second call uses the
@@ -56,7 +57,7 @@ class StaticSingleAug:
 
     Methods
     -------
-    PerformAugmentation(X: ArrayLike)
+    perform_augmentation(X: ArrayLike)
         Apply the augmentation with the given arguments.
         __call__() will call this method.
 
@@ -108,7 +109,7 @@ class StaticSingleAug:
                 self.multipleStaticArguments = True
                 self.maxcounter = len(arguments)
 
-    def PerformAugmentation(self, X: ArrayLike) -> ArrayLike:
+    def perform_augmentation(self, X: ArrayLike) -> ArrayLike:
 
         if self.multipleStaticArguments:
             argument = self.arguments[self.counter]
@@ -131,7 +132,7 @@ class StaticSingleAug:
         return Xaug
 
     def __call__(self, X):
-        return self.PerformAugmentation(X)
+        return self.perform_augmentation(X)
 
 
 class DynamicSingleAug:
@@ -201,7 +202,7 @@ class DynamicSingleAug:
 
     Methods
     -------
-    PerformAugmentation(x: ArrayLike)
+    perform_augmentation(x: ArrayLike)
         Apply the augmentation with the given arguments.
         __call__() will call this method.
 
@@ -282,11 +283,12 @@ class DynamicSingleAug:
                         self.range_arg = range_arg
                     else:
                         raise ValueError(
-                            "range_arg values must be a len 2 " "list with min and max range"
+                            "range_arg values must be a length 2 " "list with min and max range"
                         )
                 else:
                     raise ValueError(
-                        "keys of range_arg argument must be the " "argument of the augmentation fun"
+                        "keys of range_arg argument must be the "
+                        "argument of the augmentation function."
                     )
                 for i in range_arg:
                     if not (isinstance(range_arg[i], list)):
@@ -318,7 +320,7 @@ class DynamicSingleAug:
         self.given_arg = list(self.discrete_arg) if self.discrete_arg != None else []
         self.given_arg += list(self.range_arg) if self.range_arg != None else []
 
-    def PerformAugmentation(self, X: ArrayLike) -> ArrayLike:
+    def perform_augmentation(self, X: ArrayLike) -> ArrayLike:
         arguments = {i: None for i in self.given_arg}
         if self.discrete_arg != None:
             for i in self.discrete_arg:
@@ -343,7 +345,7 @@ class DynamicSingleAug:
         return Xaug
 
     def __call__(self, X):
-        return self.PerformAugmentation(X)
+        return self.perform_augmentation(X)
 
 
 class SequentialAug:
@@ -369,12 +371,17 @@ class SequentialAug:
     ----
     If you provide an augmentation implemented outside of this this library be
     sure that the function will return a single output with the element to pass
-    to the next augmentation function
-    of the list.
+    to the next augmentation function of the list.
+
+    Note
+    ----
+    The function will automatically handle RandomAug instances with return_index
+    set to True. In this case, an internal deepcopy with return_index set to false
+    will be automatically created.
 
     Methods
     -------
-    PerformAugmentation(X: ArrayLike)
+    perform_augmentation(X: ArrayLike)
         Apply the augmentations with the given arguments and specified order.
         __call__() will call this method.
 
@@ -416,15 +423,25 @@ class SequentialAug:
 
     def __init__(self, *augmentations):
         self.augs = [item for item in augmentations]
+        self._search_for_random_aug_with_index()
 
-    def PerformAugmentation(self, X: ArrayLike) -> ArrayLike:
+    def perform_augmentation(self, X: ArrayLike) -> ArrayLike:
         Xaugs = self.augs[0](X)
         for i in range(1, len(self.augs)):
             Xaugs = self.augs[i](Xaugs)
         return Xaugs
 
     def __call__(self, X):
-        return self.PerformAugmentation(X)
+        return self.perform_augmentation(X)
+
+    def _search_for_random_aug_with_index(self):
+        for idx, item in enumerate(self.augs):
+            if isinstance(item, RandomAug):
+                if self.augs[idx].return_index == True:
+                    self.augs[idx] = copy.deepcopy(item)
+                    self.augs[idx].return_index = False
+            elif isinstance(item, SequentialAug):
+                item._search_for_random_aug_with_index()
 
 
 class RandomAug:
@@ -443,17 +460,26 @@ class RandomAug:
         It can be any callable object, but the first arguments to pass must
         be the ArrayLike object to augment. It is suggested to give a set of
         ``StaticSingleAug`` or ``DynamicSingleAug`` instantiations.
-    p: 1-D array-like, optional
-        A 1-D array or list with the weights associated to each augmentation
+    p: 1D ArrayLike, optional
+        A 1D array or list with the weights associated to each augmentation
         (higher the weight, higher the frequency of choosing an augmentation
         of the list). Elements of p must be in the same order as the given
         augmentations.
         If given, p will be scaled so to have sum 1 (so you can give any value).
         If not given, all augmentations will be chosen with equal probability.
 
+        Default = None
+    return_index: bool, optional
+        Whether to return an index identifying the selected augmentation or not.
+        The index is simply the output of random.choice function used to select
+        the augmentation from the given list. Indeces follow the augmentation order
+        given during class instantiation.
+
+        Default = False
+
     Methods
     -------
-    PerformAugmentation(X: ArrayLike)
+    perform_augmentation(X: ArrayLike)
         Apply a random augmentation from the given list of augmenters.
         __call__() will call this method.
 
@@ -463,7 +489,8 @@ class RandomAug:
     >>> import numpy as np
     >>> import torch
     >>> BatchEEG = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*np.pi,1024))
-    >>> Aug_eye = aug.StaticSingleAug(aug.add_eeg_artifact,{'Fs': Fs, 'artifact': 'eye', 'amplitude': 0.5})
+    >>> Aug_eye = aug.StaticSingleAug(
+    ...     aug.add_eeg_artifact,{'Fs': Fs, 'artifact': 'eye', 'amplitude': 0.5})
     >>> Aug_warp = aug.DynamicSingleAug(
     ...     aug.warp_signal,
     ...     discrete_arg = {'batch_equal': [True, False]},
@@ -505,11 +532,12 @@ class RandomAug:
 
     """
 
-    def __init__(self, *augmentations, p=None):
+    def __init__(self, *augmentations, p=None, return_index=False):
 
         self.augs = [item for item in augmentations]
         self.N = len(self.augs)
         self.p = p
+        self.return_index = return_index
         if p is not None:
             if len(p) != self.N:
                 raise ValueError("length of p does not match the number of augmentations")
@@ -517,13 +545,16 @@ class RandomAug:
             self.p /= np.sum(p)
         self.nprange_ = np.arange(0, self.N)
 
-    def PerformAugmentation(self, X):
+    def perform_augmentation(self, X):
         if self.p is None:
             idx = random.randint(0, self.N - 1)  # nosec
         else:
             idx = np.random.choice(self.nprange_, p=self.p)
         Xaugs = self.augs[idx](X)
-        return Xaugs
+        if self.return_index:
+            return Xaugs, idx
+        else:
+            return Xaugs
 
     def __call__(self, X):
-        return self.PerformAugmentation(X)
+        return self.perform_augmentation(X)
