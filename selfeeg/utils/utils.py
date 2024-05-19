@@ -19,6 +19,8 @@ __all__ = [
     "RangeScaler",
     "scale_range_soft_clip",
     "torch_pchip",
+    "torch_zscore",
+    "ZscoreScaler",
 ]
 
 
@@ -395,6 +397,107 @@ class RangeScaler:
         :meta private:
         """
         return scale_range_soft_clip(x, self.Range, self.asintote, self.scale, self.exact)
+
+
+def torch_zscore(
+    x: torch.Tensor,
+    axis: int = -2,
+    correction: int = 1,
+) -> torch.Tensor:
+    """
+    zscore operator for torch tensors.
+
+    It is heavily based on scipy's zscore in order to provide
+    identical results when using numpy arrays. The analogous
+    command in scipy is:
+
+        x_zscore = scipy.stats.zscore(x, axis=axis, ddof=correction)
+
+    Parameters
+    ----------
+    x: torch.Tensor
+        The tensor to standardize.
+    axis: int
+        The axis along which to operate. By default, it assumes that
+        the EEG channel dimension is the second to last. If the
+        tensor has only one dimension, default value is changed to 0.
+
+        Default = -2
+    correction: int
+        difference between the sample size and sample degrees of freedom.
+        It is applied during the calculation of the standard deviation.
+        It is equivalent to the Scipy's zscore `ddof` argument.
+        Default is Bessel's correction as used in Pytorch's std function.
+
+        Default = 1
+
+    Returns
+    -------
+    xz: torch.Tensor
+        The tensor standardized along the given dimension.
+
+    """
+    dims = len(x.shape)
+    if dims == 0:
+        raise ValueError("Got a tensor with 0 length")
+    elif dims == 1:
+        axis = 0
+
+    # get mean and standard deviation
+    mn = x.mean(axis, keepdim=True)
+    sd = x.std(axis, correction=correction, keepdim=True)
+
+    # a solid solution implemented in scipy's zscore
+    # to avoid 0 division or too large values
+    x0 = x.min(axis=axis, keepdims=True)[0]
+    iszero = torch.eq(x, x0).all(axis=axis, keepdims=True)
+
+    # torch doesn't throw zero division warnings
+    sd[iszero] = 1.0
+    xz = (x - mn) / sd
+
+    # Put nans
+    xz[torch.broadcast_to(iszero, x.shape)] = torch.nan
+    return xz
+
+
+class ZscoreScaler:
+    """
+    zscore operator callable objects.
+
+    It can accept both torch Tensors and numpy arrays.
+    In case of torch Tensors are passed during call,
+    ``torch_zscore`` is called.
+
+    Parameters
+    ----------
+    x: ArrayLike
+        The ArrayLike object to standardize.
+    axis: int
+        The axis along which to operate. By default, it assumes that
+        the EEG channel dimension is the second to last. If the
+        tensor has only one dimension, default value is changed to 0.
+
+        Default = -2
+    correction: int
+        difference between the sample size and sample degrees of freedom.
+        It is applied during the calculation of the standard deviation.
+        It is equivalent to the Scipy's zscore `ddof` argument.
+        Default is Bessel's correction as used in Pytorch's std function.
+
+        Default = 1
+
+    """
+
+    def __init__(self, axis: int = -2, correction: int = 1):
+        self.axis = axis
+        self.correction = correction
+
+    def __call__(self, x):
+        if isinstance(x, torch.Tensor):
+            return torch_zscore(x, self.axis, self.correction)
+        else:
+            return zscore(x, axis=self.axis, ddof=self.correction)
 
 
 def torch_pchip(

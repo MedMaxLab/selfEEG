@@ -61,9 +61,10 @@ What makes selfEEG good? We have designed some modules keeping in mind EEG appli
 What will you not find in selfEEG? SelfEEG isn't an EEG preprocessing library. You will not find functions to preprocess EEG data in the best possible way (no IC rejection or ASR). However, some simple operations like filtering and resampling can be performed with functions implemented in the utils and augmentation modules.
 If you want to preprocess EEG data in a really good way, we suggest to take a look at:
 
-- **MNE** (python based)
-- **EEGLAB** (matlab based)
-- **BIDSAlign** (an EEGLab extension provided by our team)
+- [**MNE**](https://mne.tools) (python based)
+- [**EEGLAB**](https://sccn.ucsd.edu/eeglab) (matlab based)
+- [**BIDSAlign**](https://github.com/MedMaxLab/BIDSAlign)
+  (an EEGLab extension provided by our team)
 
 
 ## installation

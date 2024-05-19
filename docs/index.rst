@@ -79,7 +79,7 @@ If you want to preprocess EEG data in a really good way, take a look at:
 
 - `MNE <https://mne.tools>`_ (python based)
 - `EEGLAB <https://sccn.ucsd.edu/eeglab>`_ (matlab based)
-- **BIDSAlign** (an EEGLab extension provided by our team)
+- `BIDSAlign <https://github.com/MedMaxLab/BIDSAlign>`_ (an EEGLab extension provided by our team)
 
 
 Getting Started

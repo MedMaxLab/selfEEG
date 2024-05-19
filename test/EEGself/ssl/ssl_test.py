@@ -43,14 +43,10 @@ class TestSSL(unittest.TestCase):
 
         if torch.backends.mps.is_available():
             cls.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            cls.device = torch.device("cuda")
         else:
             cls.device = torch.device("cpu")
-
-        if cls.device.type == "cpu":
-            if torch.cuda.is_available():
-                cls.device = torch.device("cuda")
-            else:
-                cls.device = torch.device("cpu")
 
         if cls.device.type == "mps":
             try:

@@ -20,6 +20,8 @@
     - SSLBase class now includes two methods used to perform args check for fit and
       test methods.
     - EarlyStopping now accepts a custom device to use during best weights recording
+- **utils module**:
+    - added zscore scaler.
 
 **Documentation**
 * sphinx automodapi was removed from the dependencies and switched directly to sphinx

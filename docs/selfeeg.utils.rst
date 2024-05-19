@@ -13,6 +13,7 @@ Classes
     :template: classtemplate.rst
 
     RangeScaler
+    ZscoreScaler
 
 Functions
 --------------
@@ -28,3 +29,4 @@ Functions
     get_subarray_closest_sum
     scale_range_soft_clip
     torch_pchip
+    torch_zscore

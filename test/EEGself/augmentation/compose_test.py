@@ -13,7 +13,8 @@ class TestAugmentationCompose(unittest.TestCase):
         print("\n---------------------------")
         print("TESTING AUGMENTATION.COMPOSE MODULE")
         print("---------------------------")
-        cls.BatchEEG = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        cls.BatchEEG = torch.zeros(16, 32, 1024)
+        cls.BatchEEG += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         cls.Fs = 128
 
     def test_StaticSingleAug(self):
