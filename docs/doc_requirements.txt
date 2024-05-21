@@ -5,7 +5,6 @@ torchaudio
 torchvision
 matplotlib
 scikit-learn
-selfeeg
 
 sphinx_rtd_theme
 nbsphinx
