@@ -13,7 +13,8 @@ class TestAugmentationCompose(unittest.TestCase):
         print("\n---------------------------")
         print("TESTING AUGMENTATION.COMPOSE MODULE")
         print("---------------------------")
-        cls.BatchEEG = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        cls.BatchEEG = torch.zeros(16, 32, 1024)
+        cls.BatchEEG += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         cls.Fs = 128
 
     def test_StaticSingleAug(self):
@@ -83,17 +84,13 @@ class TestAugmentationCompose(unittest.TestCase):
     def test_RandomAug(self):
         print("Testing Random augmentation...", end="", flush=True)
         Aug_scal = aug.StaticSingleAug(aug.scaling, {"value": 2, "batch_equal": True})
-        Sequence2 = aug.RandomAug(Aug_scal, aug.flip_vertical, p=[0.7, 0.3])
-
+        Sequence2 = aug.RandomAug(Aug_scal, aug.flip_vertical, p=[0.7, 0.3], return_index=True)
         counter = [0, 0]
         N = 10000
         np.random.seed(1234)
         for i in range(N):
-            BatchEEGaug = Sequence2(self.BatchEEG)
-            if BatchEEGaug.max() > 1.5:
-                counter[0] += 1
-            else:
-                counter[1] += 1
+            BatchEEGaug, idx = Sequence2(self.BatchEEG)
+            counter[idx] += 1
         counter[0] /= N
         counter[1] /= N
         self.assertTrue(abs(counter[0] - 0.7) < 1e-2)
@@ -128,7 +125,7 @@ class TestAugmentationCompose(unittest.TestCase):
             range_arg={"amplitude": [0.1, 0.5]},
             range_type={"amplitude": False},
         )
-        Sequence2 = aug.RandomAug(AUG_band, Aug_eye)
+        Sequence2 = aug.RandomAug(AUG_band, Aug_eye, return_index=True)
         # THIRD RANDOM SELECTION: CROP OR RANDOM PERMUTATION
         AUG_crop = aug.DynamicSingleAug(
             aug.crop_and_resize,
@@ -146,7 +143,7 @@ class TestAugmentationCompose(unittest.TestCase):
             },
             range_type={"segments": True, "stretch_strength": False, "squeeze_strength": False},
         )
-        Sequence3 = aug.RandomAug(AUG_crop, Aug_warp)
+        Sequence3 = aug.RandomAug(AUG_crop, Aug_warp, return_index=True)
 
         # FINAL AUGMENTER: SEQUENCE OF THE THREE RANDOM LISTS
         Augmenter = aug.SequentialAug(Sequence1, Sequence2, Sequence3)
@@ -155,6 +152,7 @@ class TestAugmentationCompose(unittest.TestCase):
         self.assertFalse(torch.equal(self.BatchEEG, BatchEEGaug1))
         self.assertFalse(torch.equal(self.BatchEEG, BatchEEGaug2))
         print("   final augmentation composition OK")
+
 
 if __name__ == "__main__":
     unittest.main()

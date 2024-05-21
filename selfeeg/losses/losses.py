@@ -2,31 +2,33 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-__all__ = ["Barlow_loss", "BYOL_loss", "Moco_loss", "SimCLR_loss", "SimSiam_loss", "VICReg_loss"]
+__all__ = ["barlow_loss", "byol_loss", "moco_loss", "simclr_loss", "simsiam_loss", "vicreg_loss"]
 
 
-def SimCLR_loss(
+def simclr_loss(
     projections: torch.Tensor,
     projections_norm: bool = True,
     temperature: float = 0.15,
 ) -> torch.Tensor:
     """
-    ``SimCLR_loss`` computes the normalized temperature-scaled cross entropy loss [NTXent]_ ,
-    which is used in many contrastive learning algorithm. It is basically a simple
-    implementation of the InfoNCE_loss provided in the official simCLR repository
-    [simgit]_ using only torch functions.
+    ``simclr_loss`` computes the normalized temperature-scaled cross entropy
+    loss [NTXent]_ , which is used in many contrastive learning algorithm.
+    It is basically a simple implementation of the InfoNCE_loss provided in the
+    official simCLR repository [simgit]_ using only torch functions.
 
     Parameters
     ----------
     projections: torch.Tensor
-        2D Tensor where projections[0:N/2] are the projections of one batch augmented version
-        and projections[N/2:] are the projections of the other batch augmented version
+        2D Tensor where projections[0:N/2] are the projections of one batch
+        augmented version and projections[N/2:] are the projections of the other
+        batch augmented version
     projections_norm: bool, optional
         Whether to normalize the projections or not.
 
         Default = True
     temperature: float, optional
-        Temperature coefficient of the NTX_ent loss (See references to check loss formula).
+        Temperature coefficient of the NTX_ent loss
+        (See references to check loss formula).
 
         Default = 0.15
 
@@ -38,17 +40,17 @@ def SimCLR_loss(
     Note
     ----
     Looking at some implementations (e.g. the one in lightlyAI),
-    the returned loss seems to be double.
-    However the function add_contrastive_loss in the original repo returns the same value as this
+    the returned loss seems to be double. However the function
+    add_contrastive_loss in the original repo returns the same value as this
     implementation.
 
     References
     ----------
     .. [NTXent] Chen et al. A Simple Framework for Contrastive Learning of Visual
       Representations. (2020). https://doi.org/10.48550/arXiv.2002.05709
-    .. [simgit] To check the original tensorflow implementation visit the following repository:
-      https://github.com/google-research/simclr (look at the function add_contrastive_loss
-      in objective.py)
+    .. [simgit] To check the original tensorflow implementation visit the
+      following repository: https://github.com/google-research/simclr
+      (look at the function add_contrastive_loss in objective.py)
 
     Example
     -------
@@ -56,12 +58,13 @@ def SimCLR_loss(
     >>> import selfeeg.losses
     >>> torch.manual_seed(1234)
     >>> projections = torch.randn(64, 32)
-    >>> loss = losses.SimCLR_loss(projections)
+    >>> loss = losses.simclr_loss(projections)
     >>> print(loss) # will return 10.2866
 
     """
     if projections_norm:
-        projections = F.normalize(projections, p=2.0, dim=1)  # L2 norm along first dimension
+        # L2 norm along first dimension
+        projections = F.normalize(projections, p=2.0, dim=1)
 
     proj1, proj2 = torch.split(projections, int(projections.shape[0] / 2))
     N = proj1.shape[0]
@@ -82,7 +85,7 @@ def SimCLR_loss(
     return loss
 
 
-def SimSiam_loss(
+def simsiam_loss(
     p1: torch.Tensor,
     z1: torch.Tensor,
     p2: torch.Tensor,
@@ -117,8 +120,8 @@ def SimSiam_loss(
     References
     ----------
     .. [siamgit] Original github repo: https://github.com/facebookresearch/simsiam
-    .. [simsiam] Original paper: Chen & He. Exploring Simple Siamese Representation Learning.
-      https://arxiv.org/abs/2011.10566
+    .. [simsiam] Original paper: Chen & He. Exploring Simple Siamese Representation
+      Learning. https://arxiv.org/abs/2011.10566
 
     Example
     -------
@@ -129,7 +132,7 @@ def SimSiam_loss(
     >>> z1 = torch.randn(64, 32)
     >>> p2 = torch.randn(64, 32)
     >>> z2 = torch.randn(64, 32)
-    >>> loss = losses.SimSiam_loss(p1,z1,p2,z2)
+    >>> loss = losses.simsiam_loss(p1,z1,p2,z2)
     >>> print(loss) # will return -0.0161
 
     """
@@ -146,7 +149,7 @@ def SimSiam_loss(
     return loss
 
 
-def Moco_loss(
+def moco_loss(
     q: torch.Tensor,
     k: torch.Tensor,
     queue: torch.Tensor = None,
@@ -155,10 +158,11 @@ def Moco_loss(
 ) -> torch.Tensor:
     """
     Simple implementation of the MoCo loss function [moco2]_.
-    It is the InfoNCE loss with dot product as similarity and memory bank as negative samples.
-    If no queue related to the memory bank is given, MoCo v3 [moco3]_ loss calculation
-    is performed. Note that the real MoCo v3 loss is calculated by calling the function 2 times
-    (with different q and k tensors) and summing up the results.
+    It is the InfoNCE loss with dot product as similarity and memory bank as
+    negative samples. If no queue related to the memory bank is given, MoCo v3
+    [moco3]_ loss calculation is performed. Note that the real MoCo v3 loss is
+    calculated by calling the function 2 times (with different q and k tensors)
+    and summing up the results.
 
     Parameters
     ----------
@@ -170,8 +174,8 @@ def Moco_loss(
         output which will be added to the memory bank.
         N = batch size , C = number of features.
     queue:  torch.Tensor, optional
-        2D (CxK) Tensor with the memory bank, i.e. a collection of previous augmented batch
-        projection_head outputs which act as negative samples.
+        2D (CxK) Tensor with the memory bank, i.e. a collection of previous
+        augmented batch projection_head outputs which act as negative samples.
         C = number of features, K = memory bank size.
 
         Default = None
@@ -192,10 +196,11 @@ def Moco_loss(
     References
     ----------
     .. [moco2] K. He, H. Fan, Y. Wu, S. Xie, and R. Girshick,
-      “Momentum contrast for unsupervised visual representation learning,” in Proceedings of
-      the IEEE/CVF conference on computer vision and pattern recognition, pp. 9729–9738, 2020.
-    .. [moco3] X. Chen, H. Fan, R. Girshick, and K. He, “Improved base- lines with momentum
-      contrastive learning,” arXiv preprint arXiv:2003.04297, 2020.
+      “Momentum contrast for unsupervised visual representation learning,”
+      in Proceedings of the IEEE/CVF conference on computer vision and pattern
+      recognition, pp. 9729–9738, 2020.
+    .. [moco3] X. Chen, H. Fan, R. Girshick, and K. He, “Improved baselines with
+      momentum contrastive learning,” arXiv preprint arXiv:2003.04297, 2020.
 
     Example
     -------
@@ -205,9 +210,9 @@ def Moco_loss(
     >>> q = torch.randn(64, 32)
     >>> k = torch.randn(64, 32)
     >>> queue = torch.randn(32, 128)
-    >>> loss = losses.Moco_loss(q, k, queue)
+    >>> loss = losses.moco_loss(q, k, queue)
     >>> print(loss) # will return 17.1668
-    >>> loss = losses.Moco_loss(q, k)
+    >>> loss = losses.moco_loss(q, k)
     >>> print(loss) # will return 1.4349
 
     """
@@ -240,7 +245,7 @@ def Moco_loss(
     return loss
 
 
-def BYOL_loss(
+def byol_loss(
     p1: torch.Tensor,
     z1: torch.Tensor,
     p2: torch.Tensor,
@@ -272,10 +277,11 @@ def BYOL_loss(
 
     References
     ----------
-    .. [BYOL] J.-B. Grill, F. Strub, F. Altché, C. Tallec, P. Richemond, E. Buchatskaya,
-      C. Doersch, B. Avila Pires, Z. Guo, M. Gheshlaghi Azar, et al., “Bootstrap your own
-      latent- a new approach to self-supervised learning,” Advances in neural information
-      processing systems, vol. 33, pp. 21271– 21284, 2020.
+    .. [BYOL] J.-B. Grill, F. Strub, F. Altché, C. Tallec, P. Richemond,
+      E. Buchatskaya, C. Doersch, B. Avila Pires, Z. Guo, M. Gheshlaghi Azar,
+      et al., “Bootstrap your own latent - a new approach to self-supervised
+      learning,” Advances in neural information processing systems,
+      vol. 33, pp. 21271– 21284, 2020.
 
     Example
     -------
@@ -286,7 +292,7 @@ def BYOL_loss(
     >>> z1 = torch.randn(64, 32)
     >>> p2 = torch.randn(64, 32)
     >>> z2 = torch.randn(64, 32)
-    >>> loss = losses.BYOL_loss(p1,z1,p2,z2)
+    >>> loss = losses.byol_loss(p1,z1,p2,z2)
     >>> print(loss) # will return 3.9357
 
     """
@@ -303,13 +309,14 @@ def BYOL_loss(
     return loss.mean()
 
 
-def Barlow_loss(
+def barlow_loss(
     z1: torch.Tensor,
     z2: torch.Tensor = None,
     lambda_coeff: float = 5e-3,
 ) -> torch.Tensor:
     """
-    Pytorch implementation of the Barlow Twins loss function as presented in [barlow]_ .
+    Pytorch implementation of the Barlow Twins loss function
+    as presented in [barlow]_ .
 
     Parameters
     ----------
@@ -333,8 +340,8 @@ def Barlow_loss(
     References
     ----------
     .. [barlow] J. Zbontar, L. Jing, I. Misra, Y. LeCun, and S. Deny,
-      “Barlow twins: Self-supervised learning via redundancy re- duction,” in International
-      Conference on Machine Learning, pp. 12310–12320, PMLR, 2021.
+      “Barlow twins: Self-supervised learning via redundancy reduction,”
+      in International Conference on Machine Learning, pp. 12310–12320, PMLR, 2021.
 
     Example
     -------
@@ -343,7 +350,7 @@ def Barlow_loss(
     >>> torch.manual_seed(1234)
     >>> z1 = torch.randn(64, 32)
     >>> z2 = torch.randn(64, 32)
-    >>> loss = losses.Barlow_loss(z1,z2)
+    >>> loss = losses.barlow_loss(z1,z2)
     >>> print(loss) # will return 31.6141
 
     """
@@ -366,7 +373,7 @@ def Barlow_loss(
     return loss
 
 
-def VICReg_loss(
+def vicreg_loss(
     z1: torch.Tensor,
     z2: torch.Tensor = None,
     Lambda: float = 25,
@@ -383,8 +390,8 @@ def VICReg_loss(
         2D tensor with projections of one augmented version of the batch.
     z2: torch.tensor, optional
         2D projections of the other augmented version of the batch. Can be none if
-        z1 and z2 are cat together. In this case internal split is done, but be sure that
-        the first dimension can be divided by 2.
+        z1 and z2 are cat together. In this case internal split is done,
+        but be sure that the first dimension can be divided by 2.
 
         Default = None
     Lambda: float, optional
@@ -411,8 +418,9 @@ def VICReg_loss(
 
     References
     ----------
-    .. [VIC] A. Bardes, J. Ponce, and Y. LeCun, “Vicreg: Variance- invariance-covariance
-      regularization for self-supervised learning,” arXiv preprint arXiv:2105.04906, 2021.
+    .. [VIC] A. Bardes, J. Ponce, and Y. LeCun,
+      “Vicreg: Variance-invariance-covariance regularization for self-supervised
+      learning,” arXiv preprint arXiv:2105.04906, 2021.
 
     Example
     -------
@@ -421,7 +429,7 @@ def VICReg_loss(
     >>> torch.manual_seed(1234)
     >>> z1 = torch.randn(64, 32)
     >>> z2 = torch.randn(64, 32)
-    >>> loss = losses.VICReg_loss(z1,z2)
+    >>> loss = losses.vicreg_loss(z1,z2)
     >>> print(loss) # will return 53.0773
 
     """

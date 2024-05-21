@@ -5,6 +5,9 @@
 Data/
 Simulated_EEG/
 
+# Directory with all generated rst files from autosummary
+docs/api/
+
 ### Linux ###
 *~
 

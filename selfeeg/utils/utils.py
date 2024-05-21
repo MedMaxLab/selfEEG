@@ -19,20 +19,22 @@ __all__ = [
     "RangeScaler",
     "scale_range_soft_clip",
     "torch_pchip",
+    "torch_zscore",
+    "ZscoreScaler",
 ]
 
 
 def subarray_closest_sum(arr: list, n: int, k: float) -> list:
     """
-    ``subarrat_closest_sum`` returns a subarray whose element sum is closest to k.
+    returns a subarray whose element sum is closest to k.
 
     This function is taken from geeksforgeeks at the following link [link1]_
 
-    It is important to note that this function returns a subarray and not a subset of the array.
-    A subset is a collection of elements in the array taken from any index, a subarray here is
-    a slice of the array (arr[start:end]). If you are looking for a subset with closest sum,
-    which is more accurate but more computationally and memory demanding,
-    use another function.
+    It is important to note that this function returns a subarray and not a
+    subset of the array. A subset is a collection of elements in the array taken
+    from any index, a subarray here is a slice of the array (arr[start:end]).
+    If you are looking for the exact subset with closest sum, which is more
+    accurate but more computationally and memory demanding, use another function.
 
     Parameters
     ----------
@@ -68,7 +70,8 @@ def subarray_closest_sum(arr: list, n: int, k: float) -> list:
         if curr_sum < k:
             end += 1
             curr_sum += arr[end]
-        # If the current sum is greater than or equal to K, move the start pointer to the right
+        # If the current sum is greater than or equal to K,
+        # move the start pointer to the right
         else:
             curr_sum -= arr[start]
             start += 1
@@ -105,16 +108,17 @@ def get_subarray_closest_sum(
     return_subarray: bool = True,
 ) -> tuple[list, Optional[list]]:
     """
-    ``get_subarray_closest_sum`` find the subarray of whose values sum is
-    closer to a target up to a specified tolerance (if possible) and return the index of the
-    selected values in the original array.
+    find the subarray whose values sum is closer to a target.
+
+    The solution found is the first inside a specified tolerance (if possible)
+    and return the index of the selected values in the original array.
 
     To find the subarray, get_subarray_closest_sum calls multiple times the
     ``subarray_closest_sum`` function until the subarray has the sum within
     [target*(1-tolerance), target*(1+tolerance)].
-    At each try the array is shuffled in order to get a different solution. Keep in mind that
-    the solution is not always the optimal, but is the first which satisfies the requirements
-    given.
+    At each try the array is shuffled in order to get a different solution.
+    Keep in mind that the solution is not always the optimal, but rather the first
+    which satisfies the requirements given.
 
     Parameters
     ----------
@@ -127,7 +131,8 @@ def get_subarray_closest_sum(
 
         Default = 0.01
     perseverance: int, optional
-        The maximum number of tries before stopping searching the subarray with closest sum.
+        The maximum number of tries before stopping searching the subarray
+        with closest sum.
 
         Default = 1000
     return_subarray: bool, optional
@@ -148,7 +153,8 @@ def get_subarray_closest_sum(
     >>> import selfeeg.utils
     >>> random.seed(1235)
     >>> arr = [i for i in range (1,100)]
-    >>> final_idx, best_sub_arr = utils.get_subarray_closest_sum(arr, 3251, perseverance=10000)
+    >>> final_idx, best_sub_arr = utils.get_subarray_closest_sum(
+    ...     arr, 3251, perseverance=10000)
     >>> print( sum(best_sub_arr)) #should print 3251
 
     """
@@ -193,24 +199,27 @@ def scale_range_soft_clip(
     x: ArrayLike, Range: float = 200, asintote: float = 1.2, scale: str = "mV", exact: bool = True
 ) -> ArrayLike:
     """
-    ``scale_range_soft_clip`` rescale the EEG data.
+    soft version of the range scaler.
+
     The function will rescale the data in the following way:
 
         1. values in Range will be rescaled in the range [-1,1] linearly
         2. values outside the range will be either clipped or soft clipped with
            an exponential saturating curve with first derivative in -1 and 1
-           preserved and horizontal asintote (the saturating point) given by the user.
+           preserved and horizontal asintote (the saturating point) given
+           by the user.
 
-    To provide faster computation, this function can also approximate its behaviour with a
-    sigmoid function which scales the given input using the specified range and asintote.
-    To check the difference in those functions see the geogebra file provided in the extra
-    folder of the github repository.
+    To provide faster computation, this function can also approximate its behaviour
+    with a sigmoid function which scales the given input using the specified range
+    and asintote. To check the difference in those functions see the geogebra file
+    provided in the extra folder of the github repository.
 
     Parameters
     ----------
     x: ArrayLike
-        The array or tensor to rescale. Rescaling can be perfomed along the last dimension.
-        Tensors can also be placed in a GPU. Computation in this case is much faster
+        The array or tensor to rescale. Rescaling can be perfomed along the
+        last dimension. Tensors can also be placed in a GPU.
+        Computation in this case is much faster
     Range: float, optional
         The range of values to rescale given in microVolt. It rescale linearly the
         values in [-range, range] to [-1, 1]. Must be a positive value. The list
@@ -218,7 +227,8 @@ def scale_range_soft_clip(
 
         Default = 200
     asintote: float, optional
-        The horizontal asintote of the soft clipping part. Must be a value bigger than 1.
+        The horizontal asintote of the soft clipping part.
+        Must be a value bigger than 1.
 
         Default = 1.2
     scale: str, optional
@@ -230,9 +240,9 @@ def scale_range_soft_clip(
 
         Default = 'mV'
     exact: bool, optional
-        Whether to approximate the composed function (linear + exponential function) with
-        a sigmoid. It will make the rescaling much faster but will not preserve the linearity
-        in the range [-1, 1].
+        Whether to approximate the composed function (linear + exponential function)
+        with a sigmoid. It will make the rescaling much faster but will not preserve
+        the linearity in the range [-1, 1].
 
     Returns
     -------
@@ -312,32 +322,35 @@ def scale_range_soft_clip(
 
 class RangeScaler:
     """
-    ``RangeScaler`` is the class adaptation of the
-    ``scale_range_with_soft_clip`` function.
+    class adaptation of the ``scale_range_with_soft_clip`` function.
+
     Upon call, RangeScaler rescales the given EEG data in the following way:
 
         1. values in Range will be linearly rescaled in the range [-1,1].
         2. values outside the range will be either clipped or soft clipped with
            an exponential saturating curve with first derivative in -1 and 1
-           preserved and horizontal asintote (the saturating point) given by the user.
+           preserved and horizontal asintote (the saturating point) given
+           by the user.
 
-    To provide faster computation, this function can also approximate its behaviour with a
-    sigmoid function which scales the given input using the specified range and asintote.
-    To check the difference in those functions see the geogebra file provided in the extra folder of
-    the github repository.
+    To provide faster computation, this function can also approximate its
+    behaviour with a sigmoid function which scales the given input using the
+    specified range and asintote. To check the difference in those functions
+    see the geogebra file provided in the extra folder of the github repository.
 
     Parameters
     ----------
     x: ArrayLike
-        The array or tensor to rescale. Rescaling can be perfomed along the last dimension.
-        Tensors can also be placed in a GPU. Computation in this case is faster.
+        The array or tensor to rescale. Rescaling can be perfomed along the last
+        dimension. Tensors can also be placed in a GPU.
+        Computation in this case is faster.
     Range: float, optional
         The range of values to rescale given in microVolt. It rescale linearly the
         values in [-range, range] to [-1, 1]. Must be a positive value.
 
         Default = 200
     asintote: float, optional
-        The horizontal asintote of the soft clipping part. Must be a value bigger than 1.
+        The horizontal asintote of the soft clipping part.
+        Must be a value bigger than 1.
 
         Default = 1.2
     scale: str, optional
@@ -349,9 +362,9 @@ class RangeScaler:
 
         Default = 'mV'
     exact: bool, optional
-        Whether to approximate the composed function (linear + exponential function) with
-        a sigmoid. It will make the rescaling much faster but will not preserve the linearity
-        in the range [-1, 1].
+        Whether to approximate the composed function (linear + exponential function)
+        with a sigmoid. It will make the rescaling much faster but will not preserve
+        the linearity in the range [-1, 1].
 
     Example
     -------
@@ -386,6 +399,107 @@ class RangeScaler:
         return scale_range_soft_clip(x, self.Range, self.asintote, self.scale, self.exact)
 
 
+def torch_zscore(
+    x: torch.Tensor,
+    axis: int = -2,
+    correction: int = 1,
+) -> torch.Tensor:
+    """
+    zscore operator for torch tensors.
+
+    It is heavily based on scipy's zscore in order to provide
+    identical results when using numpy arrays. The analogous
+    command in scipy is:
+
+        x_zscore = scipy.stats.zscore(x, axis=axis, ddof=correction)
+
+    Parameters
+    ----------
+    x: torch.Tensor
+        The tensor to standardize.
+    axis: int
+        The axis along which to operate. By default, it assumes that
+        the EEG channel dimension is the second to last. If the
+        tensor has only one dimension, default value is changed to 0.
+
+        Default = -2
+    correction: int
+        difference between the sample size and sample degrees of freedom.
+        It is applied during the calculation of the standard deviation.
+        It is equivalent to the Scipy's zscore `ddof` argument.
+        Default is Bessel's correction as used in Pytorch's std function.
+
+        Default = 1
+
+    Returns
+    -------
+    xz: torch.Tensor
+        The tensor standardized along the given dimension.
+
+    """
+    dims = len(x.shape)
+    if dims == 0:
+        raise ValueError("Got a tensor with 0 length")
+    elif dims == 1:
+        axis = 0
+
+    # get mean and standard deviation
+    mn = x.mean(axis, keepdim=True)
+    sd = x.std(axis, correction=correction, keepdim=True)
+
+    # a solid solution implemented in scipy's zscore
+    # to avoid 0 division or too large values
+    x0 = x.min(axis=axis, keepdims=True)[0]
+    iszero = torch.eq(x, x0).all(axis=axis, keepdims=True)
+
+    # torch doesn't throw zero division warnings
+    sd[iszero] = 1.0
+    xz = (x - mn) / sd
+
+    # Put nans
+    xz[torch.broadcast_to(iszero, x.shape)] = torch.nan
+    return xz
+
+
+class ZscoreScaler:
+    """
+    zscore operator callable objects.
+
+    It can accept both torch Tensors and numpy arrays.
+    In case of torch Tensors are passed during call,
+    ``torch_zscore`` is called.
+
+    Parameters
+    ----------
+    x: ArrayLike
+        The ArrayLike object to standardize.
+    axis: int
+        The axis along which to operate. By default, it assumes that
+        the EEG channel dimension is the second to last. If the
+        tensor has only one dimension, default value is changed to 0.
+
+        Default = -2
+    correction: int
+        difference between the sample size and sample degrees of freedom.
+        It is applied during the calculation of the standard deviation.
+        It is equivalent to the Scipy's zscore `ddof` argument.
+        Default is Bessel's correction as used in Pytorch's std function.
+
+        Default = 1
+
+    """
+
+    def __init__(self, axis: int = -2, correction: int = 1):
+        self.axis = axis
+        self.correction = correction
+
+    def __call__(self, x):
+        if isinstance(x, torch.Tensor):
+            return torch_zscore(x, self.axis, self.correction)
+        else:
+            return zscore(x, axis=self.axis, ddof=self.correction)
+
+
 def torch_pchip(
     x: "1D Tensor",
     y: "ND Tensor",
@@ -394,36 +508,40 @@ def torch_pchip(
     new_y_max_numel: int = 4194304,
 ) -> torch.Tensor:
     """
-    ``torch_pchip`` performs the pchip interpolation on the last dimension of the input tensor y.
+    performs the pchip interpolation on the last dimension of the input tensor.
 
-    This function is a pytorch adaptation of the scipy's pchip_interpolate [pchip]_ .
-    It performs sp-pchip interpolation (Shape Preserving Piecewise Cubic Hermite Interpolating
-    Polynomial) on the last dimension of the y tensor.
-    x is the original time grid and xv new virtual grid. So, the new values of y at time xv are
-    given by the polynomials evaluated at the time grid x.
+    This function is a pytorch adaptation of the scipy's pchip_interpolate [pchip]_
+    . It performs sp-pchip interpolation (Shape Preserving Piecewise Cubic Hermite
+    Interpolating Polynomial) on the last dimension of the y tensor.
+    x is the original time grid and xv new virtual grid. So, the new values of y at
+    time xv are given by the polynomials evaluated at the time grid x.
 
     This function is compatible with GPU devices.
 
     Parameters
     ----------
     x: 1D Tensor
-        Tensor with the original time grid. Must be the same length as the last dimension of y.
+        Tensor with the original time grid. Must be the same length as the last
+        dimension of y.
     y: ND Tensor
-        Tensor to interpolate. The last dimension must be the time dimension of the signals to interpolate.
+        Tensor to interpolate. The last dimension must be the time dimension of the
+        signals to interpolate.
     xv: 1D Tensor
         Tensor with the new virtual grid, i.e. the time points where to interpolate
     save_memory: bool, optional
-        Whether to perform the interpolation on subsets of the y tensor by recursive function
-        calls or not. Does not apply if y is a 1-D tensor. If set to False memory usage can
-        greatly increase (for example with a 128 MB tensor, the memory usage of the
-        function is 1.2 GB), but it can speed up the process.
-        However, this is not the case for all devices and performance may also decrease.
+        Whether to perform the interpolation on subsets of the y tensor by
+        recursive function calls or not. Does not apply if y is a 1-D tensor.
+        If set to False memory usage can greatly increase (for example with a
+        128 MB tensor, the memory usage of the function is 1.2 GB), but it can
+        speed up the process. However, this is not the case for all devices and
+        performance may also decrease.
 
         Default = True
     new_y_max_numel: int, optional
-        The number of elements which the tensor needs to surpass in order to make the function
-        start doing recursive calls. It can be considered as an indicator of the maximum
-        allowed memory usage since the lower the number, the lower the memory used.
+        The number of elements which the tensor needs to surpass in order to make
+        the function start doing recursive calls. It can be considered as an
+        indicator of the maximum allowed memory usage since the lower the number,
+        the lower the memory used.
 
         Default = 256*1024*16 (approximately 16s of recording of a 256 Channel
         EEG sampled at 1024 Hz).
@@ -435,8 +553,8 @@ def torch_pchip(
 
     Note
     ----
-    Some technical information and difference with other interpolation can be found here:
-    https://blogs.mathworks.com/cleve/2012/07/16/splines-and-pchips/
+    Some technical information and difference with other interpolation can be found
+    here: https://blogs.mathworks.com/cleve/2012/07/16/splines-and-pchips/
 
     Note
     ----
@@ -459,7 +577,9 @@ def torch_pchip(
     >>> xnp = x.numpy()
     >>> x_pchip = utils.torch_pchip(torch.arange(1024), x, torch.linspace(0,1023,475)).numpy()
     >>> xnp_pchip = pchip_interpolate(np.arange(1024),xnp, np.linspace(0,1023,475), axis=-1)
-    >>> print( np.isclose(x_pchip, xnp_pchip, rtol=1e-3,atol=0.5*1e-3).sum()==16*32*475) # Should return True
+    >>> print(
+    ...     np.isclose(x_pchip, xnp_pchip, rtol=1e-3,atol=0.5*1e-3).sum()==16*32*475
+    ... ) # Should return True
 
     """
 
@@ -478,8 +598,8 @@ def torch_pchip(
     Ndim = len(y.shape)
     new_y = torch.empty((*y.shape[: (Ndim - 1)], xv.shape[0]), device=y.device)
 
-    # If save_memory and the new Tensor size is huge, call recursively for each element in
-    # the first dimension
+    # If save_memory and the new Tensor size is huge, call recursively for
+    # each element in the first dimension
     if save_memory:
         if Ndim > 1:
             if ((torch.numel(y) / y.shape[-1]) * xv.shape[0]) > new_y_max_numel:
@@ -550,8 +670,9 @@ def create_dataset(
     seed: int = 1234,
 ) -> Optional[np.ndarray]:
     """
-    ``create_dataset`` creates a simulated EEG dataset for normal abnormal binary classification,
-    with samples having random length within a given range.
+    creates a simulated EEG dataset for normal abnormal binary classification.
+
+    Samples have random length within a given range.
 
     Once called, the function will generate 1000 files in a new directory.
     Samples will have name 'A_B_C_D.pickle' with:
@@ -570,7 +691,8 @@ def create_dataset(
 
     All files will store a dictionary with two keys:
 
-        1. 'data' = the array with random length and given channels (channels in column dimension)
+        1. 'data' = the array with random length and given channels
+           (channels in column dimension)
         2. 'label' = an integer with a random binary label (0=normal, 1=abnormal).
 
     EEG files have values in uV, with range at most in [-550,550] uV.
@@ -578,11 +700,13 @@ def create_dataset(
     Parameters
     ----------
     folder_name: str, optional
-        A string with the optional name of the subdirectory to store the generated files.
+        A string with the optional name of the subdirectory to store the
+        generated files.
 
         Default = 'Simulated_EEG'
     Sample_range: list, optional
-        A length 2 list with the possible minimum and maximum length of the generated EEGs.
+        A length 2 list with the possible minimum and maximum length of the
+        generated EEGs.
 
         Default = [512, 1025]
     Chans: int, optional
@@ -601,7 +725,8 @@ def create_dataset(
     Returns
     -------
     classes: ArrayLike
-        An array with the generated label. Index association is based on the file sorted by names.
+        An array with the generated label. Index association is based on the
+        file sorted by names.
 
     Example
     -------
@@ -656,7 +781,9 @@ def create_dataset(
 
         # store files
         sample = {"data": x, "label": y}
-        A, B, C = (int(i // 200) + 1), (int((i - 200 * int(i // 200))) // 5 + 1), (i % 5 + 1)
+        A = int(i // 200) + 1
+        B = int((i - 200 * int(i // 200))) // 5 + 1
+        C = i % 5 + 1
         file_name = "Simulated_EEG/" + str(A) + "_" + str(B) + "_" + str(C) + "_1.pickle"
         with open(file_name, "wb") as f:
             pickle.dump(sample, f)
@@ -666,7 +793,7 @@ def create_dataset(
 
 def check_models(model1: torch.nn.Module, model2: torch.nn.Module) -> bool:
     """
-    ``check_models`` checks that two nn.Modules are equal.
+    checks that two nn.Modules are equal.
 
     Parameters
     ----------
@@ -703,18 +830,23 @@ def count_parameters(
     add_not_trainable=False,
 ) -> [int, Optional[pd.DataFrame]]:
     """
-    ``count_parameters`` counts the number of **trainable parameters** of a Pytorch's nn.Module.
-    It can additionally create a two column dataframe with module's name and number of trainable
-    parameters. Not trainable parameters can be also added to the table if specified.
+    counts the number of **trainable parameters** of a
+    Pytorch's nn.Module.
 
-    The implementation is an enriched implementation inspired from [stacko1]_ and [stacko2]_ .
+    It can additionally create a two column dataframe
+    with module's name and number of trainable parameters.
+    Not trainable parameters can be also added to the table if specified.
+
+    The implementation is an enriched implementation
+    inspired from [stacko1]_ and [stacko2]_ .
 
     Parameters
     ----------
     model: nn.Module
         The model to scroll.
     return_table: bool, optional
-        Whether to return a with module's name and number of trainable parameters or not.
+        Whether to return a with module's name and number of
+        trainable parameters or not.
 
         Default = False
     print_table: bool, optional
@@ -735,7 +867,7 @@ def count_parameters(
 
     References
     ----------
-    .. [stacko1] https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model
+    .. [stacko1] https://stackoverflow.com/questions/49201236
     .. [stacko2] https://discuss.pytorch.org/t/how-do-i-check-the-number-of-parameters-of-a-model/4325/9
 
     Example

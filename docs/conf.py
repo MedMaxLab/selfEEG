@@ -37,23 +37,13 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
-    # 'sphinx.ext.autosummary',
+    "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "nbsphinx",
-    "myst_parser",
-    "sphinx_automodapi.automodapi",
-    # 'sphinx.ext.doctest'
 ]
-# doctest_test_doctest_blocks = 'default'
-# doctest_global_setup = '''
-# try:
-#    import matplotlib.pyplot as plt
-# except ImportError:
-#    plt = None
-#'''
 numpydoc_show_class_members = False
 autodoc_type_aliases = {
     "Iterable": "Iterable",
@@ -77,11 +67,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
+# The theme to use for HTML and HTML Help pages.
+# See the documentation for a list of builtin themes.
 html_theme = "sphinx_rtd_theme"
-# html_logo = '_static/LibraryLogo.png'
 
 # html rtd theme configuration parameters
 html_theme_options = {
@@ -89,10 +77,7 @@ html_theme_options = {
     "display_version": True,
     "prev_next_buttons_location": "bottom",
     "style_external_links": False,
-    # Toc options
     "collapse_navigation": False,
-    # 'sticky_navigation': True,
-    # 'style_nav_header_background': '#E3E3E3',
     "navigation_depth": -1,
     "includehidden": True,
     "titles_only": True,

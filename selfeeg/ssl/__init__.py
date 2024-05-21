@@ -1,12 +1,15 @@
-from .ssl import (
-    BYOL,
-    Barlow_Twins,
+from .base import (
     EarlyStopping,
+    SSLBase,
+    evaluate_loss,
+    fine_tune,
+)
+
+from .contrastive import (
+    BYOL,
+    BarlowTwins,
     MoCo,
     SimCLR,
     SimSiam,
-    SSL_Base,
     VICReg,
-    evaluateLoss,
-    fine_tune,
 )

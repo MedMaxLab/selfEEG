@@ -138,9 +138,23 @@ Local tests can be performed with unittest by simply running the following comma
 
    python3 -m unittest discover test "*_test.py"
 
-Remember to add test functionalities if you are working on novel
-features. More detail about tests can be found in the readme file in the
-test folder. For further info on what assertion you must include, take a look at the test's folder `readme <https://github.com/MedMaxLab/selfEEG/blob/main/test/README.md>`__
+If you want to run only a specific test and not the entire battery, you can run
+the following command, changing the syntax according to the specific test:
+
+
+::
+
+    python3 -m unittest test.EEGself.module.python_filename.UnittestClass.test_function
+
+for example:
+
+::
+    python3 -m unittest test.EEGself.ssl.ssl_test.TestSSL.test_BYOL
+
+Remember to add test functionalities if you are working on novel features.
+More detail about tests can be found in the readme file in the test folder.
+For further info on what assertion you must include, take a look at the test's
+folder `readme <https://github.com/MedMaxLab/selfEEG/blob/main/test/README.md>`__
 
 Submitting Pull Requests
 ------------------------

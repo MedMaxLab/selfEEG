@@ -11,10 +11,10 @@ repos:
     -   id: check-added-large-files
         args: [-- maxkb=5000]
 
--   repo: https://gitlab.com/iamlikeme/nbhooks
-    rev: 1.0.0
+-   repo: https://github.com/kynan/nbstripout
+    rev: 0.7.1
     hooks:
-    -   id: nb-ensure-clean
+    -   id: nbstripout
         exclude: ^docs/
 
 -   repo: https://github.com/PyCQA/bandit

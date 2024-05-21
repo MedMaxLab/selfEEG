@@ -19,18 +19,19 @@ class TestModels(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.device = (
-            torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
-        )
-        if cls.device.type == "cpu":
-            cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        if torch.backends.mps.is_available():
+            cls.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            cls.device = torch.device("cuda")
+        else:
+            cls.device = torch.device("cpu")
 
         if cls.device.type == "mps":
             try:
-                xx = torch.randn(2,2).to(device=cls.device)
+                xx = torch.randn(2, 2).to(device=cls.device)
             except Exception:
                 cls.device = torch.device("cpu")
-        
+
         print("\n----------------------------")
         print("TESTING MODELS.LAYERS MODULE")
         if cls.device.type != "cpu":

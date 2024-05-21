@@ -14,18 +14,19 @@ class TestUtils(unittest.TestCase):
     def setUpClass(cls):
         print("\n--------------------")
         print("TESTING UTILS MODULE")
-        cls.device = (
-            torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
-        )
-        if cls.device.type == "cpu":
-            cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        if torch.backends.mps.is_available():
+            cls.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            cls.device = torch.device("cuda")
+        else:
+            cls.device = torch.device("cpu")
 
         if cls.device.type == "mps":
             try:
-                xx = torch.randn(2,2).to(device=cls.device)
+                xx = torch.randn(2, 2).to(device=cls.device)
             except Exception:
                 cls.device = torch.device("cpu")
-        
+
         if cls.device.type != "cpu":
             print("Found gpu device: testing module with both cpu and gpu")
         else:
@@ -68,7 +69,8 @@ class TestUtils(unittest.TestCase):
     def test_RangeScaler(self):
         print("testing Range Scaler...", end="", flush=True)
         random.seed(1234)
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024)) * 500
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024)) * 500
         xnp = x.numpy()
         inplist = [x, xnp]
         if self.device.type != "cpu":
@@ -92,6 +94,23 @@ class TestUtils(unittest.TestCase):
             self.assertFalse(x.max() <= i["asintote"] and x.min() >= -i["asintote"])
             self.assertTrue(x_scaled.max() <= i["asintote"] and x_scaled.min() >= -i["asintote"])
         print("   Range Scaler OK")
+
+    def test_torch_zscore(self):
+        print("testing Zscore Scaler...", end="", flush=True)
+        x = torch.ones(2, 16, 16)
+        x[0] += torch.randn(16, 16)
+        if self.device.type != "cpu":
+            x = x.to(device=self.device)
+        xz = utils.torch_zscore(x, -2, 1)
+        self.assertTrue(torch.isnan(xz).sum() == 16 * 16)
+        self.assertTrue(xz.device.type == self.device.type)
+
+        x[1] += torch.randn(16, 16).to(device=self.device)
+        xz = utils.torch_zscore(x, -2, 1)
+        self.assertTrue(torch.isnan(xz).sum() == 0)
+        self.assertTrue((xz.mean(-2).abs() > 1e-6).sum().item() == 0)
+        self.assertTrue(((xz.std(-2, correction=0).abs() - 1) > 1e-6).sum().item() == 0)
+        print("   Zscore Scaler OK")
 
     def test_get_subarray_closest_sum(self):
         print("testing subarray closest sum function...", end="", flush=True)
@@ -124,6 +143,7 @@ class TestUtils(unittest.TestCase):
         a, b = utils.count_parameters(mdl, True, True, True)
         self.assertEqual(b, 23760)  # should return True
         print("\n   count parameters OK")
+
 
 if __name__ == "__main__":
     unittest.main()

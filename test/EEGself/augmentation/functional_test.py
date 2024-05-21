@@ -23,18 +23,19 @@ class TestAugmentationFunctional(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.device = (
-            torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
-        )
-        if cls.device.type == "cpu":
-            cls.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        if torch.backends.mps.is_available():
+            cls.device = torch.device("mps")
+        elif torch.cuda.is_available():
+            cls.device = torch.device("cuda")
+        else:
+            cls.device = torch.device("cpu")
 
         if cls.device.type == "mps":
             try:
-                xx = torch.randn(2,2).to(device=cls.device)
+                xx = torch.randn(2, 2).to(device=cls.device)
             except Exception:
                 cls.device = torch.device("cpu")
-                
+
         device = cls.device
         print("\n---------------------------")
         print("TESTING AUGMENTATION.FUNCTIONAL MODULE")
@@ -44,10 +45,11 @@ class TestAugmentationFunctional(unittest.TestCase):
             print("Didn't found cuda device: testing module on cpu")
         print("---------------------------")
         dims = (32, 2, 32, 1024)
-        cls.x1 = torch.zeros(*dims[-1:]) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
-        cls.x2 = torch.zeros(*dims[-2:]) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
-        cls.x3 = torch.zeros(*dims[-3:]) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
-        cls.x4 = torch.zeros(*dims) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        pi = torch.pi
+        cls.x1 = torch.zeros(*dims[-1:]) + torch.sin(torch.linspace(0, 8 * pi, 1024))
+        cls.x2 = torch.zeros(*dims[-2:]) + torch.sin(torch.linspace(0, 8 * pi, 1024))
+        cls.x3 = torch.zeros(*dims[-3:]) + torch.sin(torch.linspace(0, 8 * pi, 1024))
+        cls.x4 = torch.zeros(*dims) + torch.sin(torch.linspace(0, 8 * pi, 1024))
         cls.x1np = cls.x1.numpy()
         cls.x2np = cls.x2.numpy()
         cls.x3np = cls.x3.numpy()
@@ -104,7 +106,8 @@ class TestAugmentationFunctional(unittest.TestCase):
             for i in aug_args:
                 xaug = aug.shift_vertical(**i)
 
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug = aug.shift_vertical(x, 4)
         self.assertTrue(torch.equal(x + 4, xaug))  # should return True
         print("   shift vertical OK: tested", N + len(aug_args), "combinations of input arguments")
@@ -196,7 +199,8 @@ class TestAugmentationFunctional(unittest.TestCase):
                 xaug = aug.shift_frequency(**i)
 
         Fs = 128
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 48 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 48 * torch.pi, 1024))
         x = x + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug = aug.shift_frequency(x, 10, Fs, True)
         f, per1 = periodogram(x[0, 0], fs=Fs)
@@ -226,7 +230,8 @@ class TestAugmentationFunctional(unittest.TestCase):
             for i in aug_args:
                 xaug = aug.flip_vertical(**i)
 
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * np.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * np.pi, 1024))
         xaug = aug.flip_vertical(x)
         self.assertTrue(torch.equal(xaug, x * (-1)))  # should return True
         print("   flip vertical OK: tested", N + len(aug_args), "combinations of input arguments")
@@ -252,9 +257,10 @@ class TestAugmentationFunctional(unittest.TestCase):
             for i in aug_args:
                 xaug = aug.flip_horizontal(**i)
 
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug = aug.flip_horizontal(x)
-        self.assertTrue(torch.equal(xaug, torch.flip(x, [len(x.shape) - 1])))  # should return True
+        self.assertTrue(torch.equal(xaug, torch.flip(x, [len(x.shape) - 1])))
         print("   flip horizontal OK: tested", N + len(aug_args), "combinations of input arguments")
 
     def test_gaussian_noise(self):
@@ -283,9 +289,10 @@ class TestAugmentationFunctional(unittest.TestCase):
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.add_gaussian_noise(**i)
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug, noise = aug.add_gaussian_noise(x, 0.1, get_noise=True)
-        self.assertTrue(math.isclose(noise.std(), 0.1, rel_tol=1e-2))  # should return True
+        self.assertTrue(math.isclose(noise.std(), 0.1, rel_tol=1e-2))
         self.assertTrue(math.isclose(xaug.mean(), 0, rel_tol=1e-4, abs_tol=1e-3))
         print("   gaussian noise OK: tested", N + len(aug_args), "combinations of input arguments")
 
@@ -317,7 +324,7 @@ class TestAugmentationFunctional(unittest.TestCase):
         x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * np.pi, 1024))
         xaug, noise = aug.add_noise_SNR(x, 10, get_noise=True)
         SNR = 10 * np.log10(((x**2).sum().mean()) / ((noise**2).sum().mean()))
-        self.assertTrue(math.isclose(SNR, 10, rel_tol=1e-2))  # should return True
+        self.assertTrue(math.isclose(SNR, 10, rel_tol=1e-2))
         print("   noise SNR OK: tested", N + len(aug_args), "combinations of input arguments")
 
     def test_add_band_noise(self):
@@ -362,11 +369,12 @@ class TestAugmentationFunctional(unittest.TestCase):
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.add_band_noise(**i)
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug, noise = aug.add_band_noise(x, "beta", 128, noise_range=0.2, get_noise=True)
         f, per = periodogram(noise, 128)
         index = np.where(per > 1e-12)[0]
-        self.assertTrue(len(np.where(((f[index] < 13) | (f[index] > 30)))[0]) == 0)  # True
+        self.assertTrue(len(np.where(((f[index] < 13) | (f[index] > 30)))[0]) == 0)
         print("   band noise OK: tested", N + len(aug_args), "combinations of input arguments")
 
     def test_scaling(self):
@@ -395,7 +403,8 @@ class TestAugmentationFunctional(unittest.TestCase):
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.scaling(**i)
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug = aug.scaling(x, 1.5)
         self.assertTrue(xaug.max() == x.max() * 1.5)  # should return True
         self.assertTrue(xaug.min() == x.min() * 1.5)  # should return True
@@ -436,7 +445,8 @@ class TestAugmentationFunctional(unittest.TestCase):
                     i["batch_equal"] = False
                 xaug = aug.random_slope_scale(**i)
 
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug = aug.random_slope_scale(x)
         diff1 = torch.abs(xaug[0, 0, 1:] - xaug[0, 0, :-1])
         diff2 = torch.abs(x[0, 0, 1:] - x[0, 0, :-1])
@@ -473,7 +483,8 @@ class TestAugmentationFunctional(unittest.TestCase):
             aug_args = self.makeGrid(aug_args)
             for i in aug_args:
                 xaug = aug.random_FT_phase(**i)
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug = aug.random_FT_phase(x, 0.8)
         phase_shift = torch.arccos(2 * ((x[0, 0, 0:512] * xaug[0, 0, :512]).mean()))
         a = torch.sin(torch.linspace(0, 8 * torch.pi, 1024) + phase_shift)
@@ -550,7 +561,8 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertTrue((xaug > 1e2).sum() == 0)
                 self.assertTrue((xaug < -1e2).sum() == 0)
 
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         x += torch.sin(torch.linspace(0, 48 * 2 * torch.pi, 1024))
         x += torch.sin(torch.linspace(0, 256 * 2 * torch.pi, 1024))
         f, per1 = periodogram(x[0, 0], 128)
@@ -600,13 +612,14 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertTrue((xaug > 1e2).sum() == 0)
                 self.assertTrue((xaug < -1e2).sum() == 0)
 
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         x += torch.sin(torch.linspace(0, 48 * 2 * torch.pi, 1024))
         x += torch.sin(torch.linspace(0, 256 * 2 * torch.pi, 1024))
         f, per1 = periodogram(x[0, 0], 128)
         xaug = aug.filter_highpass(x, 128, 20, 30)
         f, per2 = periodogram(xaug[0, 0], 128)
-        self.assertTrue(np.isclose(np.max(per2[f < 20]), 0, rtol=1e-04, atol=1e-04))  # True
+        self.assertTrue(np.isclose(np.max(per2[f < 20]), 0, rtol=1e-04, atol=1e-04))
         print("   highpass filter OK: tested", N + len(aug_args), "combinations of input arguments")
 
     def test_filter_bandpass(self):
@@ -644,7 +657,8 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertTrue((xaug > 1e2).sum() == 0)
                 self.assertTrue((xaug < -1e2).sum() == 0)
 
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         x += torch.sin(torch.linspace(0, 48 * 2 * torch.pi, 1024))
         x += torch.sin(torch.linspace(0, 256 * 2 * torch.pi, 1024))
         f, per1 = periodogram(x[0, 0], 128)
@@ -688,7 +702,8 @@ class TestAugmentationFunctional(unittest.TestCase):
                 self.assertFalse(torch.equal(i["x"], xaug))
                 self.assertTrue((xaug > 1e2).sum() == 0)
                 self.assertTrue((xaug < -1e2).sum() == 0)
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         x += torch.sin(torch.linspace(0, 48 * 2 * torch.pi, 1024))
         x += torch.sin(torch.linspace(0, 256 * 2 * torch.pi, 1024))
         f, per1 = periodogram(x[0, 0], 128)
@@ -745,9 +760,11 @@ class TestAugmentationFunctional(unittest.TestCase):
         }
         aug_args = self.makeGrid(aug_args)
         for i in aug_args:
-            i["x"] = i["x"] + (
-                torch.randn(32, 1) if isinstance(i["x"], torch.Tensor) else np.random.randn(32, 1)
-            )
+            i["x"] = i["x"]
+            if isinstance(i["x"], torch.Tensor):
+                i["x"] += torch.randn(32, 1)
+            else:
+                i["x"] += np.random.randn(32, 1)
             xaug = aug.permute_channels(**i)
             if isinstance(xaug, torch.Tensor):
                 self.assertTrue(torch.isnan(xaug).sum() == 0)
@@ -775,14 +792,14 @@ class TestAugmentationFunctional(unittest.TestCase):
                 xaug = aug.permute_channels(**i)
         x = torch.zeros(61, 4) + torch.arange(61).reshape(61, 1)
         xaug = aug.permute_channels(x, 10)
-        self.assertEqual((x[:, 0] != xaug[:, 0]).sum(), 10)  # should output 10
+        self.assertEqual((x[:, 0] != xaug[:, 0]).sum(), 10)
         eeg1010, chan_net = aug.get_channel_map_and_networks(chan_net=["DMN", "VFN"])
         chan2per = np.union1d(chan_net[0], chan_net[1])
         a = np.intersect1d(eeg1010, chan2per, return_indices=True)[1]
         b = torch.from_numpy(np.delete(np.arange(61), a))
         xaug2 = aug.permute_channels(x, 50, mode="network", chan_net=["DMN", "VFN"])
-        self.assertTrue(((x[:, 0] != xaug2[:, 0]).sum()) == 50)  # should output True
-        self.assertTrue(((x[b, 0] == xaug2[b, 0]).sum()) == len(b))  # should output True
+        self.assertTrue(((x[:, 0] != xaug2[:, 0]).sum()) == 50)
+        self.assertTrue(((x[b, 0] == xaug2[b, 0]).sum()) == len(b))
         print(
             "   permute channels OK: tested", N + len(aug_args), "combinations of input arguments"
         )
@@ -816,7 +833,8 @@ class TestAugmentationFunctional(unittest.TestCase):
             for i in aug_args:
                 xaug = aug.permutation_signal(**i)
         torch.manual_seed(1234)
-        x = torch.ones(16, 32, 1024) * 2 + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.ones(16, 32, 1024) * 2
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug = aug.masking(x, 3, 0.5)
         self.assertTrue(
             torch.isclose(
@@ -922,7 +940,8 @@ class TestAugmentationFunctional(unittest.TestCase):
                 xaug = aug.change_ref(**i)
 
         torch.manual_seed(1234)
-        x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.zeros(16, 32, 1024)
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         x[:, 0, :] = 0.0
         xaug = aug.change_ref(x, "channel", 5)
         self.assertFalse(x[0, 0].max() != 0 and x[0, 0].min() != 0)  # should return False
@@ -962,7 +981,8 @@ class TestAugmentationFunctional(unittest.TestCase):
             for i in aug_args:
                 xaug = aug.masking(**i)
 
-        x = torch.ones(16, 32, 1024) * 2 + torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
+        x = torch.ones(16, 32, 1024) * 2
+        x += torch.sin(torch.linspace(0, 8 * torch.pi, 1024))
         xaug = aug.masking(x, 3, 0.5)
         self.assertTrue(
             torch.isclose(
@@ -1042,6 +1062,7 @@ class TestAugmentationFunctional(unittest.TestCase):
             for i in aug_args:
                 xaug = aug.add_eeg_artifact(**i)
         print("   eeg artifact OK: tested", N + len(aug_args), "combinations of input arguments")
+
 
 if __name__ == "__main__":
     unittest.main()
