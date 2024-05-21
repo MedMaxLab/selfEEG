@@ -5,6 +5,7 @@ torchaudio
 torchvision
 matplotlib
 scikit-learn
+selfeeg @ git+https://github.com/MedMaxLab/selfEEG@main
 
 sphinx_rtd_theme
 nbsphinx
