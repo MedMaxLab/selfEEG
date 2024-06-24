@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Iterable, Callable
 import copy
 import datetime
+from itertools import zip_longest
 import math
 import os
 import random
@@ -45,10 +47,10 @@ def _default_augmentation(x):
 
 
 def evaluate_loss(
-    loss_fun: "function",
+    loss_fun: Callable,
     arguments: torch.Tensor or list[torch.Tensor],
     loss_arg: Union[list, dict] = None,
-) -> "loss_fun output":
+):
     """
     evaluates a custom loss function.
 
@@ -57,8 +59,8 @@ def evaluate_loss(
 
     Parameters
     ----------
-    loss_fun: function
-        The custom loss function. It can be any loss function which
+    loss_fun: Callable
+        The custom loss function. It can be any Callable object that
         accepts as input:
 
             1. the model's prediction (or predictions) and the true labels as
@@ -116,9 +118,9 @@ def fine_tune(
     epochs=1,
     optimizer=None,
     augmenter=None,
-    loss_func: "function" = None,
+    loss_func: Callable or list[Callable] = None,
     loss_args: list or dict = [],
-    label_encoder: "function" = None,
+    label_encoder: Callable or list[Callable] = None,
     lr_scheduler=None,
     EarlyStopper=None,
     validation_dataloader: torch.utils.data.DataLoader = None,
@@ -135,8 +137,14 @@ def fine_tune(
         The pytorch model to fine tune. It must be a nn.Module.
     train_dataloader: Dataloader
         The pytorch Dataloader used to get the training batches. The Dataloar
-        must return a batch as a tuple (X, Y), with X the feature tensor
+        must return a batch as a tuple (X, Y), with X the input tensor
         and Y the label tensor.
+
+        Note
+        ----
+        from version 0.2.0 X and Y can also be lists of Tensors.
+        This might be useful for multi-branch or multi-head models.
+
     epochs: int, optional
         The number of training epochs. It must be an integer bigger than 0.
 
@@ -147,7 +155,7 @@ def fine_tune(
         parameters will be instantiated.
 
         Default = None
-    augmenter: function, optional
+    augmenter: Callable or list of Callables, optional
         Any function (or callable object) used to perform data augmentation
         on the batch. It is highly suggested to resort to the augmentation
         module, which implements different data augmentation functions and
@@ -156,6 +164,16 @@ def fine_tune(
         training set and to get more different samples.
 
         Default = None
+
+        Note
+        ----
+        from version 0.2.0 augmenter can be a list of Callables.
+        This case is specific for scenarios when X is also a list of Tensors
+        and you want to apply a specific augmentation for each of its elements.
+        Augmentations are performed by using the command
+        ``X[i] = augmenter[i](X[i])``.
+        It is possible to have ``len(augmenter)<len(X)``.
+
     loss_func: function, optional
         The custom loss function. It can be any loss function which
         accepts as input the model's prediction and the true labels
@@ -167,10 +185,19 @@ def fine_tune(
         or a dict.
 
         Default = None
-    label_encoder: function, optional
+    label_encoder: callable of list of callables, optional
         A custom function used to encode the returned Dataloaders true labels.
         If None, the Dataloader's true label is used directly. It can be any
         funtion which accept as input the batch label tensor Y.
+
+        Note
+        ----
+        from version 0.2.0 label_encoder can be a list of Callables.
+        This case is specific for scenarios when Y is also a list of Tensors
+        and you want to apply a specific encoder for each of its elements.
+        label encoding is performed with the command
+        ``Y[i] = label_encoder[i](Y[i])``.
+        It is possible to have ``len(label_encoder)<len(Y)``.
 
         Default = None
     lr_scheduler: torch Scheduler
@@ -220,7 +247,7 @@ def fine_tune(
 
     Example
     -------
-    >>> import torch, pickle, selfeeg.losses
+    >>> import torch, pickle
     >>> import selfeeg.dataloading as dl
     >>> import selfeeg.models
     >>> def loadEEG(path, return_label=False):
@@ -233,9 +260,8 @@ def fine_tune(
     >>> random.seed(1234)
     >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
     >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
-    >>> ratios = dl.check_split(EEGlen,EEGsplit, return_ratio=True)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit, [128,2,0.3], 'train', True, loadEEG,
-    ...                              optional_load_fun_args=[True], label_on_load=True)
+    ...                          optional_load_fun_args=[True], label_on_load=True)
     >>> TrainLoader = torch.utils.data.DataLoader(TrainSet, batch_size=32)
     >>> shanet= models.ShallowNet(2, 8, 256)
     >>> loss_info = ssl.fine_tune(shanet, TrainLoader, loss_func=loss_fineTuning)
@@ -254,9 +280,7 @@ def fine_tune(
     model.to(device=device)
 
     if not (isinstance(train_dataloader, torch.utils.data.DataLoader)):
-        raise ValueError(
-            "Current implementation accept only training data" " as a pytorch DataLoader"
-        )
+        raise ValueError("Current implementation accept only training data as a pytorch DataLoader")
     if not (isinstance(epochs, int)):
         epochs = int(epochs)
     if epochs < 1:
@@ -267,14 +291,14 @@ def fine_tune(
         raise ValueError("loss function not given")
     if not (isinstance(loss_args, list) or isinstance(loss_args, dict)):
         raise ValueError(
-            "loss_args must be a list or a dict with " "all optional arguments of the loss function"
+            "loss_args must be a list or a dict with all optional arguments of the loss function"
         )
 
     perform_validation = False
     if validation_dataloader != None:
         if not (isinstance(validation_dataloader, torch.utils.data.DataLoader)):
             raise ValueError(
-                "Current implementation accept only" " validation data as a pytorch DataLoader"
+                "Current implementation accept only validation data as a pytorch DataLoader"
             )
         else:
             perform_validation = True
@@ -312,14 +336,49 @@ def fine_tune(
             for batch_idx, (X, Ytrue) in enumerate(train_dataloader):
 
                 optimizer.zero_grad()
-                if X.device.type != device.type:
+
+                # possible cases: X is tensor or not, Augmenter is iterable or not
+                if isinstance(X, torch.Tensor):
                     X = X.to(device=device)
-                if augmenter is not None:
-                    X = augmenter(X)
-                if label_encoder is not None:
-                    Ytrue = label_encoder(Ytrue)
-                if Ytrue.device.type != device.type:
+                    if augmenter is not None:
+                        X = augmenter(X)
+                else:
+                    if augmenter is not None:
+                        if isinstance(augmenter, Iterable):
+                            Nmin = min(len(augmenter), len(X))
+                            for i in range(Nmin):
+                                X[i] = X[i].to(device=device)
+                                X[i] = augmenter[i](X[i])
+                            for i in range(Nmin, len(X)):
+                                X[i] = X[i].to(device=device)
+                        else:
+                            for i in range(len(X)):
+                                X[i] = X[i].to(device=device)
+                                X[i] = augmenter(X[i])
+                    else:
+                        for i in range(len(X)):
+                            X[i] = X[i].to(device=device)
+
+                if isinstance(Ytrue, torch.Tensor):
+                    if label_encoder is not None:
+                        Ytrue = label_encoder(Ytrue)
                     Ytrue = Ytrue.to(device=device)
+                else:
+                    if label_encoder is not None:
+                        if isinstance(label_encoder, Iterable):
+                            Nmin = min(len(label_encoder), len(Ytrue))
+                            for i in range(Nmin):
+                                Ytrue[i] = label_encoder[i](Ytrue[i])
+                                Ytrue[i] = Ytrue[i].to(device=device)
+                            for i in range(len(Ytrue)):
+                                Ytrue[i] = Ytrue[i].to(device=device)
+                        else:
+                            for i in range(len(Ytrue)):
+                                Ytrue[i] = label_encoder(Ytrue[i])
+                                Ytrue[i] = Ytrue[i].to(device=device)
+                    else:
+                        for i in range(len(Ytrue)):
+                            Ytrue[i] = Ytrue[i].to(device=device)
 
                 Yhat = model(X)
                 train_loss = evaluate_loss(loss_func, [Yhat, Ytrue], loss_args)
@@ -347,12 +406,32 @@ def fine_tune(
                     val_loss = 0
                     for batch_idx, (X, Ytrue) in enumerate(validation_dataloader):
 
-                        if X.device.type != device.type:
+                        if isinstance(X, torch.Tensor):
                             X = X.to(device=device)
-                        if label_encoder != None:
-                            Ytrue = label_encoder(Ytrue)
-                        if Ytrue.device.type != device.type:
+                        else:
+                            for i in range(len(X)):
+                                X[i] = X[i].to(device=device)
+
+                        if isinstance(Ytrue, torch.Tensor):
+                            if label_encoder is not None:
+                                Ytrue = label_encoder(Ytrue)
                             Ytrue = Ytrue.to(device=device)
+                        else:
+                            if label_encoder is not None:
+                                if isinstance(label_encoder, Iterable):
+                                    Nmin = min(len(label_encoder), len(Ytrue))
+                                    for i in range(Nmin):
+                                        Ytrue[i] = label_encoder[i](Ytrue[i])
+                                        Ytrue[i] = Ytrue[i].to(device=device)
+                                    for i in range(len(Ytrue)):
+                                        Ytrue[i] = Ytrue[i].to(device=device)
+                                else:
+                                    for i in range(len(Ytrue)):
+                                        Ytrue[i] = label_encoder(Ytrue[i])
+                                        Ytrue[i] = Ytrue[i].to(device=device)
+                            else:
+                                for i in range(len(Ytrue)):
+                                    Ytrue[i] = Ytrue[i].to(device=device)
 
                         Yhat = model(X)
                         val_loss = evaluate_loss(loss_func, [Yhat, Ytrue], loss_args)
@@ -382,7 +461,7 @@ def fine_tune(
                     EarlyStopper.rec_best_weights(model)
                     updated_mdl = True
             if EarlyStopper():
-                print(f"no improvement after {EarlyStopper.patience} epochs. " f"Training stopped")
+                print(f"no improvement after {EarlyStopper.patience} epochs. Training stopped")
                 if EarlyStopper.record_best_weights and not (updated_mdl):
                     EarlyStopper.restore_best_weights(model)
                 if return_loss_info:
@@ -449,9 +528,9 @@ class EarlyStopping:
 
     Note
     ----
-    Like in KERAS the early stopper will not automatically restore the best weights if
-    the training ends, i.e., you reach the maximum number of epochs. To get the best weights
-    simply call the ``restore_best_weights( model )`` method.
+    Like in KERAS the early stopper will not automatically restore the best weights
+    if the training ends, i.e., you reach the maximum number of epochs. To get the
+    best weights simply call the ``restore_best_weights( model )`` method.
 
     Example
     -------
@@ -688,7 +767,7 @@ class SSLBase(nn.Module):
 
     def evaluate_loss(
         self,
-        loss_fun: "function",
+        loss_fun: Callable,
         arguments: torch.Tensor or list[torch.Tensors],
         loss_arg: Union[list, dict] = None,
     ) -> torch.Tensor:
@@ -804,7 +883,7 @@ class SSLBase(nn.Module):
         epochs=1,
         optimizer=None,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         EarlyStopper=None,
         validation_dataloader=None,
@@ -826,7 +905,7 @@ class SSLBase(nn.Module):
 
         if not (isinstance(train_dataloader, torch.utils.data.DataLoader)):
             raise ValueError(
-                "Current implementation accept only training data" " as a pytorch DataLoader"
+                "Current implementation accept only training data as a pytorch DataLoader"
             )
         if not (isinstance(epochs, int)):
             epochs = int(epochs)
@@ -851,6 +930,8 @@ class SSLBase(nn.Module):
                 "byol": Loss.byol_loss,
                 "moco": Loss.moco_loss,
                 "simclr": Loss.simclr_loss,
+                "predictive": torch.nn.functional.cross_entropy,
+                "reconstructive": torch.nn.functional.mse_loss,
             }
             loss_func = loss_dict.get(self._sslname)
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):
@@ -862,7 +943,7 @@ class SSLBase(nn.Module):
         if validation_dataloader != None:
             if not (isinstance(validation_dataloader, torch.utils.data.DataLoader)):
                 raise ValueError(
-                    "Current implementation accept only " "training data as a pytorch DataLoader"
+                    "Current implementation accept only training data as a pytorch DataLoader"
                 )
             else:
                 perform_validation = True
@@ -911,7 +992,7 @@ class SSLBase(nn.Module):
         self,
         test_dataloader,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         device: str = None,
     ):
@@ -941,6 +1022,8 @@ class SSLBase(nn.Module):
                 "byol": Loss.byol_loss,
                 "moco": Loss.moco_loss,
                 "simclr": Loss.simclr_loss,
+                "predictive": torch.nn.functional.cross_entropy,
+                "reconstructive": torch.nn.functional.mse_loss,
             }
             loss_func = loss_dict.get(self._sslname)
         if not (isinstance(loss_args, list) or isinstance(loss_args, dict) or loss_args == None):

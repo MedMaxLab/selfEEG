@@ -13,3 +13,7 @@ from .contrastive import (
     SimSiam,
     VICReg,
 )
+
+from .generative import ReconstructiveSSL
+
+from .predictive import PredictiveSSL

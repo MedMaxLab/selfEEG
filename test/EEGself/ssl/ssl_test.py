@@ -7,6 +7,7 @@ import unittest
 import warnings
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import selfeeg
@@ -22,6 +23,19 @@ def loadEEG(path, return_label=False):
     if return_label:
         return x, y
     else:
+        return x
+
+
+class Decoder(nn.Module):
+    def __init__(self, emb, outCh, outT):
+        super(Decoder, self).__init__()
+        self.lin = nn.Linear(emb, outT)
+        self.Conv = nn.Conv1d(1, outCh, 5, padding="same")
+
+    def forward(self, x):
+        x = self.lin(x)
+        x = torch.unsqueeze(x, 1)
+        x = self.Conv(x)
         return x
 
 
@@ -259,7 +273,7 @@ class TestSSL(unittest.TestCase):
         print("   MoCo v3 OK")
 
     def test_BYOL(self):
-        print("Testing BYOL (10 epochs, verbose True, Earlystop, Scheduler)...")
+        print("Testing BYOL (10 epochs, Earlystop, Scheduler)...", end="", flush=True)
         SelfMdl = selfeeg.ssl.BYOL(
             encoder=self.enc,
             projection_head=self.head_size,
@@ -285,7 +299,7 @@ class TestSSL(unittest.TestCase):
             loss_func=loss,
             lr_scheduler=scheduler,
             validation_dataloader=self.valloader,
-            verbose=True,
+            verbose=False,
             device=self.device,
             return_loss_info=True,
         )
@@ -369,9 +383,66 @@ class TestSSL(unittest.TestCase):
         )  # just to show it works
         print("   BarlowTwins OK")
 
+    def test_PredictiveSSL(self):
+        print("Testing Predictive SSL (2 epochs)...", end="", flush=True)
+
+        SelfMdl = selfeeg.ssl.PredictiveSSL(self.enc, [16, 1])
+
+        AUG_band = aug.DynamicSingleAug(
+            aug.add_band_noise,
+            discrete_arg={
+                "bandwidth": ["delta", "theta", "alpha", "beta", (30, 49)],
+                "samplerate": 128,
+                "noise_range": 0.5,
+            },
+        )
+        AUG_mask = aug.DynamicSingleAug(
+            aug.masking, discrete_arg={"mask_number": [1, 2, 3, 4], "masked_ratio": 0.25}
+        )
+        augment = aug.RandomAug(AUG_band, AUG_mask, return_index=True)
+        loss_train = SelfMdl.fit(
+            train_dataloader=self.trainloader,
+            epochs=2,
+            loss_func=self.loss_fineTuning,
+            augmenter=augment,
+            augmenter_batch_calls=3,
+            validation_dataloader=self.valloader,
+            verbose=False,
+            device=self.device,
+            return_loss_info=True,
+        )
+        loss_test = SelfMdl.test(
+            self.valloader,
+            loss_func=self.loss_fineTuning,
+            augmenter=augment,
+            augmenter_batch_calls=3,
+            verbose=False,
+            device=self.device,
+        )
+        print("   Predictive SSL OK")
+
+    def test_ReconstructiveSSL(self):
+        print("Testing Reconstructive SSL (2 epochs)...", end="", flush=True)
+
+        dec = Decoder(16, 8, 128)
+        gen = selfeeg.ssl.ReconstructiveSSL(self.enc, dec)
+        loss_train = gen.fit(
+            train_dataloader=self.trainloader,
+            epochs=2,
+            augmenter=self.Augmenter,
+            validation_dataloader=self.valloader,
+            verbose=False,
+            device=self.device,
+            return_loss_info=True,
+        )
+        loss_train = gen.test(
+            self.valloader, augmenter=self.Augmenter, verbose=False, device=self.device
+        )
+        print("   Reconstructive SSL OK")
+
     def test_finetuning(self):
 
-        print("testing fine-tuning phase (10 epochs, verbose True)...")
+        print("testing fine-tuning phase (10 epochs)...", end="", flush=True)
         TrainSet = dl.EEGDataset(
             self.EEGlen,
             self.EEGsplit,
@@ -402,6 +473,7 @@ class TestSSL(unittest.TestCase):
             epochs=10,
             validation_dataloader=ValLoader,
             loss_func=self.loss_fineTuning,
+            verbose=False,
             return_loss_info=True,
         )
         self.assertTrue(loss_info[9][0] < 0.015)

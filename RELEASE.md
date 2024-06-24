@@ -1,5 +1,7 @@
 # Version X.X.X (only via git install)
 
+# Version 0.2.0 (latest)
+
 **Functionality**
 
 - **overall**:
@@ -17,9 +19,14 @@
     - added FBCNet (encoder + full model) and ATCNet (full model only).
 - **ssl module**:
     - The module was divided in ssl.base and ssl.contrastive.
+    - Two new submodules, ssl.predictive and ssl.generative, with their relative
+      pretraining algorithms, were added.
     - SSLBase class now includes two methods used to perform args check for fit and
       test methods.
-    - EarlyStopping now accepts a custom device to use during best weights recording
+    - EarlyStopping now accepts a custom device to use during best weights recording.
+    - fine_tune function can also accepts lists of input, labels, augmenters, and
+      label encoders. This might make easier to work with multi-branch or multi-head
+      models.
 - **utils module**:
     - added zscore scaler.
 
@@ -36,7 +43,7 @@
 * Added new tests for novel functionalities.
 
 
-# Version 0.1.1 (latest)
+# Version 0.1.1
 
 This release includes all the revisions made during the Journal of Open Source
 Software (JOSS) peer-review.

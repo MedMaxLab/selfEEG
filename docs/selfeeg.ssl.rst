@@ -9,8 +9,10 @@ used as a standalone fit method.
 
 It is divided in two submodules:
 
-- **Base**: a submodule that include the basic objects and functions for both the pretraining and fine-tuning process.
-- **Compose**: a collection of contrastive learning algorithms.
+- **base**: a submodule that include the basic objects and functions for both the pretraining and fine-tuning process.
+- **contrastive**: a collection of contrastive learning algorithms.
+- **predictive**: a collection of predictive pretraining algorithms.
+- **generative**: a collection of generative pretraining algorithms.
 
 ssl.base module
 ===================
@@ -56,3 +58,31 @@ Classes
     SimCLR
     SimSiam
     VICReg
+
+ssl.generative module
+=========================
+
+Classes
+---------------
+
+.. currentmodule:: selfeeg.ssl.generative
+.. autosummary::
+    :toctree: api
+    :nosignatures:
+    :template: classtemplate.rst
+
+    ReconstructiveSSL
+
+ssl.predictive module
+=========================
+
+Classes
+---------------
+
+.. currentmodule:: selfeeg.ssl.predictive
+.. autosummary::
+    :toctree: api
+    :nosignatures:
+    :template: classtemplate.rst
+
+    PredictiveSSL
