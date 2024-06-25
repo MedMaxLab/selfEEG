@@ -1,49 +1,13 @@
-<img src="Images/LibraryLogo.png"
-        alt="Picture"
-        width="300"
-        style="display: block; margin: 0 auto" />
+<h1 align="center">
+  <img src="Images/LibraryLogo.png" width="300">
+</h1><br>
 
-<table>
-<tr>
-  <td>Latest Release</td>
-  <td>
-    <a href="https://pypi.org/project/selfeeg/">
-    <img src="https://img.shields.io/pypi/v/selfeeg" alt="latest release" />
-    </a>
-    <a href="https://anaconda.org/pup_fede_cnd/selfeeg">
-    <img src="https://anaconda.org/pup_fede_cnd/selfeeg/badges/version.svg" />
-    </a>
-</tr>
-<tr>
-  <td>Build Status</td>
-  <td>
-    <a href="https://img.shields.io/readthedocs/selfeeg">
-    <img src="https://img.shields.io/readthedocs/selfeeg" alt="documentation build status" />
-    </a>
-    <a href="https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml">
-      <img src="https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml/badge.svg" alt="GitHub Actions Testing Status" />
-    </a>
-  </td>
-</tr>
-<tr>
-  <td>License</td>
-  <td>
-    <a href="https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg"
-        alt="license" />
-    </a>
-</td>
-</tr>
-<tr>
-  <td>Publications</td>
-  <td>
-    <a href="https://joss.theoj.org/papers/ab7eaf53973996e7c8d49dada734de78">
-        <img src="https://joss.theoj.org/papers/ab7eaf53973996e7c8d49dada734de78/status.svg">
-    </a>
-  </td>
-</tr>
-</table>
-
+[![PyPI](https://img.shields.io/pypi/v/selfeeg?label=PyPI&color=blue)](https://pypi.org/project/selfeeg/)
+[![Conda](https://img.shields.io/conda/v/pup_fede_cnd/selfeeg?label=Conda&color=blue)](https://anaconda.org/pup_fede_cnd/selfeeg)
+[![Docs](https://img.shields.io/readthedocs/selfeeg)](https://readthedocs.org/projects/selfeeg/)
+[![Unittest](https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml/badge.svg)](https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml)
+[![License](https://img.shields.io/badge/License-MIT-violet.svg)](https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06224/status.svg)](https://doi.org/10.21105/joss.06224)
 
 # What is selfEEG?
 selfEEG is a pytorch-based library designed to facilitate self-supervised learning
@@ -88,16 +52,17 @@ SelfEEG may be installed via pip (recommended):
 ```
 pip install selfeeg
 ```
-Additionally, optional but useful packages which we suggest to include in your
-environment, especially if you plan to work with jupyter, can be automatically
-installed with the following pip command:
-```
-pip install selfeeg[interactive]
-```
 
 SelfEEG can be also installed via conda by running the following command:
 ```
 conda install -c Pup_Fede_Cnd -c pytorch selfeeg
+```
+
+Additionally, optional but useful packages that we suggest to include in your
+environment, especially if you plan to work with jupyter, can be automatically
+installed with the following pip command:
+```
+pip install selfeeg[interactive]
 ```
 
 **Good practice**
