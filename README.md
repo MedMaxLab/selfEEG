@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="Images/LibraryLogo.png" width="300">
+  <img src="https://github.com/MedMaxLab/selfEEG/blob/main/Images/LibraryLogo.png" width="300">
 </h1><br>
 
 [![PyPI](https://img.shields.io/pypi/v/selfeeg?label=PyPI&color=blue)](https://pypi.org/project/selfeeg/)
