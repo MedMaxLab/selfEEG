@@ -146,14 +146,14 @@ It would help us to continue our research.
 ```bibtex
 @article{DelPup2024,
   title = {SelfEEG: A Python library for Self-Supervised Learning in Electroencephalography},
-  author = {Federico Del Pup and
-            Andrea Zanola and
-            Louis Fabrice Tshimanga and
-            Paolo Emilio Mazzon and
-            Manfredo Atzori},
+  author = {Del Pup, Federico and
+            Zanola, Andrea and
+            Tshimanga, Louis Fabrice and
+            Mazzon, Paolo Emilio and
+            Atzori, Manfredo},
   year = {2024},
   publisher = {The Open Journal},
-  journal = {Journal of Open Source Software}
+  journal = {Journal of Open Source Software},
   volume = {9},
   number = {95},
   pages = {6224},
