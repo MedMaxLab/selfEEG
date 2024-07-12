@@ -1292,17 +1292,20 @@ def check_split(
         if len(Labels.shape) != 1:
             raise ValueError("Labels must be a 1d array or a list")
         lab_unique = np.unique(Labels)
+        Nlab = len(lab_unique)
         EEGlen2 = EEGlen.copy()  # copy to avoid strange behaviours
         EEGlen2["split_set"] = EEGsplit["split_set"]
         EEGlen2["Labels"] = Labels
         tottrain = EEGlen2.iloc[train_list]["N_samples"].sum()
         totval = EEGlen2.iloc[val_list]["N_samples"].sum()
         tottest = EEGlen2.iloc[test_list]["N_samples"].sum()
-        class_ratio = np.zeros((3, len(lab_unique)))
+        class_ratio = np.full([3, Nlab], np.nan)
+        
         # iterate through train/validation/test sets
-        for i in range(3):
+        which_to_iter = (n for n, i in enumerate([tottrain, totval, tottest]) if i)
+        for i in which_to_iter:
             # iterate through each label
-            for k in range(len(lab_unique)):
+            for k in range(Nlab):
                 if i == 0:
                     train_k = EEGlen2.loc[
                         ((EEGlen2["split_set"] == 0) & (EEGlen2["Labels"] == lab_unique[k])),
@@ -1325,15 +1328,15 @@ def check_split(
         if verbose:
             print(
                 f"\ntrain labels ratio:",
-                *[f"{lab_unique[k]}={class_ratio[0,k]:.3f}, " for k in range(len(lab_unique))],
+                *[f"{lab_unique[k]} = {class_ratio[0,k]:5.3f} , " for k in range(Nlab)],
             )
             print(
                 f"val   labels ratio:",
-                *[f"{lab_unique[k]}={class_ratio[1,k]:.3f}, " for k in range(len(lab_unique))],
+                *[f"{lab_unique[k]} = {class_ratio[1,k]:5.3f} , " for k in range(Nlab)],
             )
             print(
                 f"test  labels ratio:",
-                *[f"{lab_unique[k]}={class_ratio[2,k]:.3f}, " for k in range(len(lab_unique))],
+                *[f"{lab_unique[k]} = {class_ratio[2,k]:5.3f} , " for k in range(Nlab)],
             )
             print("")
         ratios["class_ratio"] = class_ratio
