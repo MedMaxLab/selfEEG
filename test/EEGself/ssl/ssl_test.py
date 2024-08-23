@@ -64,7 +64,8 @@ class TestSSL(unittest.TestCase):
 
         if cls.device.type != "cpu":
             try:
-                xx = torch.randn(2, 2).to(device=cls.device)
+                xx = torch.randn(1024).to(device=cls.device)
+                xx = aug.add_band_noise(xx, "theta", 128)
             except Exception:
                 cls.device = torch.device("cpu")
 

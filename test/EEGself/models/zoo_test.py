@@ -28,7 +28,9 @@ class TestModels(unittest.TestCase):
 
         if cls.device.type != "cpu":
             try:
-                xx = torch.randn(2, 2).to(device=cls.device)
+                xx = torch.randn(2, 8, 2048).to(device=cls.device)
+                model = models.EEGNet(2, 8, 2048).to(device=cls.device)
+                xx = model(xx)
             except Exception:
                 cls.device = torch.device("cpu")
 
