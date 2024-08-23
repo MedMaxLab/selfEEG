@@ -53,15 +53,14 @@ from the file name really refer to the specific dataset or subject.
 You can give anything you want as long as the previous reasoning about the
 identification of unique pairs is satisfied.
 
-3) **Can I implement a Leave One Subject Out cross-validation?**
+3) **Can I implement a Leave-One-Subject-Out (LOSO) cross-validation?**
 
 Of course. You just need to call the ``GetEEGSplitTableKfold`` function,
 setting validation split to subject mode and setting the number of folds equals
 to the number of subjects. Remember to add a subject_id extractor if needed and,
 if you have enough data to create a separate test set, to also set the test split
 mode to subject and adjust the number of folds according to the number of subjects
-minus ones put in the test set
-
+minus ones put in the test set.
 
 
 Augmentation module
@@ -93,36 +92,3 @@ check how augmentations specifically perform on your device.
     :header-rows: 1
     :widths: 15, 14, 14, 14, 14, 14, 14
     :class: longtable
-
-
-
-SSL module
-----------
-
-1) **The SSL module implements only Contrastive Learning algorithms, is it possible
-to use selfEEG to create predictive or generative pretraining task?**
-
-It depends on the type of pretraining task you want to define.
-However, by defining the right dataloader and loss, and give them to the
-fine-tuning tuning function of the ssl module, it is possible to construct simple
-predictive or generative pretraining task. For example, a simple strategy can be:
-
-1. Define an EEGDataset class without the label extraction.
-2. Define a custom Augmenter.
-3. Define a custom ``collite_fn`` function to give to the PyTorch Dataloader.
-4. Define the loss function and other training parameters.
-5. Run the fine-tuning function with the Dataloader, loss, and other parameters.
-
-The important step here is the definition of the ``collite_fn`` function (see
-`here <https://discuss.pytorch.org/t/how-to-create-a-dataloader-with-variable-size-input/8278?u=ptrblck>`_
-on how to create custom collite_fn functions), which is used to create the
-pretraining target. For example:
-
-1. Reconstructive pretraining (generative): create an augmented batch with the
-   augmenter, then return the augmented batch as the input, and the original batch
-   as the target.
-2. Predict if the sample was augmented (predictive): apply an augmentation
-   to a random number of samples before constructing the batch, then return the
-   constructed batch and a binary label (1: augmented sample, 0: original sample)
-3. Predict the type of augmentation applied (predictive): Similar to point 2,
-   with a multiclass label.

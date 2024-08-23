@@ -24,11 +24,11 @@ __all__ = [
 ]
 
 
-def subarray_closest_sum(arr: list, n: int, k: float) -> list:
+def subarray_closest_sum(arr: ArrayLike, n: int, k: float) -> tuple(ArrayLike, float, float, float):
     """
     returns a subarray whose element sum is closest to k.
 
-    This function is taken from geeksforgeeks at the following link [link1]_
+    This function is inspired from [link1]_
 
     It is important to note that this function returns a subarray and not a
     subset of the array. A subset is a collection of elements in the array taken
@@ -38,7 +38,7 @@ def subarray_closest_sum(arr: list, n: int, k: float) -> list:
 
     Parameters
     ----------
-    arr: list
+    arr: ArrayLike
         The array to search.
     n: int
         The length of the array.
@@ -47,61 +47,57 @@ def subarray_closest_sum(arr: list, n: int, k: float) -> list:
 
     Returns
     -------
-    best_arr: list
+    best_arr: ArrayLike
         The subarray whose element sum is closest to k.
+    best_start: float
+        The starting index of the subarray.
+    best_end: float
+        The ending index of the subarray.
+    min_diff: float
+        Absolute difference between the target value and the sum of the subarray's values.
 
     References
     ----------
     .. [link1] https://www.geeksforgeeks.org/subarray-whose-sum-is-closest-to-k/
 
     """
-
-    # Initialize start and end pointers, current sum, and minimum difference
-    best_arr = []
+    # Initialize start and end pointers, current sum, minimum difference
+    # and best start and end pointers
     start = 0
     end = 0
+    best_start = 0
+    best_end = 0
     curr_sum = arr[0]
-    min_diff = float("inf")
+
     # Initialize the minimum difference between the subarray sum and K
     min_diff = abs(curr_sum - k)
+
     # Traverse through the array
     while end < n - 1:
-        # If the current sum is less than K, move the end pointer to the right
+
+        # If the current sum is less than k, move the end pointer to the right
         if curr_sum < k:
             end += 1
             curr_sum += arr[end]
-        # If the current sum is greater than or equal to K,
-        # move the start pointer to the right
+        # Otherwise, move the start pointer to the right
         else:
             curr_sum -= arr[start]
             start += 1
 
-        # Update the minimum difference between the subarray sum and K
+        # Update the minimum difference and store best subarray pointers
         if abs(curr_sum - k) < min_diff:
             min_diff = abs(curr_sum - k)
+            best_start = start
+            best_end = end
+            # if minimum difference is zero, return the optimal subarray
+            if min_diff == 0:
+                return arr[best_start : best_end + 1], best_start, best_end, min_diff
 
-    # Print the subarray with the sum closest to K
-    start = 0
-    end = 0
-    curr_sum = arr[0]
-
-    while end < n - 1:
-        if curr_sum < k:
-            end += 1
-            curr_sum += arr[end]
-        else:
-            curr_sum -= arr[start]
-            start += 1
-        # Print the subarray with the sum closest to K
-        if abs(curr_sum - k) == min_diff:
-            for i in range(start, end + 1):
-                best_arr.append(arr[i])
-            break
-    return best_arr
+    return arr[best_start : best_end + 1], best_start, best_end, min_diff
 
 
 def get_subarray_closest_sum(
-    arr: Sequence[int],
+    arr: ArrayLike,
     target: float,
     tolerance: float = 0.01,
     perseverance: int = 1000,
@@ -122,7 +118,7 @@ def get_subarray_closest_sum(
 
     Parameters
     ----------
-    arr: list
+    arr: ArrayLike
         The array to search.
     target: float
         The target sum.
@@ -145,7 +141,7 @@ def get_subarray_closest_sum(
     final_idx: list
         A list with the index of the identified subarray.
     best_sub_arr: list, optional
-        The identified subarray.
+        The subarray.
 
     Example
     -------
@@ -161,36 +157,45 @@ def get_subarray_closest_sum(
 
     if tolerance < 0 or tolerance > 1:
         raise ValueError("tolerance must be in [0,1]")
-    if not (isinstance(perseverance, int)):
+    else:
+        upper_bound = target * tolerance
+    if not isinstance(perseverance, int):
         perseverance = int(perseverance)
 
-    # np.argsort
+    arr_original = arr
     idx = range(len(arr))
     N = len(arr)
-    best_sub_arr = []
-    for _ in range(perseverance):
+    subarr_diff = 0
+    best_idx = []
+    best_start = 0
+    best_end = 0
+    best_subarr_diff = float("inf")
+    starti = 0
+    endi = 0
 
+    # c = np.array([arr,idx]).T
+    for _ in range(perseverance):
         c = list(zip(arr, idx))
         random.shuffle(c)
         arr, idx = zip(*c)
+        # np.random.shuffle(c)
+        # _, starti, endi, subarr_diff = subarray_closest_sum(c[:,0], N, target)
+        _, starti, endi, subarr_diff = subarray_closest_sum(arr, N, target)
+        if subarr_diff < best_subarr_diff:
+            best_subarr_diff = subarr_diff
+            best_idx = idx
+            best_start = starti
+            best_end = endi
+            if best_subarr_diff < upper_bound:
+                break
 
-        sub_arr = subarray_closest_sum(arr, N, target)
-        # print(sub_arr, abs(sum(sub_arr)- target), abs(sum(best_sub_arr)-target))
-        if (abs(sum(sub_arr) - target)) < (abs(sum(best_sub_arr) - target)):
-            best_sub_arr = sub_arr
-        if (target * (1 - tolerance)) < sum(sub_arr) < (target * (1 + tolerance)):
-            best_sub_arr = sub_arr
-            break
     # get final list
-    best_sub2 = copy.deepcopy(best_sub_arr)
-    final_idx = []
-    for i in range(len(arr)):
-        if arr[i] in best_sub2:
-            final_idx.append(idx[i])
-            best_sub2.remove(arr[i])
+    final_idx = list(best_idx[best_start : best_end + 1])
+    final_idx.sort()
 
     if return_subarray:
-        return final_idx, best_sub_arr
+        best_subarr = list(map(arr_original.__getitem__, final_idx))
+        return final_idx, best_subarr
     else:
         return final_idx
 
