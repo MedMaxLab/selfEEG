@@ -30,7 +30,7 @@ class TestAugmentationFunctional(unittest.TestCase):
         else:
             cls.device = torch.device("cpu")
 
-        if cls.device.type in ["mps", "cuda"]:
+        if cls.device.type != "cpu":
             try:
                 xx = torch.randn(2, 2).to(device=cls.device)
             except Exception:
