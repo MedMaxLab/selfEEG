@@ -26,9 +26,11 @@ class TestLoss(unittest.TestCase):
         else:
             cls.device = torch.device("cpu")
 
-        if cls.device.type == "mps":
+        if cls.device.type != "cpu":
             try:
-                xx = torch.randn(2, 2).to(device=cls.device)
+                xx = torch.randn(64, 128).to(device=cls.device)
+                yy = torch.randn(64, 128).to(device=cls.device)
+                xx = losses.barlow_loss(xx, yy)
             except Exception:
                 cls.device = torch.device("cpu")
 

@@ -13,9 +13,7 @@ import tqdm
 
 from .base import EarlyStopping, SSLBase
 
-__all__ = [
-    "ReconstructiveSSL"
-]
+__all__ = ["ReconstructiveSSL"]
 
 
 class ReconstructiveSSL(SSLBase):
@@ -151,7 +149,7 @@ class ReconstructiveSSL(SSLBase):
             If an EarlyStopping instance is given with monitoring loss set to
             validation loss, but no validation dataloader is given, monitoring
             loss will be automatically set to training loss.
-        
+
         validation_dataloader: Dataloader, optional
             the pytorch Dataloader used to get the validation batches. It
             must return a batch as a single tensor X, thus without label tensor Y.
@@ -257,10 +255,10 @@ class ReconstructiveSSL(SSLBase):
 
                             if X.device.type != device.type:
                                 X = X.to(device=device)
-                            
+
                             Xaug = augmenter(X)
                             Xrec = self(Xaug)
-                            
+
                             val_loss = self.evaluate_loss(loss_func, [Xrec, X], loss_args)
                             val_loss_tot += val_loss.item()
                             if verbose:
@@ -343,7 +341,7 @@ class ReconstructiveSSL(SSLBase):
 
                     Xaug = augmenter(X)
                     Xrec = self(Xaug)
-                    
+
                     test_loss = self.evaluate_loss(loss_func, [Xrec, X], loss_args)
                     test_loss_tot += test_loss
                     # verbose print

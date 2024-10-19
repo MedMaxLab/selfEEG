@@ -597,7 +597,7 @@ def get_eeg_split_table(
     # single results will be then concatenated and sorted to preserve index pos
     if stratified:
         if (test_ratio == None) and (val_ratio == None):
-            print("STRATIFICATION can be applied only if at " "least one split ratio is given.")
+            print("STRATIFICATION can be applied only if at least one split ratio is given.")
         else:
             N_classes = np.unique(labels)
             classSplit = [None] * len(N_classes)
@@ -727,10 +727,8 @@ def get_eeg_split_table(
             # get split subarray
             arr = group1["N_samples"].values.tolist()
             target = test_ratio * alldatasum
-            final_idx, subarray = get_subarray_closest_sum(
-                arr, target, split_tolerance, perseverance
-            )
-            final_idx.sort()
+            final_idx = get_subarray_closest_sum(arr, target, split_tolerance, perseverance, False)
+            # final_idx.sort()
 
             # update split list according to returned subarray
             # and test split mode
@@ -807,10 +805,8 @@ def get_eeg_split_table(
                 target = val_ratio * alldatasum
             else:
                 target = val_ratio * sum(arr)
-            final_idx, subarray = get_subarray_closest_sum(
-                arr, target, split_tolerance, perseverance
-            )
-            final_idx.sort()
+            final_idx = get_subarray_closest_sum(arr, target, split_tolerance, perseverance, False)
+            # final_idx.sort()
 
             if val_split_mode == 2:
                 fileName = group2.iloc[final_idx]["file_name"].values.tolist()
@@ -1076,9 +1072,6 @@ def get_eeg_split_table_kfold(
     if (test_ratio is None) and (test_data_id is None):
         test_ratio = 0.0
 
-    if seed is not None:
-        random.seed(seed)
-
     # FIRST STEP: Create test set or exclude data if necessary
     # the result of this function call will be an initialization of the split table
     # if no data need to be excluded or placed in a test set, the split_set column
@@ -1300,7 +1293,7 @@ def check_split(
         totval = EEGlen2.iloc[val_list]["N_samples"].sum()
         tottest = EEGlen2.iloc[test_list]["N_samples"].sum()
         class_ratio = np.full([3, Nlab], np.nan)
-        
+
         # iterate through train/validation/test sets
         which_to_iter = (n for n, i in enumerate([tottrain, totval, tottest]) if i)
         for i in which_to_iter:

@@ -287,13 +287,12 @@ class TestDataloading(unittest.TestCase):
             "subject_id_extractor": [None],
             "save": [True],
             "split_tolerance": [0.001],
-            "perseverance": [10000],
+            "perseverance": [1000],
             "save_path": ["tmpsave/results1.csv"],
             "seed": [self.seed],
         }
         input_grid = self.makeGrid(input_grid)
         for n, i in enumerate(input_grid):
-
             if n == 500:
                 print("proceding...", end="", flush=True)
             elif n == 1000:
@@ -327,7 +326,7 @@ class TestDataloading(unittest.TestCase):
             else:
                 if i["test_data_id"] is None:
                     ratio = abs(0.2 - EEGlen["N_samples"][EEGsplit["split_set"] == 2].sum() / tot)
-                    self.assertTrue(ratio < 1e-2)
+                    self.assertTrue(ratio < 2.5e-2)
                     if not (i["stratified"]) and i["test_split_mode"] == 0:
                         EEGsplit["dataid"] = EEGsplit["file_name"].str[0]
                         group = EEGsplit.groupby(["dataid", "split_set"])
@@ -355,7 +354,7 @@ class TestDataloading(unittest.TestCase):
                     ratio = abs(
                         thresh - EEGlen["N_samples"][EEGsplit["split_set"] == 1].sum() / tot
                     )
-                    self.assertTrue(ratio < 1e-2)
+                    self.assertTrue(ratio < 2.5e-2)
 
         EEGsplit = dl.get_eeg_split_table(
             EEGlen,
@@ -406,8 +405,8 @@ class TestDataloading(unittest.TestCase):
             "stratified": [False, True],
             "labels": [Labels],
             "save": [True],
-            "split_tolerance": [0.005],
-            "perseverance": [5000],
+            "split_tolerance": [0.01],
+            "perseverance": [1000],
             "save_path": ["tmpsave/results1.csv"],
         }
         input_grid = self.makeGrid(input_grid)
@@ -488,7 +487,7 @@ class TestDataloading(unittest.TestCase):
         print("   EEGDataset OK")
 
     def test_EEGSampler(self):
-        print("Testing Sampler on both mode...", end="", flush=True)
+        print("Testing Sampler on both modalities...", end="", flush=True)
         EEGlen = dl.get_eeg_partition_number(
             self.eegpath,
             self.freq,

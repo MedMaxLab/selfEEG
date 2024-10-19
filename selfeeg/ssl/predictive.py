@@ -13,9 +13,8 @@ import tqdm
 
 from .base import EarlyStopping, SSLBase
 
-__all__ = [
-    "PredictiveSSL"
-]
+__all__ = ["PredictiveSSL"]
+
 
 class PredictiveSSL(SSLBase):
     """
@@ -23,7 +22,7 @@ class PredictiveSSL(SSLBase):
     Contrary to contrastive, this pretraining performs a classification or
     regression task with a generated pseudo-label.
     A trivial example is the model trying to predict which random augmentation from
-    a given set was applied to each sample of the batch. 
+    a given set was applied to each sample of the batch.
 
     Parameters
     ----------
@@ -79,10 +78,7 @@ class PredictiveSSL(SSLBase):
     """
 
     def __init__(
-        self,
-        encoder: nn.Module,
-        head: Union[list[int], nn.Module],
-        return_logits: bool = True
+        self, encoder: nn.Module, head: Union[list[int], nn.Module], return_logits: bool = True
     ):
 
         super(PredictiveSSL, self).__init__(encoder)
@@ -169,12 +165,12 @@ class PredictiveSSL(SSLBase):
             expected to take in input a batch tensor X and return both the augmented
             version of X and the pseudo-label tensor Y.
             It is highly suggested to resort to the selfeeg's augmentation module,
-            which implements different data augmentation functions and classes 
+            which implements different data augmentation functions and classes
             to combine them. RandomAug, for example, can also return the index of
             the chosen augmentation to be used as a pseudo-label.
 
             Default = None
-            
+
             Note
             ----
             This argument is optional because of the alternative way to provide
@@ -221,7 +217,7 @@ class PredictiveSSL(SSLBase):
             The number of times the augmenter is called for a single batch.
             Each call selects an equal portion of samples in the batch and gives it to
             the augmenter.
-            
+
             Default = 2
 
             Note
@@ -232,17 +228,17 @@ class PredictiveSSL(SSLBase):
             compose submodules operate at the batch level, but one might want to
             generate batches with multiple labels and not one with only a single label.
             augmenter_batch_calls solves this problem.
-            
+
         labels_on_dataloader: boolean, optional
             Set this to True if the dataloader already provides a set of pseudo-labels.
             If ``True`` augmenter and augmenter_batch_calls will be ignored.
-            
+
             Note
             ----
             if you want to pretrain the model by simply solving another task and you
             need more functionalities, you can consider using the ``fine_tune``
             function, which acts as a generic supervised training.
-            
+
             Default = False
         verbose: bool, optional
             Whether to print a progression bar or not.
@@ -269,13 +265,13 @@ class PredictiveSSL(SSLBase):
 
         """
         # Various checks on input parameters.
-        if (augmenter is None) and not(labels_on_dataloader):
+        if (augmenter is None) and not (labels_on_dataloader):
             raise ValueError(
                 "at least an augmenter or a dataloader that can output pseudo-labels must be given"
             )
         if augmenter_batch_calls <= 0:
             raise ValueError("augmenter_batch_calls must be an integer greater than 0")
-            
+
         # If some arguments weren't given they will be automatically set
         (device, epochs, optimizer, loss_func, perform_validation, loss_info, N_train, N_val) = (
             self._set_fit_args(
@@ -325,41 +321,38 @@ class PredictiveSSL(SSLBase):
                             X = X.to(device=device)
                         else:
                             for i in range(len(X)):
-                                X[i] = X[i].to(device=device)        
+                                X[i] = X[i].to(device=device)
                         if isinstance(Y, torch.Tensor):
                             Y = Y.to(device=device)
                         else:
                             for i in range(len(Y)):
                                 Y[i] = Y[i].to(device=device)
-                    #pseudo-label must be created, need for data augmentation
-                    else:                  
+                    # pseudo-label must be created, need for data augmentation
+                    else:
                         X = X.to(device=device)
-                        if augmenter_batch_calls==1:
+                        if augmenter_batch_calls == 1:
                             X, Ytrue = augmenter(X)
                         else:
                             permidx = torch.randperm(X.shape[0])
-                            piece = X.shape[0]//augmenter_batch_calls
+                            piece = X.shape[0] // augmenter_batch_calls
                             samples = permidx[:piece]
                             X[samples], Ytruei = augmenter(X[samples])
                             if isinstance(Ytruei, torch.Tensor):
                                 Ytrue = torch.empty(
-                                    X.shape[0], *Ytruei.shape[1:],
-                                    dtype=Ytruei.dtype, device=device
+                                    X.shape[0], *Ytruei.shape[1:], dtype=Ytruei.dtype, device=device
                                 )
                             else:
-                                Ytrue = torch.empty(
-                                    X.shape[0], device=device, dtype=type(Ytruei)
-                                )
+                                Ytrue = torch.empty(X.shape[0], device=device, dtype=type(Ytruei))
                             Ytrue[samples] = Ytruei
                             for i in range(1, augmenter_batch_calls):
-                                samples = permidx[piece*i:piece*(i+1)]
+                                samples = permidx[piece * i : piece * (i + 1)]
                                 X[samples], Ytrue[samples] = augmenter(X[samples])
-                            samples = permidx[piece*(i+1):]
-                            X[samples], Ytrue[samples] = augmenter(X[samples]) 
+                            samples = permidx[piece * (i + 1) :]
+                            X[samples], Ytrue[samples] = augmenter(X[samples])
 
                     Yhat = self(X)
                     train_loss = self.evaluate_loss(loss_func, [Yhat, Ytrue], loss_args)
-                    
+
                     train_loss.backward()
                     optimizer.step()
                     train_loss_tot += train_loss.item()
@@ -392,26 +385,28 @@ class PredictiveSSL(SSLBase):
                                     X = X.to(device=device)
                                 else:
                                     for i in range(len(X)):
-                                        X[i] = X[i].to(device=device)        
+                                        X[i] = X[i].to(device=device)
                                 if isinstance(Y, torch.Tensor):
                                     Y = Y.to(device=device)
                                 else:
                                     for i in range(len(Y)):
                                         Y[i] = Y[i].to(device=device)
-                            #pseudo-label must be created, need for data augmentation
-                            else: 
+                            # pseudo-label must be created, need for data augmentation
+                            else:
                                 X = X.to(device=device)
-                                if augmenter_batch_calls==1:
+                                if augmenter_batch_calls == 1:
                                     X, Ytrue = augmenter(X)
                                 else:
                                     permidx = torch.randperm(X.shape[0])
-                                    piece = X.shape[0]//augmenter_batch_calls
+                                    piece = X.shape[0] // augmenter_batch_calls
                                     samples = permidx[:piece]
                                     X[samples], Ytruei = augmenter(X[samples])
                                     if isinstance(Ytruei, torch.Tensor):
                                         Ytrue = torch.empty(
-                                            X.shape[0], *Ytruei.shape[1:],
-                                            dtype=Ytruei.dtype, device=device
+                                            X.shape[0],
+                                            *Ytruei.shape[1:],
+                                            dtype=Ytruei.dtype,
+                                            device=device,
                                         )
                                     else:
                                         Ytrue = torch.empty(
@@ -419,10 +414,10 @@ class PredictiveSSL(SSLBase):
                                         )
                                     Ytrue[samples] = Ytruei
                                     for i in range(1, augmenter_batch_calls):
-                                        samples = permidx[piece*i:piece*(i+1)]
+                                        samples = permidx[piece * i : piece * (i + 1)]
                                         X[samples], Ytrue[samples] = augmenter(X[samples])
-                                    samples = permidx[piece*(i+1):]
-                                    X[samples], Ytrue[samples] = augmenter(X[samples]) 
+                                    samples = permidx[piece * (i + 1) :]
+                                    X[samples], Ytrue[samples] = augmenter(X[samples])
 
                             Yhat = self(X)
                             val_loss = self.evaluate_loss(loss_func, [Yhat, Ytrue], loss_args)
@@ -450,9 +445,7 @@ class PredictiveSSL(SSLBase):
                         EarlyStopper.rec_best_weights(self)
                         updated_mdl = True
                 if EarlyStopper():
-                    print(
-                        f"no improvement after {EarlyStopper.patience} epochs. Training stopped"
-                    )
+                    print(f"no improvement after {EarlyStopper.patience} epochs. Training stopped")
                     if EarlyStopper.record_best_weights and not (updated_mdl):
                         EarlyStopper.restore_best_weights(self)
                     if return_loss_info:
@@ -468,11 +461,11 @@ class PredictiveSSL(SSLBase):
     def test(
         self,
         test_dataloader,
-        augmenter = None,
-        loss_func = None,
+        augmenter=None,
+        loss_func=None,
         loss_args: list or dict = [],
-        augmenter_batch_calls = 2,
-        labels_on_dataloader = False,
+        augmenter_batch_calls=2,
+        labels_on_dataloader=False,
         verbose: bool = True,
         device: str = None,
     ):
@@ -503,7 +496,7 @@ class PredictiveSSL(SSLBase):
                 file=sys.stdout,
             ) as pbar:
                 for batch_idx, X in enumerate(test_dataloader):
-                    
+
                     # pseudo-label already in X, no need for data augmentations
                     if labels_on_dataloader:
                         Ytrue = X[1]
@@ -512,37 +505,34 @@ class PredictiveSSL(SSLBase):
                             X = X.to(device=device)
                         else:
                             for i in range(len(X)):
-                                X[i] = X[i].to(device=device)        
+                                X[i] = X[i].to(device=device)
                         if isinstance(Y, torch.Tensor):
                             Y = Y.to(device=device)
                         else:
                             for i in range(len(Y)):
                                 Y[i] = Y[i].to(device=device)
-                    #pseudo-label must be created, need for data augmentation
-                    else: 
+                    # pseudo-label must be created, need for data augmentation
+                    else:
                         X = X.to(device=device)
-                        if augmenter_batch_calls==1:
+                        if augmenter_batch_calls == 1:
                             X, Ytrue = augmenter(X)
                         else:
                             permidx = torch.randperm(X.shape[0])
-                            piece = X.shape[0]//augmenter_batch_calls
+                            piece = X.shape[0] // augmenter_batch_calls
                             samples = permidx[:piece]
                             X[samples], Ytruei = augmenter(X[samples])
                             if isinstance(Ytruei, torch.Tensor):
                                 Ytrue = torch.empty(
-                                    X.shape[0], *Ytruei.shape[1:],
-                                    dtype=Ytruei.dtype, device=device
+                                    X.shape[0], *Ytruei.shape[1:], dtype=Ytruei.dtype, device=device
                                 )
                             else:
-                                Ytrue = torch.empty(
-                                    X.shape[0], device=device, dtype=type(Ytruei)
-                                )
+                                Ytrue = torch.empty(X.shape[0], device=device, dtype=type(Ytruei))
                             Ytrue[samples] = Ytruei
                             for i in range(1, augmenter_batch_calls):
-                                samples = permidx[piece*i:piece*(i+1)]
+                                samples = permidx[piece * i : piece * (i + 1)]
                                 X[samples], Ytrue[samples] = augmenter(X[samples])
-                            samples = permidx[piece*(i+1):]
-                            X[samples], Ytrue[samples] = augmenter(X[samples]) 
+                            samples = permidx[piece * (i + 1) :]
+                            X[samples], Ytrue[samples] = augmenter(X[samples])
 
                     Yhat = self(X)
                     test_loss = self.evaluate_loss(loss_func, [Yhat, Ytrue], loss_args)

@@ -21,9 +21,12 @@ class TestUtils(unittest.TestCase):
         else:
             cls.device = torch.device("cpu")
 
-        if cls.device.type == "mps":
+        if cls.device.type != "cpu":
             try:
-                xx = torch.randn(2, 2).to(device=cls.device)
+                xx = torch.zeros(16, 32, 1024)
+                xx = xx + torch.sin(torch.linspace(0, 8 * torch.pi, 1024)) * 500
+                xx = xx.to(device=cls.device)
+                xx = utils.scale_range_soft_clip(xx, "scale", "uV")
             except Exception:
                 cls.device = torch.device("cpu")
 
