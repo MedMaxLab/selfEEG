@@ -41,8 +41,11 @@ class Decoder(nn.Module):
 
 class TestSSL(unittest.TestCase):
 
-    def loss_fineTuning(self, yhat, ytrue):
+    def loss_finetuning(self, yhat, ytrue):
         return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.0)
+
+    def loss_finetuning_val(self, yhat, ytrue):
+        return torch.sum((yhat > 0.5) == ytrue) / ytrue.shape[0]
 
     def makeGrid(self, pars_dict):
         keys = pars_dict.keys()
@@ -192,7 +195,7 @@ class TestSSL(unittest.TestCase):
             TrainLoader,
             2,
             EarlyStopper=Stopper,
-            loss_func=self.loss_fineTuning,
+            loss_func=self.loss_finetuning,
             verbose=False,
         )
         self.assertTrue(Stopper.earlystop)
@@ -404,7 +407,7 @@ class TestSSL(unittest.TestCase):
         loss_train = SelfMdl.fit(
             train_dataloader=self.trainloader,
             epochs=2,
-            loss_func=self.loss_fineTuning,
+            loss_func=self.loss_finetuning,
             augmenter=augment,
             augmenter_batch_calls=3,
             validation_dataloader=self.valloader,
@@ -414,7 +417,7 @@ class TestSSL(unittest.TestCase):
         )
         loss_test = SelfMdl.test(
             self.valloader,
-            loss_func=self.loss_fineTuning,
+            loss_func=self.loss_finetuning,
             augmenter=augment,
             augmenter_batch_calls=3,
             verbose=False,
@@ -473,7 +476,8 @@ class TestSSL(unittest.TestCase):
             device=self.device,
             epochs=10,
             validation_dataloader=ValLoader,
-            loss_func=self.loss_fineTuning,
+            loss_func=self.loss_finetuning,
+            validation_loss_func=self.loss_finetuning_val,
             verbose=False,
             return_loss_info=True,
         )

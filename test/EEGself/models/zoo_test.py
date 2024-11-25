@@ -68,7 +68,7 @@ class TestModels(unittest.TestCase):
             "tcn_depth": [2, 3],
             "F1": [12, 8],
             "D": [2, 3],
-            "return_logits": [True, False],
+            "return_logits": [False],
         }
         DCN_grid = self.makeGrid(DCN_args)
         for i in DCN_grid:
@@ -105,7 +105,7 @@ class TestModels(unittest.TestCase):
             "ELUalpha": [1],
             "dropRate": [0.5],
             "max_dense_norm": [1.0],
-            "return_logits": [True, False],
+            "return_logits": [False],
         }
         DCN_grid = self.makeGrid(DCN_args)
         for i in DCN_grid:
@@ -140,7 +140,7 @@ class TestModels(unittest.TestCase):
             "batch_momentum": [0.9],
             "dropRate": [0.5],
             "max_depth_norm": [1.0],
-            "return_logits": [True, False],
+            "return_logits": [False],
             "bias": [True, False],
         }
         EEGin_args = self.makeGrid(EEGin_args)
@@ -170,14 +170,14 @@ class TestModels(unittest.TestCase):
             "nb_classes": [2, 4],
             "Chans": [self.Chan],
             "Samples": [self.Samples],
-            "kernLength": [32, 64, 128],
-            "F1": [4, 8, 16],
+            "kernLength": [32, 64],
+            "F1": [4, 8],
             "D": [2, 4],
-            "F2": [8, 16, 32],
+            "F2": [8, 16],
             "pool1": [4, 8],
             "pool2": [8, 16],
             "separable_kernel": [16, 32],
-            "return_logits": [True, False],
+            "return_logits": [False],
         }
         EEGnet_args = self.makeGrid(EEGnet_args)
         for i in EEGnet_args:
@@ -213,7 +213,7 @@ class TestModels(unittest.TestCase):
             "F": [8, 24],
             "pool": [2, 3],
             "bias": [True, False],
-            "return_logits": [True, False],
+            "return_logits": [False],
         }
         EEGsym_args = self.makeGrid(EEGsym_args)
         for i in EEGsym_args:
@@ -248,7 +248,7 @@ class TestModels(unittest.TestCase):
             "FilterRange": [4, 5],
             "FilterType": ["Cheby2", "ellip"],
             "TemporalType": ["var", "max", "mean", "std", "logvar"],
-            "return_logits": [True, False],
+            "return_logits": [False],
         }
         DCN_grid = self.makeGrid(DCN_args)
         for i in DCN_grid:
@@ -277,11 +277,11 @@ class TestModels(unittest.TestCase):
             "Samples": [2048],
             "Chans": [self.Chan],
             "block": [models.BasicBlock1],
-            "Layers": [[1, 1, 1, 1], [2, 2, 2, 2], [1, 2, 4, 3]],
-            "inplane": [8, 16, 32],
-            "kernLength": [7, 13, 15],
+            "Layers": [[1, 1, 1, 1], [1, 2, 4, 3]],
+            "inplane": [8, 16],
+            "kernLength": [7, 13],
             "addConnection": [True, False],
-            "return_logits": [True, False],
+            "return_logits": [False],
         }
         EEGres_args = self.makeGrid(EEGres_args)
         for i in EEGres_args:
@@ -310,10 +310,10 @@ class TestModels(unittest.TestCase):
             "nb_classes": [2, 4],
             "Samples": [2048],
             "Chans": [self.Chan],
-            "F": [20, 40, 80],
-            "K1": [25, 12, 50],
-            "Pool": [75, 50, 100],
-            "return_logits": [True, False],
+            "F": [20, 40],
+            "K1": [25, 12],
+            "Pool": [75, 50],
+            "return_logits": [False],
         }
         EEGsha_args = self.makeGrid(EEGsha_args)
         for i in EEGsha_args:
@@ -342,10 +342,10 @@ class TestModels(unittest.TestCase):
             "nb_classes": [2, 4],
             "Samples": [2048],
             "Chans": [self.Chan],
-            "F": [8, 16, 4],
-            "kernLength": [64, 32, 120],
-            "Pool": [16, 30, 8],
-            "return_logits": [True, False],
+            "F": [8, 16],
+            "kernLength": [64, 120],
+            "Pool": [16, 8],
+            "return_logits": [False],
         }
         EEGsta_args = self.makeGrid(EEGsta_args)
         for i in EEGsta_args:
@@ -374,10 +374,10 @@ class TestModels(unittest.TestCase):
             "nb_classes": [2, 4],
             "Samples": [2048],
             "grid_size": [5, 9],
-            "F": [256, 512, 64],
+            "F": [256, 64],
             "kernlength": [5, 7],
             "dense_size": [1024, 512],
-            "return_logits": [True, False],
+            "return_logits": [False],
         }
         EEGstn_args = self.makeGrid(EEGstn_args)
         for i in EEGstn_args:
@@ -410,11 +410,11 @@ class TestModels(unittest.TestCase):
             "nb_classes": [2, 4],
             "Chans": [self.Chan],
             "Fs": [64],
-            "F": [128, 64, 32],
-            "kernlength": [8, 16, 30],
-            "pool": [16, 5, 8],
+            "F": [128, 32],
+            "kernlength": [8, 30],
+            "pool": [16, 5],
             "hidden_lstm": [128, 50],
-            "return_logits": [True, False],
+            "return_logits": [False],
         }
         EEGsleep_args = self.makeGrid(EEGsleep_args)
         for i in EEGsleep_args:

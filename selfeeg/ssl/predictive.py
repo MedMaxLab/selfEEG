@@ -178,7 +178,7 @@ class PredictiveSSL(SSLBase):
             but in reality it must be given if the dataloader does not directly
             provide the pseudo-labels.
 
-        loss_func: function, optional
+        loss_func: Callable, optional
             The custom loss function. It can be any loss function that
             accepts as input only the model's predictions as required arguments
             and loss_args as optional arguments.
@@ -445,7 +445,9 @@ class PredictiveSSL(SSLBase):
                         EarlyStopper.rec_best_weights(self)
                         updated_mdl = True
                 if EarlyStopper():
-                    print(f"no improvement after {EarlyStopper.patience} epochs. Training stopped")
+                    if verbose:
+                        print(f"no improvement after {EarlyStopper.patience} epochs.")
+                        print(f"Training stopped at epoch {epoch}")
                     if EarlyStopper.record_best_weights and not (updated_mdl):
                         EarlyStopper.restore_best_weights(self)
                     if return_loss_info:

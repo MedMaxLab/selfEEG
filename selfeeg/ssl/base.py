@@ -118,8 +118,10 @@ def fine_tune(
     epochs=1,
     optimizer=None,
     augmenter=None,
-    loss_func: Callable or list[Callable] = None,
+    loss_func: Callable = None,
     loss_args: list or dict = [],
+    validation_loss_func: Callable = None,
+    validation_loss_args: list or dict = [],
     label_encoder: Callable or list[Callable] = None,
     lr_scheduler=None,
     EarlyStopper=None,
@@ -174,15 +176,28 @@ def fine_tune(
         ``X[i] = augmenter[i](X[i])``.
         It is possible to have ``len(augmenter)<len(X)``.
 
-    loss_func: function, optional
+    loss_func: Callable, optional
         The custom loss function. It can be any loss function which
-        accepts as input the model's prediction and the true labels
+        accepts as inputs the model's prediction and the true labels
         as required arguments and loss_args as optional arguments.
 
         Default = None
     loss_args: Union[list, dict], optional
-        The optional arguments to pass to the function. It can be a list
+        The optional arguments to pass to the loss function. It can be a list
         or a dict.
+
+        Default = None
+    validation_loss_func: Callable, optional
+        A custom validation loss function. It can be any loss function which
+        accepts as inputs the model's prediction and the true labels
+        as required arguments, and loss_args as optional arguments.
+        If None, loss_func will be used.
+
+        Default = None
+    validation_loss_args: Union[list, dict], optional
+        The optional arguments to pass to the validation loss function.
+        It can be a list or a dict.
+        If None, loss_args will be used.
 
         Default = None
     label_encoder: callable of list of callables, optional
@@ -258,7 +273,8 @@ def fine_tune(
     >>> def loss_fineTuning(yhat, ytrue):
     ...     return F.binary_cross_entropy_with_logits(torch.squeeze(yhat), ytrue + 0.)
     >>> random.seed(1234)
-    >>> EEGlen = dl.get_eeg_partition_number('Simulated_EEG',128, 2, 0.3, load_function=loadEEG)
+    >>> EEGlen = dl.get_eeg_partition_number(
+    ...     'Simulated_EEG', 128, 2, 0.3, load_function=loadEEG)
     >>> EEGsplit = dl.get_eeg_split_table (EEGlen, seed=1234)
     >>> TrainSet = dl.EEGDataset(EEGlen,EEGsplit, [128,2,0.3], 'train', True, loadEEG,
     ...                          optional_load_fun_args=[True], label_on_load=True)
@@ -280,7 +296,7 @@ def fine_tune(
     model.to(device=device)
 
     if not (isinstance(train_dataloader, torch.utils.data.DataLoader)):
-        raise ValueError("Current implementation accept only training data as a pytorch DataLoader")
+        raise ValueError("train_dataloader must be a pytorch DataLoader")
     if not (isinstance(epochs, int)):
         epochs = int(epochs)
     if epochs < 1:
@@ -290,23 +306,23 @@ def fine_tune(
     if loss_func is None:
         raise ValueError("loss function not given")
     if not (isinstance(loss_args, list) or isinstance(loss_args, dict)):
-        raise ValueError(
-            "loss_args must be a list or a dict with all optional arguments of the loss function"
-        )
+        raise ValueError("loss_args must be a list or a dict")
 
     perform_validation = False
     if validation_dataloader != None:
         if not (isinstance(validation_dataloader, torch.utils.data.DataLoader)):
-            raise ValueError(
-                "Current implementation accept only validation data as a pytorch DataLoader"
-            )
+            raise ValueError("validation_dataloader must be a pytorch DataLoader")
         else:
             perform_validation = True
+            if validation_loss_func is None:
+                validation_loss_func = loss_func
+                validation_loss_args = loss_args
+
     if EarlyStopper is not None:
         if EarlyStopper.monitored == "validation" and not (perform_validation):
             print(
-                "Early stopper monitoring is set to validation loss"
-                ", but no validation data are given. "
+                "Early stopper monitoring is set to validation loss,"
+                "but no validation data are given. "
                 "Internally changing monitoring to training loss"
             )
             EarlyStopper.monitored = "train"
@@ -434,7 +450,11 @@ def fine_tune(
                                     Ytrue[i] = Ytrue[i].to(device=device)
 
                         Yhat = model(X)
-                        val_loss = evaluate_loss(loss_func, [Yhat, Ytrue], loss_args)
+                        val_loss = evaluate_loss(
+                            validation_loss_func,
+                            [Yhat, Ytrue],
+                            validation_loss_args,
+                        )
                         val_loss_tot += val_loss.item()
                         if verbose:
                             pbar.set_description(
@@ -461,7 +481,9 @@ def fine_tune(
                     EarlyStopper.rec_best_weights(model)
                     updated_mdl = True
             if EarlyStopper():
-                print(f"no improvement after {EarlyStopper.patience} epochs. Training stopped")
+                if verbose:
+                    print(f"no improvement after {EarlyStopper.patience} epochs.")
+                    print(f"Training stopped at epoch {epoch}")
                 if EarlyStopper.record_best_weights and not (updated_mdl):
                     EarlyStopper.restore_best_weights(model)
                 if return_loss_info:

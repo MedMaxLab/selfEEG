@@ -1,5 +1,18 @@
 # Version X.X.X (only via git install)
 
+**Functionality**
+
+- **dataloading module**:
+    - EEGDataset now supports EEG with multiple labels (1 per window partition).
+- **ssl module**:
+    - The fine_tuning function now accepts a custom validation loss function.
+
+**maintenance**
+
+* fixed workflows MPS device bug
+* reduced unittest overall time
+
+
 # Version 0.2.0 (latest)
 
 **Functionality**

@@ -29,13 +29,18 @@ class TestDataloading(unittest.TestCase):
             with open(file_name, "wb") as f:
                 pickle.dump(sample, f)
 
-    def loadEEG(self, path, return_label=False):
+    def loadEEG(self, path, return_label=False, return_label_array=False):
         with open(path, "rb") as handle:
             EEG = pickle.load(handle)
         x = EEG["data"]
         y = EEG["label"]
         if return_label:
-            return x, y
+            if return_label_array:
+                # just to complicate things
+                y = np.array([[y] * 100, [y] * 100]).T
+                return x, y
+            else:
+                return x, y
         else:
             return x
 
@@ -471,7 +476,7 @@ class TestDataloading(unittest.TestCase):
             mode="train",
             supervised=True,
             load_function=self.loadEEG,
-            optional_load_fun_args=[True],
+            optional_load_fun_args=[True, False],
             transform_function=self.transformEEG,
             label_on_load=True,
         )
@@ -479,6 +484,23 @@ class TestDataloading(unittest.TestCase):
         self.assertTrue(isinstance(sample_2, torch.Tensor))
         self.assertEqual(sample_2.shape[-1], 256)
         self.assertTrue(isinstance(label_2, int))
+
+        # try again with an array of labels
+        dataset_finetune = dl.EEGDataset(
+            EEGlen,
+            EEGsplit,
+            [self.freq, self.window, self.overlap],
+            mode="train",
+            supervised=True,
+            load_function=self.loadEEG,
+            optional_load_fun_args=[True, True],
+            transform_function=self.transformEEG,
+            multilabel_on_load=True,
+        )
+        sample_2, label_2 = dataset_finetune.__getitem__(0)
+        self.assertTrue(isinstance(sample_2, torch.Tensor))
+        self.assertEqual(sample_2.shape[-1], 256)
+        # self.assertTrue(len(label_2.shape)==0)
 
         dataset_finetune.preload_dataset()
         sample_3, label_3 = dataset_finetune.__getitem__(0)
