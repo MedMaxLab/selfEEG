@@ -2349,7 +2349,7 @@ def permute_channels(
             # shuffle according to the selected networks
             for k in range(len(networks)):
                 # identify chans idx
-                idxor = np.where(np.in1d(channel_map[idxor_full], networks[k]))[0]
+                idxor = np.where(np.isin(channel_map[idxor_full], networks[k]))[0]
                 idxor = idxor[np.where(idx_full[idxor] == -1)[0]]
                 idx = idxor_full[idxor]  # get chans idx
                 if idx.shape[0] > 1:
