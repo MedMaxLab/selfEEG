@@ -324,7 +324,7 @@ class TestAugmentationFunctional(unittest.TestCase):
 
         x = torch.zeros(16, 32, 1024) + torch.sin(torch.linspace(0, 8 * np.pi, 1024))
         xaug, noise = aug.add_noise_SNR(x, 10, get_noise=True)
-        SNR = 10 * np.log10(((x**2).sum().mean()) / ((noise**2).sum().mean()))
+        SNR = 10 * torch.log10(((x**2).sum().mean()) / ((noise**2).sum().mean()))
         self.assertTrue(math.isclose(SNR, 10, rel_tol=1e-2))
         print("   noise SNR OK: tested", N + len(aug_args), "combinations of input arguments")
 

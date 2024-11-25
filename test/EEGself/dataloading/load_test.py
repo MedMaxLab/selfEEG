@@ -29,13 +29,18 @@ class TestDataloading(unittest.TestCase):
             with open(file_name, "wb") as f:
                 pickle.dump(sample, f)
 
-    def loadEEG(self, path, return_label=False):
+    def loadEEG(self, path, return_label=False, return_label_array=False):
         with open(path, "rb") as handle:
             EEG = pickle.load(handle)
         x = EEG["data"]
         y = EEG["label"]
         if return_label:
-            return x, y
+            if return_label_array:
+                # just to complicate things
+                y = np.array([[y] * 100, [y] * 100]).T
+                return x, y
+            else:
+                return x, y
         else:
             return x
 
@@ -115,162 +120,28 @@ class TestDataloading(unittest.TestCase):
         Labels = np.zeros(EEGlen.shape[0], dtype=int)
         for i in range(EEGlen.shape[0]):
             _, Labels[i] = self.loadEEG(EEGlen.iloc[i]["full_path"], True)
+
+        # fmt: off
         val_dict_id = [
-            25,
-            26,
-            27,
-            28,
-            29,
-            60,
-            61,
-            62,
-            63,
-            64,
-            225,
-            226,
-            227,
-            228,
-            229,
-            260,
-            261,
-            262,
-            263,
-            264,
-            425,
-            426,
-            427,
-            428,
-            429,
-            460,
-            461,
-            462,
-            463,
-            464,
-            625,
-            626,
-            627,
-            628,
-            629,
-            660,
-            661,
-            662,
-            663,
-            664,
-            825,
-            826,
-            827,
-            828,
-            829,
-            860,
-            861,
-            862,
-            863,
-            864,
+            25, 26, 27, 28, 29, 60, 61, 62, 63, 64, 225, 226, 227, 228, 229, 260,
+            261, 262, 263, 264, 425, 426, 427, 428, 429, 460, 461, 462, 463, 464,
+            625, 626, 627, 628, 629, 660, 661, 662, 663, 664, 825, 826, 827, 828,
+            829, 860, 861, 862, 863, 864,
         ]
         test_dict_id = [
-            20,
-            21,
-            22,
-            23,
-            24,
-            65,
-            66,
-            67,
-            68,
-            69,
-            220,
-            221,
-            222,
-            223,
-            224,
-            265,
-            266,
-            267,
-            268,
-            269,
-            420,
-            421,
-            422,
-            423,
-            424,
-            465,
-            466,
-            467,
-            468,
-            469,
-            620,
-            621,
-            622,
-            623,
-            624,
-            665,
-            666,
-            667,
-            668,
-            669,
-            820,
-            821,
-            822,
-            823,
-            824,
-            865,
-            866,
-            867,
-            868,
-            869,
+            20, 21, 22, 23, 24, 65, 66, 67, 68, 69, 220, 221, 222, 223, 224, 265,
+            266, 267, 268, 269, 420, 421, 422, 423, 424, 465, 466, 467, 468, 469,
+            620, 621, 622, 623, 624, 665, 666, 667, 668, 669, 820, 821, 822, 823,
+            824, 865, 866, 867, 868, 869,
         ]
         excl_dict_id = [
-            15,
-            16,
-            17,
-            18,
-            19,
-            70,
-            71,
-            72,
-            73,
-            74,
-            215,
-            216,
-            217,
-            218,
-            219,
-            270,
-            271,
-            272,
-            273,
-            274,
-            415,
-            416,
-            417,
-            418,
-            419,
-            470,
-            471,
-            472,
-            473,
-            474,
-            615,
-            616,
-            617,
-            618,
-            619,
-            670,
-            671,
-            672,
-            673,
-            674,
-            815,
-            816,
-            817,
-            818,
-            819,
-            870,
-            871,
-            872,
-            873,
-            874,
+            15, 16, 17, 18, 19, 70, 71, 72, 73, 74, 215, 216, 217, 218, 219, 270,
+            271, 272, 273, 274, 415, 416, 417, 418, 419, 470, 471, 472, 473, 474,
+            615, 616, 617, 618, 619, 670, 671, 672, 673, 674, 815, 816, 817, 818,
+            819, 870, 871, 872, 873, 874,
         ]
+        # fmt: on
+
         input_grid = {
             "partition_table": [EEGlen],
             "test_ratio": [0, 0.2],
@@ -425,7 +296,7 @@ class TestDataloading(unittest.TestCase):
 
     def test_EEGDataset(self):
         # checks: extraction is performed correctly
-        print("Testing EEGDataset on both unsupervised and supervised mode...", end="", flush=True)
+        print("Testing EEGDataset...", end="", flush=True)
 
         EEGlen = dl.get_eeg_partition_number(
             self.eegpath,
@@ -471,7 +342,7 @@ class TestDataloading(unittest.TestCase):
             mode="train",
             supervised=True,
             load_function=self.loadEEG,
-            optional_load_fun_args=[True],
+            optional_load_fun_args=[True, False],
             transform_function=self.transformEEG,
             label_on_load=True,
         )
@@ -479,6 +350,23 @@ class TestDataloading(unittest.TestCase):
         self.assertTrue(isinstance(sample_2, torch.Tensor))
         self.assertEqual(sample_2.shape[-1], 256)
         self.assertTrue(isinstance(label_2, int))
+
+        # try again with an array of labels
+        dataset_finetune = dl.EEGDataset(
+            EEGlen,
+            EEGsplit,
+            [self.freq, self.window, self.overlap],
+            mode="train",
+            supervised=True,
+            load_function=self.loadEEG,
+            optional_load_fun_args=[True, True],
+            transform_function=self.transformEEG,
+            multilabel_on_load=True,
+        )
+        sample_2, label_2 = dataset_finetune.__getitem__(0)
+        self.assertTrue(isinstance(sample_2, torch.Tensor))
+        self.assertEqual(sample_2.shape[-1], 256)
+        # self.assertTrue(len(label_2.shape)==0)
 
         dataset_finetune.preload_dataset()
         sample_3, label_3 = dataset_finetune.__getitem__(0)

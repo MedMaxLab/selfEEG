@@ -1441,11 +1441,18 @@ class EEGDataset(Dataset):
         Can be a list or a dict.
 
         Default = None
-    label_on_load: bool, optional
-        Whether the custom loading function will also load a label
-        associated to the eeg file.
+    multilabel_on_load: bool, optional
+        Whether the custom loading function will also load an array of labels
+        associated to the EEG file. In this case it is assumed that the number of
+        labels is equal to the number of samples, i.e. windows that can be extracted
+        from the EEG according to the partition EEGpartition_spec.
 
         Default = True
+    label_on_load: bool, optional
+        Whether the custom loading function will also load a single label
+        associated to the EEG file.
+
+        Default = False
     label_key: str or list of str, optional
         A single or set of dictionary keys given as list of strings, used to access
         a specific label if multiple were loaded. Might be useful if the loading
@@ -1499,6 +1506,7 @@ class EEGDataset(Dataset):
         optional_load_fun_args: list or dict = None,
         optional_transform_fun_args: list or dict = None,
         optional_label_fun_args: list or dict = None,
+        multilabel_on_load: bool = False,
         label_on_load: bool = False,
         label_key: list = None,
         default_dtype=torch.float32,
@@ -1533,6 +1541,7 @@ class EEGDataset(Dataset):
         self.label_function = label_function
         self.optional_label_fun_args = optional_label_fun_args
 
+        self.multilabel_on_load = multilabel_on_load
         self.label_on_load = label_on_load
         self.given_label_keys = None
         self.curr_key = None
@@ -1613,17 +1622,16 @@ class EEGDataset(Dataset):
         if self.supervised:
             x, y = self.__getitem__(0)
             try:
+                # try to convert y to a torch tensor
                 if not (isinstance(y, torch.Tensor)):
-                    y = torch.tensor(y, dtype=self.default_dtype)
+                    y = torch.tensor(y)
+                    y_to_convert = True
                 # if it's a scalar, create a 1D array with length as the
                 # dataset length otherwise add more dimensions
-                if len(y.shape) == 1 and y.numel() == 1:
-                    y = torch.empty(self.__len__(), dtype=self.default_dtype)
+                if len(y.shape) <= 1 and y.numel() == 1:
+                    self.y_preload = torch.empty(self.__len__(), dtype=y.dtype)
                 else:
-                    y_to_convert = True
-                    self.y_preload = torch.empty(
-                        [self.__len__(), *y.shape], dtype=self.default_dtype
-                    )
+                    self.y_preload = torch.empty([self.__len__(), *y.shape], dtype=y.dtype)
             except Exception:
                 self.y_preload = [None] * self.__len__()
         else:
@@ -1647,7 +1655,7 @@ class EEGDataset(Dataset):
             if self.supervised:
                 x, y = self.__getitem__(i)
                 if y_to_convert:
-                    y = torch.tensor(y, dtype=self.default_dtype)
+                    y = torch.tensor(y)
                 self.y_preload[i] = y
             else:
                 x = self.__getitem__(i)
@@ -1694,7 +1702,7 @@ class EEGDataset(Dataset):
                     EEG = self.load_function(self.file_path, **self.optional_load_fun_args)
                 else:
                     EEG = self.load_function(self.file_path)
-                if self.label_on_load:
+                if self.label_on_load or self.multilabel_on_load:
                     self.currEEG = EEG[0]
                     if self.supervised:
                         self.label_info = EEG[1]
@@ -1712,7 +1720,7 @@ class EEGDataset(Dataset):
                 else:
                     self.currEEG = EEG
             else:
-                # load things considering files coming from the auto-BIDS library
+                # load things considering files coming from the BIDSAlign library
                 EEG = loadmat(self.file_path, simplify_cells=True)
                 self.currEEG = EEG["DATA_STRUCT"]["data"]
                 if (self.supervised) and (self.label_on_load):
@@ -1743,7 +1751,11 @@ class EEGDataset(Dataset):
             if self.currEEG.dtype != self.default_dtype:
                 self.currEEG = self.currEEG.to(dtype=self.default_dtype)
 
-            # store dimensionality of EEG files (some datasets stored 3D tensors, unfortunately)
+            if self.multilabel_on_load:
+                if isinstance(self.label, np.ndarray):
+                    self.label = torch.from_numpy(self.label)
+
+            # store dimensionality of EEG files (some datasets are stored as 3D tensors)
             # This might be helpful for partition selection of multiple EEG in a single file
             self.dimEEG = len(self.currEEG.shape)
             if self.dimEEG > 2:
@@ -1758,26 +1770,28 @@ class EEGDataset(Dataset):
 
         # Calculate start and end of the partition
         # Manage the multidimensional EEG
-        # NOTE: using the if add lines but avoid making useless operation in case of 2D tensors
+        # ----------------- NOTE -----------------
+        # using the if add lines but avoid making
+        # useless operation in case of 2D tensors
         partition = index - self.minIdx
-        first_dims_idx = [0] * (self.dimEEG - 2)
+        dim_idx = [0] * (self.dimEEG - 2)
         if self.dimEEG > 2:
             cumidx = 0
             for i in range(self.dimEEG - 2):
-                first_dims_idx[i] = (partition - cumidx) // self.dimEEGprod[i]
-                cumidx += first_dims_idx[i] * self.dimEEGprod[i]
+                dim_idx[i] = (partition - cumidx) // self.dimEEGprod[i]
+                cumidx += dim_idx[i] * self.dimEEGprod[i]
             start = (self.Nsample - round(self.Nsample * self.overlap)) * (partition - cumidx)
             end = start + self.Nsample
             if end > self.currEEG.shape[-1]:  # in case of partial ending samples
                 sample = self.currEEG[
                     (
-                        *first_dims_idx,
+                        *dim_idx,
                         slice(None),
                         slice(self.currEEG.shape[-1] - Nsample, self.currEEG.shape[-1]),
                     )
                 ]
             else:
-                sample = self.currEEG[(*first_dims_idx, slice(None), slice(start, end))]
+                sample = self.currEEG[(*dim_idx, slice(None), slice(start, end))]
         else:
             start = (self.Nsample - round(self.Nsample * self.overlap)) * (partition)
             end = start + self.Nsample
@@ -1788,21 +1802,26 @@ class EEGDataset(Dataset):
 
         # extract label if training is supervised (fine-tuning purposes)
         if self.supervised:
-            if self.label_on_load:
+            if self.multilabel_on_load:
+                label_idx = index - self.minIdx
+                label = self.label[label_idx]
+            elif self.label_on_load:
                 label = self.label
             else:
                 if isinstance(self.optional_label_fun_args, list):
                     label = self.label_function(
-                        self.file_path, [*first_dims_idx, start, end], *self.optional_label_fun_args
+                        self.file_path,
+                        [*dim_idx, start, end],
+                        *self.optional_label_fun_args,
                     )
                 elif isinstance(self.optional_label_fun_args, dict):
                     label = self.label_function(
                         self.file_path,
-                        [*first_dims_idx, start, end],
+                        [*dim_idx, start, end],
                         **self.optional_label_fun_args,
                     )
                 else:
-                    label = self.label_function(self.file_path, [*first_dims_idx, start, end])
+                    label = self.label_function(self.file_path, [*dim_idx, start, end])
             return sample, label
         else:
             return sample

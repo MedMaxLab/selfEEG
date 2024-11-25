@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Callable
 import copy
 import os
 import sys
@@ -137,7 +138,7 @@ class SimCLR(SSLBase):
         epochs=1,
         optimizer=None,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         lr_scheduler=None,
         EarlyStopper=None,
@@ -177,7 +178,7 @@ class SimCLR(SSLBase):
             since it's part of the SSL algorithm.
 
             Default = None
-        loss_func: function, optional
+        loss_func: Callable, optional
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions as required arguments
             and loss_args as optional arguments.
@@ -352,9 +353,9 @@ class SimCLR(SSLBase):
                         EarlyStopper.rec_best_weights(self)
                         updated_mdl = True
                 if EarlyStopper():
-                    print(
-                        f"no improvement after {EarlyStopper.patience} epochs. " f"Training stopped"
-                    )
+                    if verbose:
+                        print(f"no improvement after {EarlyStopper.patience} epochs.")
+                        print(f"Training stopped at epoch {epoch}")
                     if EarlyStopper.record_best_weights and not (updated_mdl):
                         EarlyStopper.restore_best_weights(self)
                     if return_loss_info:
@@ -371,7 +372,7 @@ class SimCLR(SSLBase):
         self,
         test_dataloader,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         verbose: bool = True,
         device: str = None,
@@ -551,7 +552,7 @@ class SimSiam(SSLBase):
         epochs=1,
         optimizer=None,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         lr_scheduler=None,
         EarlyStopper=None,
@@ -590,7 +591,7 @@ class SimSiam(SSLBase):
             SSL algorithm.
 
             Default = None
-        loss_func: function, optional
+        loss_func: Callable, optional
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions (4 torch Tensor) as
             required arguments and loss_args as optional arguments. Check the input
@@ -759,11 +760,9 @@ class SimSiam(SSLBase):
                         EarlyStopper.rec_best_weights(self)
                         updated_mdl = True
                 if EarlyStopper():
-                    print(
-                        "no improvement after {} epochs. Training stopped.".format(
-                            EarlyStopper.patience
-                        )
-                    )
+                    if verbose:
+                        print(f"no improvement after {EarlyStopper.patience} epochs.")
+                        print(f"Training stopped at epoch {epoch}")
                     if EarlyStopper.record_best_weights and not (updated_mdl):
                         EarlyStopper.restore_best_weights(self)
                     if return_loss_info:
@@ -780,7 +779,7 @@ class SimSiam(SSLBase):
         self,
         test_dataloader,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         verbose: bool = True,
         device: str = None,
@@ -1087,7 +1086,7 @@ class MoCo(SSLBase):
         epochs=1,
         optimizer=None,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         lr_scheduler=None,
         EarlyStopper=None,
@@ -1128,7 +1127,7 @@ class MoCo(SSLBase):
             SSL algorithm.
 
             Default = None
-        loss_func: function, optional
+        loss_func: Callable, optional
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions (2 torch Tensor) as
             required arguments and loss_args as optional arguments. Check the input
@@ -1336,9 +1335,9 @@ class MoCo(SSLBase):
                         EarlyStopper.rec_best_weights(self)
                         updated_mdl = True
                 if EarlyStopper():
-                    print(
-                        f"no improvement after {EarlyStopper.patience} epochs. " f"Training stopped"
-                    )
+                    if verbose:
+                        print(f"no improvement after {EarlyStopper.patience} epochs.")
+                        print(f"Training stopped at epoch {epoch}")
                     if EarlyStopper.record_best_weights and not (updated_mdl):
                         EarlyStopper.restore_best_weights(self)
                     if return_loss_info:
@@ -1355,7 +1354,7 @@ class MoCo(SSLBase):
         self,
         test_dataloader,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         verbose: bool = True,
         device: str = None,
@@ -1587,7 +1586,7 @@ class BYOL(SSLBase):
         epochs=1,
         optimizer=None,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         lr_scheduler=None,
         EarlyStopper=None,
@@ -1626,7 +1625,7 @@ class BYOL(SSLBase):
             SSL algorithm.
 
             Default = None
-        loss_func: function, optional
+        loss_func: Callable, optional
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions (4 torch Tensor) as
             required arguments and loss_args as optional arguments. Check the input
@@ -1795,11 +1794,9 @@ class BYOL(SSLBase):
                         EarlyStopper.rec_best_weights(self)
                         updated_mdl = True
                 if EarlyStopper():
-                    print(
-                        "no improvement after {} epochs. Training stopped.".format(
-                            EarlyStopper.patience
-                        )
-                    )
+                    if verbose:
+                        print(f"no improvement after {EarlyStopper.patience} epochs.")
+                        print(f"Training stopped at epoch {epoch}")
                     if EarlyStopper.record_best_weights and not (updated_mdl):
                         EarlyStopper.restore_best_weights(self)
                     if return_loss_info:
@@ -1816,7 +1813,7 @@ class BYOL(SSLBase):
         self,
         test_dataloader,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         verbose: bool = True,
         device: str = None,
@@ -1952,7 +1949,7 @@ class BarlowTwins(SimCLR):
         epochs=1,
         optimizer=None,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         lr_scheduler=None,
         EarlyStopper=None,
@@ -1992,7 +1989,7 @@ class BarlowTwins(SimCLR):
             SSL algorithm.
 
             Default = None
-        loss_func: function, optional
+        loss_func: Callable, optional
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions as required arguments
             and loss_args as optional arguments.
@@ -2078,7 +2075,7 @@ class BarlowTwins(SimCLR):
         self,
         test_dataloader,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         verbose: bool = True,
         device: str = None,
@@ -2167,7 +2164,7 @@ class VICReg(SimCLR):
         epochs=1,
         optimizer=None,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         lr_scheduler=None,
         EarlyStopper=None,
@@ -2207,7 +2204,7 @@ class VICReg(SimCLR):
             SSL algorithm.
 
             Default = None
-        loss_func: function, optional
+        loss_func: Callable, optional
             The custom loss function. It can be any loss function which
             accepts as input only the model's predictions as required arguments
             and loss_args as optional arguments.
@@ -2293,7 +2290,7 @@ class VICReg(SimCLR):
         self,
         test_dataloader,
         augmenter=None,
-        loss_func: "function" = None,
+        loss_func: Callable = None,
         loss_args: list or dict = [],
         verbose: bool = True,
         device: str = None,
