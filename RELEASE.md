@@ -9,7 +9,8 @@
 
 **maintenance**
 
-* fixed workflows MPS device bug
+* fixed unittest MPS device bug on git workflows
+* fixed unittest deprecation warnings
 * reduced unittest overall time
 
 
