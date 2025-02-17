@@ -81,6 +81,21 @@ class TestAugmentationCompose(unittest.TestCase):
         self.assertTrue(torch.equal(BatchEEGaug1, BatchEEGaug2 * (-1)))
         print(" Sequential augmentation OK")
 
+    def test_CircularAug(self):
+        print("Testing Circular augmentation...", end="", flush=True)
+        Circular = aug.CircularAug(aug.flip_vertical, aug.identity)
+        BatchEEGaug1 = Circular(self.BatchEEG)
+        self.assertTrue(torch.equal(BatchEEGaug1, self.BatchEEG * (-1)))
+        BatchEEGaug1 = Circular(self.BatchEEG)
+        self.assertTrue(torch.equal(BatchEEGaug1, self.BatchEEG))
+
+        # repeat to check Circular calls
+        BatchEEGaug1 = Circular(self.BatchEEG)
+        self.assertTrue(torch.equal(BatchEEGaug1, self.BatchEEG * (-1)))
+        BatchEEGaug1 = Circular(self.BatchEEG)
+        self.assertTrue(torch.equal(BatchEEGaug1, self.BatchEEG))
+        print(" Circular augmentation OK")
+
     def test_RandomAug(self):
         print("Testing Random augmentation...", end="", flush=True)
         Aug_scal = aug.StaticSingleAug(aug.scaling, {"value": 2, "batch_equal": True})
@@ -97,7 +112,7 @@ class TestAugmentationCompose(unittest.TestCase):
         self.assertTrue(abs(counter[1] - 0.3) < 1e-2)
         print("   Random augmentation OK")
 
-    def test_UltimateAugmentationComposition(self):
+    def test_AugmentationComposition(self):
         print(
             "Testing final augmentation composition based on all previous classes...",
             end="",

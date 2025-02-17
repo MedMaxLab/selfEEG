@@ -603,24 +603,34 @@ def add_noise_SNR(
 
     """
 
+    N = len(x.shape)
+    if N == 1:
+        axis = 0
+        new_size = (x.shape[-1],)
+    elif N == 2:
+        axis = 1
+        new_size = (1, x.shape[-1])
+    else:
+        axis = -1
+        new_size = (*x.shape[0:-2], 1, x.shape[-1])
+
     # get signal power. Not exactly true since we have an already noised signal
-    x_pow = x**2
+    factor = 10 ** (-target_snr / 20)
 
     if isinstance(x, np.ndarray):
-        x_pow_avg = np.mean(x_pow)
-        x_db_avg = 10 * np.log10(x_pow_avg)
-        noise_db_avg = x_db_avg - target_snr
-        noise_pow_avg = 10 ** (noise_db_avg / 10)
-        noise = np.random.normal(0, noise_pow_avg**0.5, size=x.shape)
-        x_noise = x + noise
-
+        xpow = np.power(x, 2)
+        xpow = np.mean(xpow, keepdims=True)
+        xpow = np.sqrt(xpow)
+        noise = np.random.randn(*new_size)
     else:
-        x_pow_avg = torch.mean(x_pow)
-        x_db_avg = 10 * torch.log10(x_pow_avg)
-        noise_db_avg = x_db_avg - target_snr
-        noise_pow_avg = 10 ** (noise_db_avg / 10)
-        noise = (noise_pow_avg**0.5) * (torch.randn(*x.shape).to(device=x.device))
-        x_noise = x + noise
+        xpow = torch.pow(x, 2)
+        xpow = torch.mean(xpow, axis, keepdim=True)
+        xpow = torch.sqrt(xpow)
+        noise = torch.randn(size=new_size).to(device=x.device)
+
+    noise = factor * noise
+    noise = xpow * noise
+    x_noise = x + noise
 
     if get_noise:
         return x_noise, noise
@@ -873,7 +883,7 @@ def random_slope_scale(
     x: ArrayLike,
     min_scale: float = 0.9,
     max_scale: float = 1.2,
-    batch_equal: bool = False,
+    batch_equal: bool = True,
     keep_memory: bool = False,
 ) -> ArrayLike:
     """
@@ -907,7 +917,7 @@ def random_slope_scale(
         Whether to apply the same rescale to all EEGs in the batch or not.
         This apply only if x has more than 2 dimensions, i.e. more than 1 EEG.
 
-        Default: False
+        Default: True
     keep_memory: bool, optional
         Whether to keep memory of the previous changes in slope and accumulate
         them during the transformation or not. Basically, instead of using:
@@ -1225,16 +1235,18 @@ def get_filter_coeff(
 
     Parameters
     ----------
-    Wp: float
-        Bandpass in Hz.
-    Ws: float
-        Stopband in Hz.
+    Wp: float or ArrayLike
+        Passband edges in Hz. It can be a float for lowpass and highpass filters,
+        or a length 2 scalar vector for bandpass and stopband filters.
+    Ws: float or ArrayLike
+        Stopband edges in Hz. It can be a float for lowpass and highpass filters,
+        or a length 2 scalar vector for bandpass and stopband filters.
     rp: float, optional
-        Ripple at bandpass in decibel.
+        Ripple at bandpass in dB.
 
         Default = -20*log10(0.95)
     rs: float, optional
-        Ripple at stopband in decibel.
+        Ripple at stopband in dB.
 
         Default = -20*log10(0.15)
     btype: str, optional
@@ -1251,7 +1263,7 @@ def get_filter_coeff(
         The order of the filter.
 
         Default = None
-    Wn: array_like, optional
+    Wn: ArrayLike, optional
         The critical frequency or frequencies.
 
         Default = None
@@ -1390,19 +1402,19 @@ def filter_lowpass(
     Fs: float
         The sampling frequency in Hz.
     Wp: float, optional
-        Bandpass in Hz.
+        Passband edge in Hz.
 
         Default = 50
     Ws: float, optional
-        Stopband in Hz.
+        Stopband edge in Hz.
 
         Default = 70
     rp: float, optional
-        Ripple at bandpass in decibel.
+        Ripple at bandpass in dB.
 
         Default = -20*log10(0.95)
     rs: float, optional
-        Ripple at stopband in decibel.
+        Ripple at stopband in dB.
 
         Default = -20*log10(0.15)
     filter_type: str, optional
@@ -1442,10 +1454,10 @@ def filter_lowpass(
 
     Note
     ----
-    Lots of parameters are the ones used to call scipy's matlab style filters,
-    aside to **Wp** and **Ws** which you must give directly in Hz.
-    The normalization to [0,1] with respect to the half-cycles / sample
-    (i.e. Nyquist frequency) is done directly inside the ``get_filter_coeff``
+    Many parameters are those used in scipy's implementation of Matlab-style
+    filters, except for **Wp** and **Ws**, which must be specified directly in Hz.
+    The normalization to [0,1] with respect to half-cycles/sample
+    (i.e., Nyquist frequency) is done directly inside the ``get_filter_coeff``
     function.
 
     Note
@@ -1466,13 +1478,13 @@ def filter_lowpass(
     >>> f, per1 = periodogram(x[0,0], 128)
     >>> xaug = aug.filter_lowpass(x, 128, 20, 30)
     >>> f, per2 = periodogram(xaug[0,0], 128)
-    >>> print(np.isclose(np.max(per2[f>30]), 0, rtol=1e-04, atol=1e-04)) #should return True
+    >>> print(np.isclose(np.max(per2[f>30]), 0, rtol=1e-04, atol=1e-04))
 
     """
 
     if filter_type not in ["butter", "ellip", "cheby1", "cheby2"]:
         raise ValueError(
-            "filter type not supported. Choose between butter, " "elliptic, cheby1, cheby2"
+            "filter type not supported. Choose between butter, elliptic, cheby1, cheby2"
         )
 
     if (a is None) or (b is None):
@@ -1535,19 +1547,19 @@ def filter_highpass(
         The last two dimensions must refer to the EEG recording
         (Channels x Samples).
     Wp: float, optional
-        Bandpass in Hz.
+        Passband edge in Hz.
 
         Default = 30
     Ws: float, optional
-        Stopband in Hz.
+        Stopband edge in Hz.
 
         Default = 13
     rp: float, optional
-        Ripple at bandpass in decibel.
+        Ripple at bandpass in dB.
 
         Default = -20*log10(0.95)
     rs: float, optional
-        Ripple at stopband in decibel.
+        Ripple at stopband in dB.
 
         Default = -20*log10(0.15)
     filter_type: str, optional
@@ -1587,11 +1599,11 @@ def filter_highpass(
 
     Note
     ----
-    Lots of parameters are the ones used to call scipy's matlab style filters,
-    aside to **Wp** and **Ws** which you must give directly in Hz.
-    The normalization to [0,1] with respect to the half-cycles / sample
-    (i.e. Nyquist frequency) is done directly inside the ``get_filter_coeff``
-    function.
+    Many parameters are those used in scipy's implementation of Matlab-style
+    filters, except for **Wp** and **Ws**, which must be specified directly in Hz.
+    The normalization to [0,1] with respect to half-cycles/sample
+    (i.e., Nyquist frequency) is done directly inside the
+    ``get_filter_coeff`` function.
 
     Note
     ----
@@ -1674,8 +1686,8 @@ def filter_bandpass(
     Therefore the arguments closer to a and b in the scheme are used to get
     the filter coefficient.
 
-    If ``eeg_band`` is given, (Wp,Ws,rp,rs) are bypassed and instantiated according
-    to the eeg band specified. The priority order remains, so if (Wn,order) or
+    If ``eeg_band`` is given, (Wp,Ws,rp,rs) are ignored and instantiated according
+    to the EEG band specified. The priority order remains. So, if (Wn, order) or
     (a,b) are given, the filter will be created according to such argument.
 
     Parameters
@@ -1686,20 +1698,20 @@ def filter_bandpass(
         (Channels x Samples).
     Fs: float
         the sampling frequency in Hz.
-    Wp: float, optional
-        Bandpass in Hz.
+    Wp: ArrayLike, optional
+        Passband edges in Hz. It must be a length 2 scalar vector.
 
         Default = None
-    Ws: float, optional
-        Stopband in Hz.
+    Ws: ArrayLike, optional
+        Stopband edges in Hz. It must be a length 2 scalar vector.
 
         Default = None
     rp: float, optional
-        Ripple at bandpass in decibel.
+        Ripple at bandpass in dB.
 
         Default = -20*log10(0.95)
     rs: float, optional
-        Ripple at stopband in decibel.
+        Ripple at stopband in dB.
 
         Default = -20*log10(0.15)
     filter_type: str, optional
@@ -1711,15 +1723,15 @@ def filter_bandpass(
         The order of the filter.
 
         Default = None
-    Wn: array_like, optional
+    Wn: ArrayLike, optional
         The critical frequency or frequencies.
 
         Default = None
-    a: array_like, optional
+    a: ArrayLike, optional
         The denominator coefficients of the filter
 
         Default = None
-    b: array_like, optional
+    b: ArrayLike, optional
         The numerator coefficients of the filer
 
         Default = None
@@ -1745,11 +1757,11 @@ def filter_bandpass(
 
     Note
     ----
-    Lots of parameters are the ones used to call scipy's matlab style filters,
-    aside to **Wp** and **Ws** which you must give directly in Hz.
-    The normalization to [0,1] with respect to the half-cycles / sample
-    (i.e. Nyquist frequency) is done directly inside the ``get_filter_coeff``
-    function.
+    Many parameters are those used in scipy's implementation of Matlab-style
+    filters, except for **Wp** and **Ws**, which must be specified directly in Hz.
+    The normalization to [0,1] with respect to half-cycles/sample
+    (i.e., Nyquist frequency) is done directly inside the
+    ``get_filter_coeff`` function.
 
     Note
     ----
@@ -1847,19 +1859,19 @@ def filter_bandstop(
     Fs: float
         The sampling frequency in Hz.
     Wp: float, optional
-        Bandpass in Hz.
+        Passband edges in Hz. It must be a length 2 scalar vector.
 
         Default = 30
     Ws: float, optional
-        Stopband in Hz.
+        Stopband edges in Hz. It must be a length 2 scalar vector.
 
         Default = 13
     rp: float, optional
-        Ripple at bandpass in decibel.
+        Ripple at bandpass in dB.
 
         Default = -20*log10(0.95)
     rs: float, optional
-        Ripple at stopband in decibel.
+        Ripple at stopband in dB.
 
         Default = -20*log10(0.15)
     filter_type: str, optional
@@ -1871,15 +1883,15 @@ def filter_bandstop(
         The order of the filter.
 
         Default = None
-    Wn: array_like, optional
+    Wn: ArrayLike, optional
         The critical frequency or frequencies.
 
         Default = None
-    a: array_like, optional
+    a: ArrayLike, optional
         The denominator coefficients of the filter.
 
         Default = None
-    b: array_like, optional
+    b: ArrayLike, optional
         The numerator coefficients of the filer.
 
         Default = None
@@ -1905,10 +1917,10 @@ def filter_bandstop(
 
     Note
     ----
-    Lots of parameters are the ones used to call scipy's matlab style filters,
-    aside to **Wp** and **Ws** which you must give directly in Hz.
-    The normalization to [0,1] with respect to the half-cycles / sample
-    (i.e. Nyquist frequency) is done directly inside the
+    Many parameters are those used in scipy's implementation of Matlab-style
+    filters, except for **Wp** and **Ws**, which must be specified directly in Hz.
+    The normalization to [0,1] with respect to half-cycles/sample
+    (i.e., Nyquist frequency) is done directly inside the
     ``get_filter_coeff`` function.
 
     Note
@@ -2202,7 +2214,7 @@ def permute_channels(
     mode: str = "random",
     channel_map: list = None,
     chan_net: list[str] = "all",
-    batch_equal: bool = False,
+    batch_equal: bool = True,
 ) -> ArrayLike:
     """
     permutes the ArrayLike object along the EEG channel dimension.
@@ -2265,7 +2277,7 @@ def permute_channels(
         If True, permute_signal is called recursively in order
         to permute each EEG differently.
 
-        Default = False
+        Default = True
 
     Returns
     -------
@@ -2408,7 +2420,7 @@ def permute_channels(
 
 
 def permutation_signal(
-    x: ArrayLike, segments: int = 10, seg_to_per: int = -1, batch_equal: bool = False
+    x: ArrayLike, segments: int = 10, seg_to_per: int = -1, batch_equal: bool = True
 ) -> ArrayLike:
     """
     permutes some portions of the ArrayLike object along its last dimension.
@@ -2439,7 +2451,7 @@ def permutation_signal(
         If True, the function is called recursively in order to apply a different
         permutation to all EEGs.
 
-        Default = False
+        Default = True
 
     Returns
     -------
@@ -2519,7 +2531,7 @@ def warp_signal(
     segments: int = 10,
     stretch_strength: float = 2.0,
     squeeze_strength: float = 0.5,
-    batch_equal: bool = False,
+    batch_equal: bool = True,
 ) -> ArrayLike:
     """
     stretches and squeezes portions of the ArrayLike object.
@@ -2555,7 +2567,7 @@ def warp_signal(
     batch_equal: bool, optional
         Whether to apply the same warp to all records or not.
 
-        Default = False
+        Default = True
 
     Returns
     -------
@@ -2634,7 +2646,7 @@ def crop_and_resize(
     x: ArrayLike,
     segments: int = 10,
     N_cut: int = 1,
-    batch_equal: bool = False,
+    batch_equal: bool = True,
 ) -> ArrayLike:
     """
     crops some segments of the ArrayLike object.
@@ -2667,7 +2679,8 @@ def crop_and_resize(
         Default = 1
     batch_equal: bool, optional
         Whether to apply the same crop to all EEG record or not.
-        Default = False
+
+        Default = True
 
     Returns
     -------
@@ -2866,7 +2879,7 @@ def change_ref(
 
 
 def masking(
-    x: ArrayLike, mask_number: int = 1, masked_ratio: float = 0.1, batch_equal: bool = False
+    x: ArrayLike, mask_number: int = 1, masked_ratio: float = 0.1, batch_equal: bool = True
 ) -> ArrayLike:
     """
     puts to zero random portions of the ArrayLike object.
@@ -2899,7 +2912,7 @@ def masking(
         Whether to apply the same masking to all elements in the batch or not.
         It does apply only if x has more than 2 dimensions.
 
-        Default = False
+        Default = True
 
     Returns
     -------
@@ -3043,7 +3056,7 @@ def add_eeg_artifact(
     line_at_60Hz: bool = True,
     lost_time: float = None,
     drift_slope: float = None,
-    batch_equal: bool = False,
+    batch_equal: bool = True,
 ) -> ArrayLike:
     """
     add common EEG artifacts to the ArrayLike object.
@@ -3112,7 +3125,7 @@ def add_eeg_artifact(
         Whether to apply the same masking to all elements in the batch or not.
         Does apply only if x has more than 2 dimensions
 
-        Default = False
+        Default = True
 
     Returns
     -------

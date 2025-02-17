@@ -809,9 +809,13 @@ class ResNet1D(nn.Module):
         Default: selfeeg.models.BasicBlock1
     Layers: list of 4 int, optional
         A list of integers indicating the number of times the resnet block
-        is repeated.
+        is repeated at each stage.
+        It must be a list of length 4 with positive integers.
+        Shorter lists are padded to 1 on the right.
+        Only the first four elements of longer lists are considered.
+        Zeros are changed to 1.
 
-        Default = [2,2,2,2]
+        Default = [2, 2, 2, 2]
     inplane: int, optional
         The number of output filters.
 
@@ -889,7 +893,7 @@ class ResNet1D(nn.Module):
         Chans,
         Samples,
         block: nn.Module = BasicBlock1,
-        Layers: "list of 4 int" = [0, 0, 0, 0],
+        Layers: "list of 4 int" = [2, 2, 2, 2],
         inplane: int = 16,
         kernLength: int = 7,
         addConnection: bool = False,
@@ -922,7 +926,9 @@ class ResNet1D(nn.Module):
                     1 if nb_classes <= 2 else nb_classes,
                 )
             else:
-                self.Dense = nn.Linear(Chans * inplane, 1 if nb_classes <= 2 else nb_classes)
+                self.Dense = nn.Linear(
+                    Chans * self.encoder.inplane, 1 if nb_classes <= 2 else nb_classes
+                )
         else:
             self.Dense = classifier
 

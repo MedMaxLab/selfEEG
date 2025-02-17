@@ -47,126 +47,116 @@ def get_eeg_partition_number(
     verbose: bool = False,
 ) -> pd.DataFrame:
     """
-    finds the number of unique partitions from each EEG signal.
+    Calculates the number of unique partitions in each EEG signal.
 
-    The function is applied to each EEG stored inside a given input directory.
-    Some default parameters are designed to work with
-    the 'BIDSAlign' library. For more info, see [bids]_ .
-    To further check how to use this function see the introductory
-    notebook provided in the documentation.
-
+    This function processes each EEG file stored in a specified input directory.
+    It is designed with default parameters that are compatible with the
+    'BIDSAlign' library. For additional information, see [1]_.
+    For a comprehensive guide on how to use this function, refer to the
+    introductory notebook included in the documentation.
 
     Parameters
     ----------
     EEGpath : str
-        Directory with all EEG files. If the last element of the string is not
-        "/", the character will be added automatically.
+        The directory containing all EEG files.
+        If the string does not end with a "/",
+        the character will be added automatically.
     freq : int or float, optional
-        EEG sampling rate. Must be the same for all EEG files.
+        The EEG sampling rate, which must be consistent across all EEG files.
 
-        Default = 250
+        Default = 250.
     window : int or float, optional
-        The window length given in seconds.
+        The length of the time window, specified in seconds.
 
-        Default = 2
+        Default = 2.
     overlap : float, optional
-        Same EEG contiguous partitions overlap in percentage.
-        Must be in the interval [0,1).
+        The percentage overlap between contiguous EEG partitions.
+        This value must be in the interval [0, 1).
 
-        Default = 0.1
+        Default = 0.1.
     includePartial : bool, optional
-        Whether to also count the final EEG portions which could potentially cover
-        at least half of the time windows. In this case the overlap between the
-        last included partition and the previous one will increase in order
-        to fill the incomplete partition with real recorded values.
-        Note that this apply only if at
-        least half of such partition will include new values.
+        Indicates whether to count the final portions of the EEG that may cover
+        at least half of the time windows. If this option is enabled, the overlap
+        between the last included partition and the previous one will be adjusted
+        to incorporate real recorded values, provided at least half of the
+        partition includes new data.
 
-        Default = True
+        Default = True.
     file_format : str or list[str], optional
-        A string used to detect a set of specific EEG files inside the given
-        EEGpath. It is directly put after ``EEGpath`` during call of the
-        glob.glob() method. Therefore, it can contain shell-style wildcards
-        (see glob.glob() help for more info). This parameter might be helpful
-        if you have other files other than the EEGs in your directory.
-        Alternatively, you can provide a list of strings to cast multiple
-        glob.glob() searches. This might be useful if you want to combine
-        multiple identification criteria (e.g. specific file extensions,
-        specific file names, etc.)
+        A string or list of strings used to filter specific EEG files in the
+        provided EEGpath. This is used directly in the `glob.glob()` method
+        and can include shell-style wildcards
+        (refer to the glob.glob() documentation for details).
+        This option is useful if there are other file types in the directory.
 
-        Default = '*'
-    load_function : 'function', optional
-        A custom EEG file loading function. It will be used instead of the default:
+        Default = '*'.
+    load_function : function, optional
+        A custom function for loading EEG files, which will override the default:
 
-        ``loadmat(ii, simplify_cells=True)['DATA_STRUCT']['data']``
+        ``loadmat(ii, simplify_cells=True)['DATA_STRUCT']['data']``.
 
-        which is the default output format for files preprocessed with the
-        BIDSalign library. The function must take only one required argument,
-        which is the full path to the EEG file (e.g. the function will be called
-        in this way: load_function(fullpath, optional_arguments) ).
+        The function must accept one required argument:
+        the full path to the EEG file
+        (e.g., it will be called as: load_function(fullpath, optional_arguments)).
 
-        Default = None
-    optional_load_fun_args: list or dict, optional
-        Optional arguments to give to the custom loading function.
-        Can be a list or a dict.
+        Default = None.
+    optional_load_fun_args : list or dict, optional
+        Additional arguments to pass to the custom loading function.
+        This can be specified as a list or a dictionary.
 
-        Default = None
-    transform_function : 'function', optional
-        A custom transformation to be applied after the EEG is loaded.
-        Might be useful if there are portions of the signal to cut
-        (usually the initial or the final). The function must take only one
-        required argument, which is the loaded EEG file to transform
-        (e.g. the function will be called in this way:
-        transform_function(EEG, optional_arguments) ).
+        Default = None.
+    transform_function : function, optional
+        A custom transformation function to apply after loading the EEG data.
+        This may be useful for trimming portions of the signal
+        (usually the beginning or end). The function must accept one required
+        argument: the loaded EEG file (e.g., it
+        will be called as: transform_function(EEG, optional_arguments)).
 
-        Default = None
-    optional_transform_fun_args: list or dict, optional
-        Optional arguments to give to the EEG transformation function.
-        Can be a list or a dict.
-
-        Default = None
+        Default = None.
+    optional_transform_fun_args : list or dict, optional
+        Additional arguments to pass to the EEG transformation function.
+        This can be specified as a list or a dictionary.
+        Default = None.
     keep_zero_sample : bool, optional
-        Whether to preserve Dataframe's rows with calculated
-        zero number of samples or not.
+        Specifies whether to retain DataFrame rows with a calculated zero
+        number of samples.
 
-        Default = True
+        Default = True.
     save : bool, optional
-        Whether to save the resulting DataFrame as a .csv file.
+        Indicates whether to save the resulting DataFrame as a .csv file.
+        Default = False.
+    save_path : str, optional
+        A custom path for saving the .csv file instead of using the current
+        working directory. This string is passed to the `pandas.DataFrame.to_csv()`
+        method. If save is True and no save_path is provided, the file will
+        be saved as `EEGPartitionNumber_k.csv`, where k is an integer to
+        prevent overwriting.
 
-        Default = False
-    save_path: str, optional
-        A custom path to be used instead of the current working directory.
-        It is the string given to the ``pandas.DataFrame.to_csv()`` method.
-        Note that if save is True and no save_path is given, the file will
-        be saved in the current working directory as `EEGPartitionNumber.csv` or
-        `EEGPartitionNumber_k.csv` with k integer used to avoid overwriting a file.
+        Default = None.
+    verbose : bool, optional
+        Controls whether to print information during function execution, which can
+        be helpful for tracking progress, especially with large datasets.
 
-        Default = None
-    verbose: bool, optional
-        whether to print some information during function excecution.
-        Useful to keep track of the calculation process. Might be useful for large
-        datasets.
+        Default = False.
 
     Returns
     -------
     lenEEG : DataFrame
-        Three columns Pandas DataFrame.
-        The first column has the full path to the EEG file,
-        the second the file name, the third its number of partitions.
+        A three-column Pandas DataFrame containing:
+        - The full path to the EEG files in the first column,
+        - The file names in the second column,
+        - The number of partitions in the third column.
 
-    Note
-    ----
-    freq*window must give an integer with the number of samples.
-
-    Note
-    ----
-    This function can handle array with more than 2 dimensions. In this case a
-    warning will be generated and calculation will be performed in this way.
-    First the length of the last dimension will be used to calculate the number
-    of partitions, then the number will be multiplied by the product of the shape
-    of all dimensions from the first to the second to last (the last two
-    dimensions are supposed to be the Channel and Sample dimension of a single
-    EEG file).
+    Notes
+    -----
+    - The product of `freq` and `window` must yield an integer representing
+      the number of samples.
+    - This function can handle arrays with more than two dimensions.
+      In such cases, a warning is issued, and the calculation proceeds as follows:
+      the length of the last dimension is used to determine the number of
+      partitions, which is then multiplied by the product of the shapes of
+      all preceding dimensions (the last two dimensions should correspond to
+      channel and sample dimensions of a single EEG file).
 
     Example
     -------
@@ -186,7 +176,10 @@ def get_eeg_partition_number(
 
     References
     ----------
-    .. [bids] https://github.com/MedMaxLab/BIDSAlign
+    .. [1] Zanola et al "BIDSAlign: a library for automatic merging and
+       preprocessing of multiple EEG repositories."
+       doi: https://doi.org/10.1088/1741-2552/ad6a8c.
+       GitHub repository: https://github.com/MedMaxLab/BIDSAlign
 
     """
     # Check Inputs

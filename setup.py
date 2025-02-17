@@ -9,7 +9,6 @@ requirements = [
     "scipy>=1.10.1",
     "torch>=2.0.0",
     "torchaudio>=2.0.2",
-    "torchvision>=0.15.2",
     "tqdm",
 ]
 

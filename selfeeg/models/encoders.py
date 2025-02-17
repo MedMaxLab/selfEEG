@@ -854,9 +854,13 @@ class ResNet1DEncoder(nn.Module):
         An nn.Module defining the resnet block.
     Layers: list of 4 int, optional
         A list of integers indicating the number of times
-        the resnet block is repeated .
+        the resnet block is repeated at each stage.
+        It must be a list of length 4 with positive integers.
+        Shorter lists are padded to 1 on the right.
+        Only the first four elements of longer lists are considered.
+        Zeros are changed to 1.
 
-        Default = [2,2,2,2]
+        Default = [2, 2, 2, 2]
     inplane: int, optional
         The number of output filters.
     kernLength: int, optional
@@ -925,8 +929,18 @@ class ResNet1DEncoder(nn.Module):
         self.inplane = inplane
         self.kernLength = kernLength
         self.connection = addConnection
+        # Checks on the Layer list
+        if len(Layers) < 4:
+            Layers = Layers + [1 for _ in range(4 - len(Layers))]
+        else:
+            Layers = Layers[:4]
+        if any(Layers):
+            Layers = [i if i > 0 else 1 for i in Layers]
+        for i in Layers:
+            if not isinstance(i, int):
+                raise ValueError("Layers must be a length 4 list of positive integers")
 
-        #   PRE-RESIDUAL
+        # PRE-RESIDUAL
         if preBlock is None:
             self.preBlocks = nn.Sequential(
                 nn.Conv2d(
@@ -959,17 +973,20 @@ class ResNet1DEncoder(nn.Module):
 
         #  POST-RESIDUAL
         if postBlock is None:
-            self.postBlocks = nn.Sequential(
-                nn.Conv2d(
-                    self.inplane,
-                    inplane,
-                    kernel_size=(1, kernLength),
-                    stride=(1, 1),
-                    padding=(0, 0),
-                    bias=False,
-                ),
-                nn.AdaptiveAvgPool2d((Chans, 1)),
-            )
+            if self.connection:
+                self.postBlocks = nn.Sequential(
+                    nn.Conv2d(
+                        self.inplane,
+                        inplane,
+                        kernel_size=(1, kernLength),
+                        stride=(1, 1),
+                        padding=(0, 0),
+                        bias=False,
+                    ),
+                    nn.AdaptiveAvgPool2d((Chans, 1)),
+                )
+            else:
+                self.postBlocks = nn.AdaptiveAvgPool2d((Chans, 1))
         else:
             self.postBlocks = postBlock
 
@@ -1032,7 +1049,6 @@ class ResNet1DEncoder(nn.Module):
             embeddings = torch.cat((out1, out2), dim=-1)
         else:
             embeddings = out1
-
         return embeddings
 
 
