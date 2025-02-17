@@ -926,7 +926,9 @@ class ResNet1D(nn.Module):
                     1 if nb_classes <= 2 else nb_classes,
                 )
             else:
-                self.Dense = nn.Linear(Chans * inplane, 1 if nb_classes <= 2 else nb_classes)
+                self.Dense = nn.Linear(
+                    Chans * self.encoder.inplane, 1 if nb_classes <= 2 else nb_classes
+                )
         else:
             self.Dense = classifier
 

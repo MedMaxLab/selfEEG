@@ -1049,7 +1049,6 @@ class ResNet1DEncoder(nn.Module):
             embeddings = torch.cat((out1, out2), dim=-1)
         else:
             embeddings = out1
-
         return embeddings
 
 
