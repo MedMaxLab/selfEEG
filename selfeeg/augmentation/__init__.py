@@ -2,7 +2,7 @@
 This is the import of the data augmentation module
 """
 
-from .compose import DynamicSingleAug, RandomAug, SequentialAug, StaticSingleAug
+from .compose import CircularAug, DynamicSingleAug, RandomAug, SequentialAug, StaticSingleAug
 from .functional import (
     add_band_noise,
     add_eeg_artifact,

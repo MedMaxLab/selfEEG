@@ -20,6 +20,7 @@ Classes
     :nosignatures:
     :template: classtemplate.rst
 
+    CircularAug
     DynamicSingleAug
     RandomAug
     SequentialAug

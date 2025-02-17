@@ -8,7 +8,13 @@ from typing import Any, Dict
 import numpy as np
 from numpy.typing import ArrayLike
 
-__all__ = ["DynamicSingleAug", "RandomAug", "SequentialAug", "StaticSingleAug"]
+__all__ = [
+    "CircularAug",
+    "DynamicSingleAug",
+    "RandomAug",
+    "SequentialAug",
+    "StaticSingleAug",
+]
 
 
 class StaticSingleAug:
@@ -19,7 +25,7 @@ class StaticSingleAug:
     where the optional arguments are previously set and given during initialization.
     No random choice of the arguments is performed. The class accepts multiple set of
     optional arguments. In this case they are called individually at each class
-    call, in a sequential and cyclic manner. This means that the first call uses the first set of
+    call, in a circular manner. This means that the first call uses the first set of
     arguments, the second will use the second set of arguments, and so on.
     When the last set of arguments is used, the class will restart from the
     first set of arguments.
@@ -369,7 +375,7 @@ class SequentialAug:
 
     Note
     ----
-    If you provide an augmentation implemented outside of this this library be
+    If you provide an augmentation implemented outside of this this library, be
     sure that the function will return a single output with the element to pass
     to the next augmentation function of the list.
 
@@ -433,6 +439,82 @@ class SequentialAug:
 
     def __call__(self, X):
         return self.perform_augmentation(X)
+
+    def _search_for_random_aug_with_index(self):
+        for idx, item in enumerate(self.augs):
+            if isinstance(item, RandomAug):
+                if self.augs[idx].return_index == True:
+                    self.augs[idx] = copy.deepcopy(item)
+                    self.augs[idx].return_index = False
+            elif isinstance(item, SequentialAug):
+                item._search_for_random_aug_with_index()
+
+
+class CircularAug:
+    """
+    Single Augmenter called sequentially from a list, following a circular order.
+
+    ``CircularAug`` calls an Augmenter from a given sequence following the  order.
+    Augmenters are called circularly. This means that the first call uses the first
+    Augmenter from the input list, the second call will use the second, and so on.
+    When the last Augmenter is called, the class will restart from the
+    first one.
+
+    To perform an augmentation, simply call the instantiated class
+    (see provided example or check the introductory notebook)
+
+    Parameters
+    ----------
+    *augmentations: "callable objects"
+        The list of augmentations to apply at each call.
+        It can be any callable object, but the first argument to pass must be
+        the element to augment. It is suggested to give a sequence of
+        ``StaticSingleAug`` or ``DynamicSingleAug`` instantiations.
+
+    Note
+    ----
+    The function will automatically handle RandomAug instances with return_index
+    set to True. In this case, an internal deepcopy with return_index set to false
+    will be automatically created.
+
+    Methods
+    -------
+    perform_augmentation(X: ArrayLike)
+        Apply the augmentations with the given arguments and specified order.
+        __call__() will call this method.
+
+
+    Example
+    -------
+    >>> import selfeeg.augmentation as aug
+    >>> import torch
+    >>> BatchEEG = torch.zeros(16,32,1024) + torch.sin(torch.linspace(0, 8*np.pi,1024))
+    >>> Aug_eye = aug.StaticSingleAug(
+    ...     aug.add_eeg_artifact,{'Fs': 64, 'artifact': 'eye', 'amplitude': 0.5})
+    >>> Circular = aug.CircularAug(Aug_eye, aug.identity)
+    >>> EEGeye = Circular(BatchEEG)
+    >>> EEGid  = Circular(BatchEEG)
+
+    """
+
+    def __init__(self, *augmentations):
+        self.augs = [item for item in augmentations]
+        self._augcnt = 0
+        self._augnumber = len(self.augs)
+        self._search_for_random_aug_with_index()
+
+    def perform_augmentation(self, X: ArrayLike) -> ArrayLike:
+        Xaugs = self.augs[self._augcnt](X)
+        self._update_counter()
+        return Xaugs
+
+    def __call__(self, X):
+        return self.perform_augmentation(X)
+
+    def _update_counter(self):
+        self._augcnt += 1
+        if self._augcnt == self._augnumber:
+            self._augcnt = 0
 
     def _search_for_random_aug_with_index(self):
         for idx, item in enumerate(self.augs):
