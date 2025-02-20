@@ -3,11 +3,11 @@
 </h1><br>
 
 [![PyPI](https://img.shields.io/pypi/v/selfeeg?label=PyPI&color=blue)](https://pypi.org/project/selfeeg/)
-[![Conda](https://img.shields.io/conda/v/pup_fede_cnd/selfeeg?label=Conda&color=blue)](https://anaconda.org/pup_fede_cnd/selfeeg)
+[![Conda](https://img.shields.io/conda/vn/conda-forge/selfeeg.svg?color=blue)](https://anaconda.org/conda-forge/selfeeg)
 [![Docs](https://img.shields.io/readthedocs/selfeeg)](https://readthedocs.org/projects/selfeeg/)
 [![Unittest](https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml/badge.svg)](https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml)
-[![License](https://img.shields.io/badge/License-MIT-violet.svg)](https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.06224/status.svg)](https://doi.org/10.21105/joss.06224)
+[![License](https://img.shields.io/badge/License-MIT-violet.svg)](https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md)
 
 # What is selfEEG?
 selfEEG is a pytorch-based library designed to facilitate self-supervised learning
@@ -55,7 +55,7 @@ pip install selfeeg
 
 SelfEEG can be also installed via conda by running the following command:
 ```
-conda install -c Pup_Fede_Cnd -c pytorch selfeeg
+conda install conda-forge::selfeeg
 ```
 
 Additionally, optional but useful packages that we suggest to include in your
@@ -65,7 +65,7 @@ installed with the following pip command:
 pip install selfeeg[interactive]
 ```
 
-**Good practice**
+**Good practices**
 
 Although the dependency list is pretty short, it is strongly suggested to install
 selfEEG in a fresh environment. The following links provide a guide for creating a
