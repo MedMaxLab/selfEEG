@@ -40,6 +40,7 @@ Classes
     :template: classtemplate.rst
 
     DeepConvNetEncoder
+    EEGConformerEncoder
     EEGInceptionEncoder
     EEGNetEncoder
     EEGSymEncoder
@@ -65,6 +66,7 @@ Classes
 
     ATCNet
     DeepConvNet
+    EEGConformer
     EEGInception
     EEGNet
     EEGSym

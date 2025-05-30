@@ -9,6 +9,7 @@ from .layers import (
 from .encoders import (
     BasicBlock1,
     DeepConvNetEncoder,
+    EEGConformerEncoder,
     EEGInceptionEncoder,
     EEGNetEncoder,
     EEGSymEncoder,
@@ -22,6 +23,7 @@ from .encoders import (
 from .zoo import (
     ATCNet,
     DeepConvNet,
+    EEGConformer,
     EEGInception,
     EEGNet,
     EEGSym,

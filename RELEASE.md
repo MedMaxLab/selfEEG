@@ -2,6 +2,9 @@
 
 **Functionality**
 
+- **models module**:
+    - models can be initialized with a custom seed.
+    - add EEGConformer.
 - **dataloading module**:
     - EEGDataset now supports EEG with multiple labels (1 per window partition).
 - **ssl module**:

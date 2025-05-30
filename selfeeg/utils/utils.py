@@ -382,7 +382,13 @@ class RangeScaler:
 
     """
 
-    def __init__(self, Range=200, asintote=1.2, scale="mV", exact=True):
+    def __init__(
+        self,
+        Range: float=200,
+        asintote: float=1.2,
+        scale: str="mV",
+        exact: bool=True
+    ):
         if Range < 0:
             raise ValueError("Range cannot be lower than 0")
         if asintote is None:
@@ -910,3 +916,25 @@ def count_parameters(
         )
         print(" " * char2add + "TOTAL TRAINABLE PARAMS" + " " * char2add2, total_params)
     return (layer_table, total_params) if return_table else total_params
+
+
+def _reset_seed(
+    seed: int=None,
+    reset_random: bool=True,
+    reset_numpy: bool=True,
+    reset_torch: bool=True,
+) -> None:
+    """
+    :meta private:
+    """
+    if seed is not None:
+        assert seed>=0, "seed must be a nonnegative number"
+        if reset_numpy:
+            np.random.seed(seed)
+        if reset_random:
+            random.seed(seed)
+        if reset_torch:
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed(seed)
+                torch.cuda.manual_seed_all(seed)

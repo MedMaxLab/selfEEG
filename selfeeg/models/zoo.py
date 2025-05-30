@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .layers import ConstrainedDense, ConstrainedConv1d, ConstrainedConv2d
-
 from .encoders import (
     BasicBlock1,
     DeepConvNetEncoder,
     EEGInceptionEncoder,
+    EEGConformerEncoder,
     EEGNetEncoder,
     EEGSymEncoder,
     FBCNetEncoder,
@@ -16,10 +16,12 @@ from .encoders import (
     STNetEncoder,
     TinySleepNetEncoder,
 )
+from ..utils.utils import _reset_seed
 
 __all__ = [
     "ATCNet",
     "DeepConvNet",
+    "EEGConformer",
     "EEGInception",
     "EEGNet",
     "EEGSym",
@@ -103,6 +105,11 @@ class EEGNet(nn.Module):
         applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Note
     ----
@@ -129,22 +136,23 @@ class EEGNet(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Chans,
-        Samples,
-        kernLength=64,
-        dropRate=0.5,
-        F1=8,
-        D=2,
-        F2=16,
-        norm_rate=0.25,
-        dropType="Dropout",
-        ELUalpha=1,
-        pool1=4,
-        pool2=8,
-        separable_kernel=16,
-        depthwise_max_norm=1.0,
-        return_logits=True,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
+        kernLength: int=64,
+        dropRate: float=0.5,
+        F1: int=8,
+        D: int=2,
+        F2: int=16,
+        norm_rate: int=0.25,
+        dropType: str="Dropout",
+        ELUalpha: int=1,
+        pool1: int=4,
+        pool2: int=8,
+        separable_kernel: int=16,
+        depthwise_max_norm: float=1.0,
+        return_logits: bool=True,
+        seed: int=None
     ):
 
         super(EEGNet, self).__init__()
@@ -164,7 +172,10 @@ class EEGNet(nn.Module):
             pool2,
             separable_kernel,
             depthwise_max_norm,
+            seed
         )
+
+        _reset_seed(seed)
         self.Dense = ConstrainedDense(
             F2 * (Samples // int(pool1 * pool2)),
             1 if nb_classes <= 2 else nb_classes,
@@ -253,6 +264,11 @@ class DeepConvNet(nn.Module):
         the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Note
     ----
@@ -281,32 +297,35 @@ class DeepConvNet(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Chans,
-        Samples,
-        kernLength=10,
-        F=25,
-        Pool=3,
-        stride=3,
-        max_norm=None,
-        batch_momentum=0.1,
-        ELUalpha=1,
-        dropRate=0.5,
-        max_dense_norm=None,
-        return_logits=True,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
+        kernLength: int=10,
+        F: int=25,
+        Pool: int=3,
+        stride: int=3,
+        max_norm: int=None,
+        batch_momentum: float=0.1,
+        ELUalpha: int=1,
+        dropRate: float=0.5,
+        max_dense_norm: float=None,
+        return_logits: bool=True,
+        seed: int=None
     ):
         super(DeepConvNet, self).__init__()
 
         self.nb_classes = nb_classes
         self.return_logits = return_logits
         self.encoder = DeepConvNetEncoder(
-            Chans, kernLength, F, Pool, stride, max_norm, batch_momentum, ELUalpha, dropRate
+            Chans, kernLength, F, Pool, stride, max_norm, batch_momentum, ELUalpha, dropRate, seed
         )
         k = kernLength
         Dense_input = [Samples] * 8
         for i in range(4):
             Dense_input[i * 2] = Dense_input[i * 2 - 1] - k + 1
             Dense_input[i * 2 + 1] = (Dense_input[i * 2] - Pool) // stride + 1
+
+        _reset_seed(seed)
         self.Dense = ConstrainedDense(
             F * 8 * Dense_input[-1], 1 if nb_classes <= 2 else nb_classes, max_norm=max_dense_norm
         )
@@ -392,6 +411,11 @@ class EEGInception(nn.Module):
         the pytorch crossentropy applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     References
     ----------
@@ -416,19 +440,20 @@ class EEGInception(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Chans,
-        Samples,
-        F1=8,
-        D=2,
-        kernel_size=64,
-        pool=4,
-        dropRate=0.5,
-        ELUalpha=1.0,
-        bias=True,
-        batch_momentum=0.1,
-        max_depth_norm=1.0,
-        return_logits=True,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
+        F1: int=8,
+        D: int=2,
+        kernel_size: int=64,
+        pool: int=4,
+        dropRate: float=0.5,
+        ELUalpha: float=1.0,
+        bias: bool=True,
+        batch_momentum: float=0.1,
+        max_depth_norm: float=1.0,
+        return_logits: bool=True,
+        seed: int=None
     ):
         super(EEGInception, self).__init__()
         self.nb_classes = nb_classes
@@ -444,7 +469,10 @@ class EEGInception(nn.Module):
             bias,
             batch_momentum,
             max_depth_norm,
+            seed
         )
+
+        _reset_seed(seed)
         self.Dense = nn.Linear(
             int((F1 * 3) / 4) * int((Samples // (pool * (int(pool // 2) ** 3)))),
             1 if nb_classes <= 2 else nb_classes,
@@ -523,6 +551,11 @@ class TinySleepNet(nn.Module):
         to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     References
     ----------
@@ -547,26 +580,28 @@ class TinySleepNet(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Chans,
-        Fs,
-        F=128,
-        kernlength=8,
-        pool=8,
-        dropRate=0.5,
-        batch_momentum=0.1,
-        max_dense_norm=2.0,
-        hidden_lstm=128,
-        return_logits=True,
+        nb_classes: int,
+        Chans: int,
+        Fs: int,
+        F: int=128,
+        kernlength: int=8,
+        pool: int=8,
+        dropRate: float=0.5,
+        batch_momentum: float=0.1,
+        max_dense_norm: float=2.0,
+        hidden_lstm: int=128,
+        return_logits: bool=True,
+        seed: int=None
     ):
         super(TinySleepNet, self).__init__()
 
         self.nb_classes = nb_classes
         self.return_logits = return_logits
         self.encoder = TinySleepNetEncoder(
-            Chans, Fs, F, kernlength, pool, dropRate, batch_momentum, hidden_lstm
+            Chans, Fs, F, kernlength, pool, dropRate, batch_momentum, hidden_lstm, seed
         )
 
+        _reset_seed(seed)
         self.drop3 = nn.Dropout1d(dropRate)
         self.Dense = ConstrainedDense(
             hidden_lstm, 1 if nb_classes <= 2 else nb_classes, max_norm=max_dense_norm
@@ -629,6 +664,11 @@ class StagerNet(nn.Module):
         to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     References
     ----------
@@ -650,21 +690,25 @@ class StagerNet(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Chans,
-        Samples,
-        dropRate=0.5,
-        kernLength=64,
-        F=8,
-        Pool=16,
-        return_logits=True,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
+        dropRate: float=0.5,
+        kernLength: int=64,
+        F: int=8,
+        Pool: int=16,
+        return_logits: bool=True,
+        seed: int=None
     ):
 
         super(StagerNet, self).__init__()
         self.nb_classes = nb_classes
         self.return_logits = return_logits
-        self.encoder = StagerNetEncoder(Chans, kernLength=kernLength, F=F, Pool=Pool)
+        self.encoder = StagerNetEncoder(
+            Chans, kernLength=kernLength, F=F, Pool=Pool, seed=seed
+        )
 
+        _reset_seed(seed)
         self.drop = nn.Dropout(p=dropRate)
         self.Dense = nn.Linear(
             Chans * F * (int((int((Samples - Pool) / Pool + 1) - Pool) / Pool + 1)),
@@ -728,6 +772,11 @@ class ShallowNet(nn.Module):
         to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Note
     ----
@@ -754,13 +803,26 @@ class ShallowNet(nn.Module):
 
     """
 
-    def __init__(self, nb_classes, Chans, Samples, F=40, K1=25, Pool=75, p=0.2, return_logits=True):
+    def __init__(
+        self,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
+        F: int=40,
+        K1: int=25,
+        Pool: int=75,
+        p: float=0.2,
+        return_logits: bool=True,
+        seed: int=None
+    ):
 
         super(ShallowNet, self).__init__()
 
         self.nb_classes = nb_classes
         self.return_logits = return_logits
-        self.encoder = ShallowNetEncoder(Chans, F=F, K1=K1, Pool=Pool, p=p)
+        self.encoder = ShallowNetEncoder(Chans, F=F, K1=K1, Pool=Pool, p=p, seed=seed)
+
+        _reset_seed(seed)
         self.Dense = nn.Linear(
             F * ((Samples - K1 + 1 - Pool) // 15 + 1), 1 if nb_classes <= 2 else nb_classes
         )
@@ -864,6 +926,11 @@ class ResNet1D(nn.Module):
         to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Note
     ----
@@ -889,9 +956,9 @@ class ResNet1D(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Chans,
-        Samples,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
         block: nn.Module = BasicBlock1,
         Layers: "list of 4 int" = [2, 2, 2, 2],
         inplane: int = 16,
@@ -900,7 +967,8 @@ class ResNet1D(nn.Module):
         preBlock: nn.Module = None,
         postBlock: nn.Module = None,
         classifier: nn.Module = None,
-        return_logits=True,
+        return_logits: bool=True,
+        seed: int=None
     ):
 
         super(ResNet1D, self).__init__()
@@ -916,8 +984,11 @@ class ResNet1D(nn.Module):
             addConnection=addConnection,
             preBlock=preBlock,
             postBlock=postBlock,
+            seed=seed
         )
+        
         # Classifier
+        _reset_seed(seed)
         if classifier is None:
             if addConnection:
                 out1 = int((Samples + 2 * (int(kernLength // 2)) - kernLength) // 2) + 1
@@ -999,6 +1070,11 @@ class STNet(nn.Module):
         to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     References
     ----------
@@ -1019,23 +1095,25 @@ class STNet(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Samples,
-        grid_size=9,
-        F=256,
-        kernlength=5,
-        dropRate=0.5,
-        bias=True,
-        dense_size=1024,
-        return_logits=True,
+        nb_classes: int,
+        Samples: int,
+        grid_size: int=9,
+        F: int=256,
+        kernlength: int=5,
+        dropRate: float=0.5,
+        bias: bool=True,
+        dense_size: int=1024,
+        return_logits: bool=True,
+        seed: int=None
     ):
         super(STNet, self).__init__()
 
         self.nb_classes = nb_classes
         self.return_logits = return_logits
-        self.encoder = STNetEncoder(Samples, F, kernlength, dropRate, bias)
-        self.drop3 = nn.Dropout(dropRate)
+        self.encoder = STNetEncoder(Samples, F, kernlength, dropRate, bias, seed=seed)
 
+        _reset_seed(seed)
+        self.drop3 = nn.Dropout(dropRate)
         self.Dense = nn.Sequential(
             nn.Linear(int(F / 16) * (grid_size**2), dense_size),
             nn.Dropout(dropRate),
@@ -1131,6 +1209,11 @@ class EEGSym(nn.Module):
         to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     References
     ----------
@@ -1151,20 +1234,21 @@ class EEGSym(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Chans,
-        Samples,
-        Fs,
-        scales_time=(500, 250, 125),
-        lateral_chans=3,
-        first_left=True,
-        F=8,
-        pool=2,
-        dropRate=0.5,
-        ELUalpha=1.0,
-        bias=True,
-        residual=True,
-        return_logits=True,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
+        Fs: int,
+        scales_time: tuple=(500, 250, 125),
+        lateral_chans: int=3,
+        first_left: bool=True,
+        F: int=8,
+        pool: int=2,
+        dropRate: float=0.5,
+        ELUalpha: float=1.0,
+        bias: bool=True,
+        residual: bool=True,
+        return_logits: bool=True,
+        seed: int=None
     ):
         super(EEGSym, self).__init__()
         self.nb_classes = nb_classes
@@ -1182,7 +1266,10 @@ class EEGSym(nn.Module):
             ELUalpha,
             bias,
             residual,
+            seed=seed
         )
+
+        _reset_seed(seed)
         self.Dense = nn.Linear(int((F * 9) / 2), 1 if nb_classes <= 2 else nb_classes)
 
     def forward(self, x):
@@ -1304,6 +1391,11 @@ class FBCNet(nn.Module):
         to not use False as the pytorch crossentropy applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     References
     ----------
@@ -1344,6 +1436,7 @@ class FBCNet(nn.Module):
         linear_max_norm: float = None,
         classifier: nn.Module = None,
         return_logits: bool = True,
+        seed: int=None
     ):
         super(FBCNet, self).__init__()
 
@@ -1367,8 +1460,11 @@ class FBCNet(nn.Module):
             TemporalStride,
             batch_momentum,
             depthwise_max_norm,
+            seed=seed
         )
+        
         # Head
+        _reset_seed(seed)
         if classifier is None:
             self.head = ConstrainedDense(
                 D * FilterBands * TemporalStride,
@@ -1622,6 +1718,11 @@ class ATCNet(nn.Module):
         applies the softmax internally.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     References
     ----------
@@ -1644,32 +1745,34 @@ class ATCNet(nn.Module):
 
     def __init__(
         self,
-        nb_classes,
-        Chans,
-        Samples,
-        Fs,
-        num_windows=5,
-        mha_heads=2,
-        tcn_depth=2,
-        F1=16,
-        D=2,
-        pool1=None,
-        pool2=None,
-        dropRate=0.3,
-        max_norm=None,
-        batchMomentum=0.1,
-        ELUAlpha=1.0,
-        mha_dropRate=0.5,
-        tcn_kernLength=4,
-        tcn_F=32,
-        tcn_ELUAlpha=0.0,
-        tcn_dropRate=0.3,
-        tcn_max_norm=None,
-        tcn_batchMom=0.1,
-        return_logits=True,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
+        Fs: float,
+        num_windows: int=5,
+        mha_heads: int=2,
+        tcn_depth: int=2,
+        F1: int=16,
+        D: int=2,
+        pool1: int=None,
+        pool2: int=None,
+        dropRate: float=0.3,
+        max_norm: float=None,
+        batchMomentum: float=0.1,
+        ELUAlpha: float=1.0,
+        mha_dropRate: float=0.5,
+        tcn_kernLength: int=4,
+        tcn_F: int=32,
+        tcn_ELUAlpha: float=0.0,
+        tcn_dropRate: float=0.3,
+        tcn_max_norm: float=None,
+        tcn_batchMom: float=0.1,
+        return_logits: bool=True,
+        seed: int=None
     ):
 
         super(ATCNet, self).__init__()
+        _reset_seed(seed)
 
         # important for model construction
         self.return_logits = return_logits
@@ -1721,6 +1824,7 @@ class ATCNet(nn.Module):
         )
 
         # Construct each Branch
+        _reset_seed(seed)
         for i in range(self.num_windows):
             self.add_multi_head(i)
             self.add_residual_tcn(i)
@@ -1773,6 +1877,157 @@ class ATCNet(nn.Module):
         x = torch.mean(x, 0)
 
         if not self.return_logits:
+            if self.nb_classes <= 2:
+                x = torch.sigmoid(x)
+            else:
+                x = F.softmax(x, dim=1)
+        return x
+
+
+class EEGConformer(nn.Module):
+    """
+    Pytorch implementation of EEGConformer.
+
+    For more information see the following paper [EEGcon]_ .
+    The original implementation of EEGconformer can be found here [EEGcongit]_ .
+    
+    The expected **input** is a **3D tensor** with size
+    (Batch x Channels x Samples).
+
+    Parameters
+    ----------
+    nb_classes: int
+        The number of classes. If less than 2, a binary classification problem
+        is considered (output dimensions will be [batch, 1] in this case).
+    Chans: int
+        The number of EEG channels.
+    F: int, optional
+        The number of output filters in the temporal convolution layer.
+
+        Default = 40
+    K1: int, optional
+        The length of the temporal convolutional layer.
+
+        Default = 25
+    Pool: int, optional
+        The temporal pooling kernel size.
+
+        Default = 75
+    stride_pool: int, optional
+        The temporal pooling stride.
+
+        Default = 15
+    d_model: int, optional
+        The embedding size. It is the number of expected features in the input of
+        the transformer encoder layer.
+
+        Default = 40
+    nlayers: int, optional
+        The number of transformer encoder layers.
+
+        Default = 6
+    nheads: int, optional
+        The number of heads in the multi-head attention layers.
+
+        Default = 10
+    dim_feedforward: int, optional
+        The dimension of the feedforward hidden layer in the transformer encoder.
+
+        Default = 160
+    activation_transformer: str or Callabel, optional
+        The activation function in the transformer encoder. See the PyTorch
+        TransformerEncoderLayer documentation for accepted inputs.
+
+        Default = "gelu"
+    p: float, optional
+        Dropout probability in the tokenizer. Must be in [0,1)
+
+        Default = 0.2
+    p_transformer: float, optional
+        Dropout probability in the transformer encoder. Must be in [0,1)
+
+        Default = 0.5
+    mlp_dim: list, optional
+        A two-element list indicating the output dimensions of the 2 FC
+        layers in the final classification head.
+
+        Default = [256, 32]
+    return_logits: bool, optional
+        Whether to return the output as logit or probability.
+        It is suggested to not use False as the pytorch crossentropy loss function
+        applies the softmax internally.
+
+        Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
+
+    References
+    ----------
+    .. [EEGcon] Song et al., EEG Conformer: Convolutional Transformer for EEG Decoding
+      and Visualization. IEEE TNSRE. 2023. https://doi.org/10.1109/TNSRE.2022.3230250
+    .. [EEGcongit] https://github.com/eeyhsong/EEG-Conformer
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.EEGConformer(2, 8, 512)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 1])
+
+    """
+    def __init__(
+        self,
+        nb_classes: int,
+        Chans: int,
+        Samples: int,
+        F: int=40,
+        K1: int=25,
+        Pool: int=75,
+        stride_pool: int=15,
+        d_model: int=40,
+        nlayers: int=6,
+        nheads: int=10,
+        dim_feedforward: int=160,
+        activation_transformer: str or Callable="gelu",
+        p: float=0.2,
+        p_transformer: float=0.5,
+        mlp_dim: list[int,int]=[256,32],
+        return_logits: bool=True,
+        seed: int=None
+    ):
+
+        super(EEGConformer, self).__init__()
+        self.return_logits = return_logits
+        self.nb_classes = nb_classes
+        
+        self.encoder = EEGConformerEncoder(
+            Chans, F, K1, Pool, stride_pool, d_model, nlayers, nheads,
+            dim_feedforward, activation_transformer, p, p_transformer, seed
+        )
+
+        _reset_seed(seed)
+        self.MLP = nn.Sequential(
+            nn.AvgPool1d((Samples - K1 + 1 - Pool) // stride_pool + 1),
+            nn.Flatten(start_dim=1),
+            nn.LayerNorm(d_model),
+            nn.Linear(d_model, mlp_dim[0]),
+            nn.ELU(),
+            nn.Dropout(p),
+            nn.Linear(mlp_dim[0], mlp_dim[1]),   
+            nn.ELU(),
+            nn.Dropout(p),
+            nn.Linear(mlp_dim[1], 1 if nb_classes <= 2 else nb_classes)
+        )
+
+    def forward(self, x):
+        x = self.encoder(x)
+        x = self.MLP(x)
+        if not (self.return_logits):
             if self.nb_classes <= 2:
                 x = torch.sigmoid(x)
             else:

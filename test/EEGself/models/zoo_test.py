@@ -69,6 +69,7 @@ class TestModels(unittest.TestCase):
             "F1": [12, 8],
             "D": [2, 3],
             "return_logits": [False],
+            "seed": [42]
         }
         DCN_grid = self.makeGrid(DCN_args)
         for i in DCN_grid:
@@ -106,6 +107,7 @@ class TestModels(unittest.TestCase):
             "dropRate": [0.5],
             "max_dense_norm": [1.0],
             "return_logits": [False],
+            "seed": [42]
         }
         DCN_grid = self.makeGrid(DCN_args)
         for i in DCN_grid:
@@ -127,6 +129,45 @@ class TestModels(unittest.TestCase):
                     self.assertGreaterEqual(out.min(), 0)
         print("   DeepConvNet OK: tested ", len(DCN_grid), " combinations of input arguments")
 
+    def test_EEGConformer(self):
+        print("Testing EEGConformer...", end="", flush=True)
+        EEGcon_args = {
+            "nb_classes": [2, 4],
+            "Samples": [2048],
+            "Chans": [self.Chan],
+            "F": [40],
+            "K1": [25, 12],
+            "Pool": [75, 50],
+            "stride_pool": [20],
+            "nlayers": [4],
+            "nheads": [8, 10],
+            "dim_feedforward": [80],
+            "activation_transformer": ["gelu"],
+            "mlp_dim": [[128,32]],
+            "return_logits": [False],
+            "seed": [42]
+        }
+        EEGcon_args = self.makeGrid(EEGcon_args)
+        for i in EEGcon_args:
+            model = models.EEGConformer(**i)
+            out = model(self.x)
+            self.assertEqual(torch.isnan(out).sum(), 0)
+            self.assertEqual(out.shape[1], i["nb_classes"] if i["nb_classes"] > 2 else 1)
+            if not (i["return_logits"]):
+                self.assertLessEqual(out.max(), 1)
+                self.assertGreaterEqual(out.min(), 0)
+
+        if self.device.type != "cpu":
+            for i in EEGcon_args:
+                model = models.EEGConformer(**i).to(device=self.device)
+                out = model(self.x2)
+                self.assertEqual(torch.isnan(out).sum(), 0)
+                self.assertEqual(out.shape[1], i["nb_classes"] if i["nb_classes"] > 2 else 1)
+                if not (i["return_logits"]):
+                    self.assertLessEqual(out.max(), 1)
+                    self.assertGreaterEqual(out.min(), 0)
+        print("   EEGConformer OK: tested", len(EEGcon_args), " combinations of input arguments")
+
     def test_EEGInception(self):
         print("Testing EEGInception...", end="", flush=True)
         EEGin_args = {
@@ -142,6 +183,7 @@ class TestModels(unittest.TestCase):
             "max_depth_norm": [1.0],
             "return_logits": [False],
             "bias": [True, False],
+            "seed": [42]
         }
         EEGin_args = self.makeGrid(EEGin_args)
         for i in EEGin_args:
@@ -178,6 +220,7 @@ class TestModels(unittest.TestCase):
             "pool2": [8, 16],
             "separable_kernel": [16, 32],
             "return_logits": [False],
+            "seed": [42]
         }
         EEGnet_args = self.makeGrid(EEGnet_args)
         for i in EEGnet_args:
@@ -214,6 +257,7 @@ class TestModels(unittest.TestCase):
             "pool": [2, 3],
             "bias": [True, False],
             "return_logits": [False],
+            "seed": [42]
         }
         EEGsym_args = self.makeGrid(EEGsym_args)
         for i in EEGsym_args:
@@ -249,6 +293,7 @@ class TestModels(unittest.TestCase):
             "FilterType": ["Cheby2", "ellip"],
             "TemporalType": ["var", "max", "mean", "std", "logvar"],
             "return_logits": [False],
+            "seed": [42]
         }
         DCN_grid = self.makeGrid(DCN_args)
         for i in DCN_grid:
@@ -282,6 +327,7 @@ class TestModels(unittest.TestCase):
             "kernLength": [7, 13],
             "addConnection": [True, False],
             "return_logits": [False],
+            "seed": [42]
         }
         EEGres_args = self.makeGrid(EEGres_args)
         for i in EEGres_args:
@@ -314,6 +360,7 @@ class TestModels(unittest.TestCase):
             "K1": [25, 12],
             "Pool": [75, 50],
             "return_logits": [False],
+            "seed": [42]
         }
         EEGsha_args = self.makeGrid(EEGsha_args)
         for i in EEGsha_args:
@@ -346,6 +393,7 @@ class TestModels(unittest.TestCase):
             "kernLength": [64, 120],
             "Pool": [16, 8],
             "return_logits": [False],
+            "seed": [42]
         }
         EEGsta_args = self.makeGrid(EEGsta_args)
         for i in EEGsta_args:
@@ -378,6 +426,7 @@ class TestModels(unittest.TestCase):
             "kernlength": [5, 7],
             "dense_size": [1024, 512],
             "return_logits": [False],
+            "seed": [42]
         }
         EEGstn_args = self.makeGrid(EEGstn_args)
         for i in EEGstn_args:
@@ -415,6 +464,7 @@ class TestModels(unittest.TestCase):
             "pool": [16, 5],
             "hidden_lstm": [128, 50],
             "return_logits": [False],
+            "seed": [42]
         }
         EEGsleep_args = self.makeGrid(EEGsleep_args)
         for i in EEGsleep_args:
