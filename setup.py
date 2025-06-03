@@ -38,10 +38,10 @@ setuptools.setup(
     author_email="federico.delpup@studenti.unipd.it",
     packages=PACKAGES,
     license="MIT",
+    license_files = ["LICENSE.md"],
     classifiers=[
         "Environment :: Console",
         "Environment :: GPU",
-        "License :: OSI Approved :: MIT License",
         "Intended Audience :: Science/Research",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: MacOS",
