@@ -26,7 +26,7 @@ __all__ = [
     "StagerNetEncoder",
     "STNetEncoder",
     "TinySleepNetEncoder",
-    "xEEGNetEncoder"
+    "xEEGNetEncoder",
 ]
 
 
@@ -113,18 +113,18 @@ class EEGNetEncoder(nn.Module):
     def __init__(
         self,
         Chans: int,
-        kernLength: int=64,
-        dropRate: float=0.5,
-        F1: int=8,
-        D: int=2,
-        F2: int=16,
-        dropType: str="Dropout",
-        ELUalpha: int=1,
-        pool1: int=4,
-        pool2: int=8,
-        separable_kernel: int=16,
-        depthwise_max_norm: float=1.0,
-        seed: int=None
+        kernLength: int = 64,
+        dropRate: float = 0.5,
+        F1: int = 8,
+        D: int = 2,
+        F2: int = 16,
+        dropType: str = "Dropout",
+        ELUalpha: int = 1,
+        pool1: int = 4,
+        pool2: int = 8,
+        separable_kernel: int = 16,
+        depthwise_max_norm: float = 1.0,
+        seed: int = None,
     ):
 
         if dropType not in ["SpatialDropout2D", "Dropout"]:
@@ -253,20 +253,20 @@ class DeepConvNetEncoder(nn.Module):
     def __init__(
         self,
         Chans: int,
-        kernLength: int=10,
-        F: int=25,
-        Pool: int=3,
-        stride: int=3,
-        max_norm: float=None,
-        batch_momentum: float=0.1,
-        ELUalpha: int=1,
-        dropRate: float=0.5,
-        seed: int=None
+        kernLength: int = 10,
+        F: int = 25,
+        Pool: int = 3,
+        stride: int = 3,
+        max_norm: float = None,
+        batch_momentum: float = 0.1,
+        ELUalpha: int = 1,
+        dropRate: float = 0.5,
+        seed: int = None,
     ):
 
         super(DeepConvNetEncoder, self).__init__()
         _reset_seed(seed)
-        
+
         self.conv1 = ConstrainedConv2d(
             1, F, (1, kernLength), padding="valid", stride=(1, 1), max_norm=max_norm
         )
@@ -406,21 +406,21 @@ class EEGInceptionEncoder(nn.Module):
     def __init__(
         self,
         Chans: int,
-        F1: int=8,
-        D: int=2,
-        kernel_size: int=64,
-        pool: int=4,
-        dropRate: float=0.5,
-        ELUalpha: float=1.0,
-        bias: bool=True,
-        batch_momentum: float=0.1,
-        max_depth_norm: float=1.0,
-        seed: int=None
+        F1: int = 8,
+        D: int = 2,
+        kernel_size: int = 64,
+        pool: int = 4,
+        dropRate: float = 0.5,
+        ELUalpha: float = 1.0,
+        bias: bool = True,
+        batch_momentum: float = 0.1,
+        max_depth_norm: float = 1.0,
+        seed: int = None,
     ):
 
         super(EEGInceptionEncoder, self).__init__()
         _reset_seed(seed)
-        
+
         self.inc1 = nn.Sequential(
             nn.Conv2d(1, F1, (1, kernel_size), padding="same", bias=bias),
             nn.BatchNorm2d(F1, momentum=batch_momentum),
@@ -588,18 +588,18 @@ class TinySleepNetEncoder(nn.Module):
         self,
         Chans: int,
         Fs: int,
-        F: int=128,
-        kernlength: int=8,
-        pool: int=8,
-        dropRate: float=0.5,
-        batch_momentum: float=0.1,
-        hidden_lstm: int=128,
-        seed: int=None
+        F: int = 128,
+        kernlength: int = 8,
+        pool: int = 8,
+        dropRate: float = 0.5,
+        batch_momentum: float = 0.1,
+        hidden_lstm: int = 128,
+        seed: int = None,
     ):
 
         super(TinySleepNetEncoder, self).__init__()
         _reset_seed(seed)
-        
+
         self.conv1 = nn.Conv1d(Chans, F, int(Fs // 2), stride=int(Fs // 16), padding="valid")
         self.BN1 = nn.BatchNorm1d(F, momentum=batch_momentum)
         self.Relu = nn.ReLU()
@@ -692,7 +692,7 @@ class StagerNetEncoder(nn.Module):
 
     """
 
-    def __init__(self, Chans, kernLength: int=64, F: int=8, Pool: int=16, seed: int=None):
+    def __init__(self, Chans, kernLength: int = 64, F: int = 8, Pool: int = 16, seed: int = None):
 
         super(StagerNetEncoder, self).__init__()
         _reset_seed(seed)
@@ -775,11 +775,13 @@ class ShallowNetEncoder(nn.Module):
 
     """
 
-    def __init__(self, Chans, F: int=40, K1: int=25, Pool: int=75, p: float=0.2, seed: int=None):
+    def __init__(
+        self, Chans, F: int = 40, K1: int = 25, Pool: int = 75, p: float = 0.2, seed: int = None
+    ):
 
         super(ShallowNetEncoder, self).__init__()
         _reset_seed(seed)
-        
+
         self.conv1 = nn.Conv2d(1, F, (1, K1), stride=(1, 1))
         self.conv2 = nn.Conv2d(F, F, (Chans, 1), stride=(1, 1))
         self.batch1 = nn.BatchNorm2d(F)
@@ -811,7 +813,7 @@ class BasicBlock1(nn.Module):
     :meta private:
     """
 
-    def __init__(self, inplanes: int, planes: int, kernLength: int=7, stride: int=1):
+    def __init__(self, inplanes: int, planes: int, kernLength: int = 7, stride: int = 1):
 
         super(BasicBlock1, self).__init__()
         self.stride = stride
@@ -960,12 +962,12 @@ class ResNet1DEncoder(nn.Module):
         addConnection: bool = False,
         preBlock: nn.Module = None,
         postBlock: nn.Module = None,
-        seed: int=None
+        seed: int = None,
     ):
 
         super(ResNet1DEncoder, self).__init__()
         _reset_seed(seed)
-        
+
         self.inplane = inplane
         self.kernLength = kernLength
         self.connection = addConnection
@@ -1182,11 +1184,11 @@ class STNetEncoder(nn.Module):
     def __init__(
         self,
         Samples,
-        F: int=256,
-        kernlength: int=5,
-        dropRate: float=0.5,
-        bias: bool=True,
-        seed: int=None
+        F: int = 256,
+        kernlength: int = 5,
+        dropRate: float = 0.5,
+        bias: bool = True,
+        seed: int = None,
     ):
         super(STNetEncoder, self).__init__()
         _reset_seed(seed)
@@ -1273,6 +1275,7 @@ class EEGSymInception(nn.Module):
     """
     :meta private:
     """
+
     def __init__(
         self,
         in_channels,
@@ -1341,6 +1344,7 @@ class EEGSymResBlock(nn.Module):
     """
     :meta private:
     """
+
     def __init__(
         self,
         in_channels,
@@ -1471,16 +1475,16 @@ class EEGSymEncoder(nn.Module):
         Chans: int,
         Samples: int,
         Fs: float,
-        scales_time: tuple=(500, 250, 125),
-        lateral_chans: int=3,
-        first_left: bool=True,
-        F: int=8,
-        pool: int=2,
-        dropRate: float=0.5,
-        ELUalpha: float=1.0,
-        bias: bool=True,
-        residual: bool=True,
-        seed: int=None
+        scales_time: tuple = (500, 250, 125),
+        lateral_chans: int = 3,
+        first_left: bool = True,
+        F: int = 8,
+        pool: int = 2,
+        dropRate: float = 0.5,
+        ELUalpha: float = 1.0,
+        bias: bool = True,
+        residual: bool = True,
+        seed: int = None,
     ):
         super(EEGSymEncoder, self).__init__()
         _reset_seed(seed)
@@ -1865,7 +1869,7 @@ class FBCNetEncoder(nn.Module):
         TemporalStride: int = 4,
         batch_momentum: float = 0.1,
         depthwise_max_norm=None,
-        seed: int=None
+        seed: int = None,
     ):
         super(FBCNetEncoder, self).__init__()
         self.FilterBands = FilterBands
@@ -2003,41 +2007,41 @@ class EEGConformerEncoder(nn.Module):
     def __init__(
         self,
         Chans,
-        F: int=40,
-        K1: int=25,
-        Pool: int=75,
-        stride_pool: int=15,
-        d_model: int=40,
-        nlayers: int=6,
-        nheads: int=10,
-        dim_feedforward: int=160,
-        activation_transformer: str or Callable="gelu",
-        p: float=0.2,
-        p_transformer: float=0.5,
-        seed: int=None
+        F: int = 40,
+        K1: int = 25,
+        Pool: int = 75,
+        stride_pool: int = 15,
+        d_model: int = 40,
+        nlayers: int = 6,
+        nheads: int = 10,
+        dim_feedforward: int = 160,
+        activation_transformer: str or Callable = "gelu",
+        p: float = 0.2,
+        p_transformer: float = 0.5,
+        seed: int = None,
     ):
 
         super(EEGConformerEncoder, self).__init__()
         _reset_seed(seed)
-        
+
         self.tokenizer = nn.Sequential(
             nn.Conv2d(1, F, (1, K1), stride=(1, 1)),
             nn.Conv2d(F, F, (Chans, 1), stride=(1, 1)),
             nn.BatchNorm2d(F),
             nn.AvgPool2d((1, Pool), stride=(1, stride_pool)),
-            nn.Dropout(p)
+            nn.Dropout(p),
         )
         self.projection = nn.Conv2d(F, d_model, (1, 1))
         self.transformer = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
                 d_model,
-                nhead                = nheads,
-                dim_feedforward      = dim_feedforward,
-                dropout              = p_transformer,
-                activation           = "gelu",
-                batch_first          = True
+                nhead=nheads,
+                dim_feedforward=dim_feedforward,
+                dropout=p_transformer,
+                activation="gelu",
+                batch_first=True,
             ),
-            num_layers           = nlayers,
+            num_layers=nlayers,
         )
 
     def forward(self, x):
@@ -2047,9 +2051,9 @@ class EEGConformerEncoder(nn.Module):
         x = torch.unsqueeze(x, 1)
         x = self.tokenizer(x)
         x = x.squeeze(2)
-        x = torch.permute(x,[0,2,1])
+        x = torch.permute(x, [0, 2, 1])
         x = self.transformer(x)
-        x = torch.permute(x,[0,2,1])
+        x = torch.permute(x, [0, 2, 1])
         return x
 
 
@@ -2058,8 +2062,8 @@ class xEEGNetEncoder(nn.Module):
     Pytorch implementation of the xEEGNet Encoder.
 
     See xEEGNet for some references.
-    The expected **input** is a **3D tensor** with size:
-        (Batch x Channels x Samples).
+    The expected **input** is a **3D tensor** with size
+    (Batch x Channels x Samples).
 
     Parameters
     ----------
@@ -2068,11 +2072,11 @@ class xEEGNetEncoder(nn.Module):
     Fs: int
         The sampling rate of the EEG signal in Hz.
         It is used to initialize the weights of the filters.
-        Must be specified even if `random_temporal_filter` is False. 
+        Must be specified even if `random_temporal_filter` is False.
     F1: int, optional
         The number of output filters in the temporal convolution layer.
 
-        Default = 7  
+        Default = 7
     K1: int, optional
         The length of the temporal convolutional layer.
 
@@ -2137,8 +2141,9 @@ class xEEGNetEncoder(nn.Module):
     >>> mdl = models.xEEGNetEncoder(8, 125)
     >>> out = mdl(x)
     >>> print(out.shape) # shoud return torch.Size([4, 7])
-    
+
     """
+
     def __init__(
         self,
         Chans: int,
@@ -2148,14 +2153,14 @@ class xEEGNetEncoder(nn.Module):
         F2: int = 7,
         Pool: int = 75,
         p: float = 0.2,
-        random_temporal_filter = False,
+        random_temporal_filter=False,
         freeze_temporal: int = 1e12,
         spatial_depthwise: bool = True,
         log_activation_base: str = "dB",
         norm_type: str = "batchnorm",
-        global_pooling = True,
+        global_pooling=True,
         bias: list[int, int] = [False, False],
-        seed: int = None
+        seed: int = None,
     ):
 
         super(xEEGNetEncoder, self).__init__()
@@ -2163,23 +2168,23 @@ class xEEGNetEncoder(nn.Module):
         # Set seed before initializing layers
         self.custom_seed = seed
         _reset_seed(seed)
-                
+
         self.Fs = Fs
         self.chans = Chans
         self.freeze_temporal = freeze_temporal
         self.bias_1conv = bias[0]
         self.bias_2conv = bias[1]
         self.do_global_pooling = global_pooling
-        if self.Fs <=0 and not(random_temporal_filter):
+        if self.Fs <= 0 and not (random_temporal_filter):
             raise ValueError(
                 "to properly initialize non random temporal fir filters, "
                 "Fs (sampling rate) must be given"
             )
-        
+
         if random_temporal_filter:
             self.conv1 = nn.Conv2d(1, F1, (1, K1), stride=(1, 1), bias=self.bias_1conv)
         else:
-            self.conv1 = nn.Conv2d(1, F1, (1, K1), stride=(1,1), bias=self.bias_1conv)
+            self.conv1 = nn.Conv2d(1, F1, (1, K1), stride=(1, 1), bias=self.bias_1conv)
             self._initialize_custom_temporal_filter(self.custom_seed)
 
         if spatial_depthwise:
@@ -2187,45 +2192,44 @@ class xEEGNetEncoder(nn.Module):
                 F1, F2, (Chans, 1), stride=(1, 1), groups=F1, bias=self.bias_2conv
             )
         else:
-            self.conv2 = nn.Conv2d(
-                F1, F2, (Chans, 1), stride=(1, 1), bias = self.bias_2conv
-            )
-            
-        if "batch" in norm_type.casefold(): 
-            self.batch1 = nn.BatchNorm2d(F2,affine=True)
+            self.conv2 = nn.Conv2d(F1, F2, (Chans, 1), stride=(1, 1), bias=self.bias_2conv)
+
+        if "batch" in norm_type.casefold():
+            self.batch1 = nn.BatchNorm2d(F2, affine=True)
         elif "instance" in norm_type.casefold():
             self.batch1 = nn.InstanceNorm2d(F2)
         else:
-            raise ValueError(
-                "normalization layer type can be 'batchnorm' or 'instancenorm'"
-            )
-        
-        if log_activation_base in ["e", torch.e]: 
+            raise ValueError("normalization layer type can be 'batchnorm' or 'instancenorm'")
+
+        if log_activation_base in ["e", torch.e]:
             self.log_activation = lambda x: torch.log(torch.clamp(x, 1e-7, 1e4))
         elif log_activation_base in ["10", 10]:
             self.log_activation = lambda x: torch.log10(torch.clamp(x, 1e-7, 1e4))
         elif log_activation_base in ["db", "dB"]:
-            self.log_activation = lambda x: 10*torch.log10(torch.clamp(x, 1e-7, 1e4))
+            self.log_activation = lambda x: 10 * torch.log10(torch.clamp(x, 1e-7, 1e4))
         else:
             raise ValueError(
                 "allowed activation base are 'e' for torch.log, "
                 "'10' for torch.log10, and 'dB' for 10*torch.log10"
             )
-        
+
         if not self.do_global_pooling:
-            self.pool2 = nn.AvgPool2d((1, Pool), stride=(1, max(1, Pool//5)))
+            self.pool2 = nn.AvgPool2d((1, Pool), stride=(1, max(1, Pool // 5)))
         else:
             self.global_pooling = nn.AdaptiveAvgPool2d((1, 1))
-        
+
         self.drop1 = nn.Dropout(p)
         self.flatten = nn.Flatten()
 
     def forward(self, x):
+        """
+        :meta private:
+        """
         if self.freeze_temporal:
             self.freeze_temporal -= 1
             self.conv1.requires_grad_(False)
         else:
-            self.conv1.requires_grad_(True)        
+            self.conv1.requires_grad_(True)
         x = torch.unsqueeze(x, 1)
         x = self.conv1(x)
         x = self.conv2(x)
@@ -2242,61 +2246,71 @@ class xEEGNetEncoder(nn.Module):
 
     @torch.no_grad()
     def _get_spatial_softmax(self):
+        """
+        :meta private:
+        """
         return torch.softmax(self.conv2.weight, -2)
 
     @torch.no_grad()
     def _get_spatial_zero(self):
-        return self.conv2.weight-torch.sum(self.conv2.weight,-2, keepdim=True)
-    
+        """
+        :meta private:
+        """
+        return self.conv2.weight - torch.sum(self.conv2.weight, -2, keepdim=True)
+
     @torch.no_grad()
     def _initialize_custom_temporal_filter(self, seed=None):
+        """
+        :meta private:
+        """
         _reset_seed(seed)
         if self.conv1.weight.shape[-1] >= 75:
             bands = (
-                ( 0.5,  4.0), # delta
-                ( 4.0,  8.0), # theta
-                ( 8.0, 12.0), # alpha
-                (12.0, 16.0), # beta1 
-                (16.0, 20.0), # beta2
-                (20.0, 28.0), # beta3
-                (28.0, 45.0)  # gamma
+                (0.5, 4.0),  # delta
+                (4.0, 8.0),  # theta
+                (8.0, 12.0),  # alpha
+                (12.0, 16.0),  # beta1
+                (16.0, 20.0),  # beta2
+                (20.0, 28.0),  # beta3
+                (28.0, 45.0),  # gamma
             )
         else:
-            bands = (
-                ( 0.5,  8.0),
-                ( 8.0, 16.0),
-                (16.0, 28.0),
-                (28.0, 45.0)
-            )
+            bands = ((0.5, 8.0), (8.0, 16.0), (16.0, 28.0), (28.0, 45.0))
         F, KernLength = self.conv1.weight.shape[0], self.conv1.weight.shape[-1]
         comb = self._powerset(bands)
-        for i in range(min(F,len(comb))): # if F <= len(comb):
+        for i in range(min(F, len(comb))):  # if F <= len(comb):
             filt_coeff = firwin(
-                KernLength,
-                self._merge_tuples(comb[i]),
-                pass_zero=False,
-                fs=self.Fs
+                KernLength, self._merge_tuples(comb[i]), pass_zero=False, fs=self.Fs
             )
-            self.conv1.weight.data[i,0,0] = torch.from_numpy(filt_coeff)
+            self.conv1.weight.data[i, 0, 0] = torch.from_numpy(filt_coeff)
 
     @torch.no_grad()
     def _powerset(self, s):
-        return tuple(chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1)))
+        """
+        :meta private:
+        """
+        return tuple(chain.from_iterable(combinations(s, r) for r in range(1, len(s) + 1)))
 
     @torch.no_grad()
     def _merge_tuples(self, tuples):
+        """
+        :meta private:
+        """
         merged = [num for tup in tuples for num in tup]
         merged = sorted(merged)
-        if len(merged)>2:
+        if len(merged) > 2:
             new_merged = [merged[0]]
-            for i in range(1, len(merged)-2, 2):
-                if merged[i] != merged[i+1]:
+            for i in range(1, len(merged) - 2, 2):
+                if merged[i] != merged[i + 1]:
                     new_merged.append(merged[i])
-                    new_merged.append(merged[i+1])
+                    new_merged.append(merged[i + 1])
             new_merged.append(merged[-1])
-            return sorted(new_merged)  
+            return sorted(new_merged)
         return merged
 
     @torch.no_grad()
     def _combinatorial_op(self, N, k):
-        return int((math.factorial(N))/(math.factorial(k)*math.factorial(N-k)))
+        """
+        :meta private:
+        """
+        return int((math.factorial(N)) / (math.factorial(k) * math.factorial(N - k)))

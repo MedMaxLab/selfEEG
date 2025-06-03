@@ -18,7 +18,7 @@ from .encoders import (
     StagerNetEncoder,
     STNetEncoder,
     TinySleepNetEncoder,
-    xEEGNetEncoder
+    xEEGNetEncoder,
 )
 
 from .zoo import (
@@ -34,5 +34,5 @@ from .zoo import (
     StagerNet,
     STNet,
     TinySleepNet,
-    xEEGNet
+    xEEGNet,
 )

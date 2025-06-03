@@ -212,9 +212,7 @@ class TestAugmentationFunctional(unittest.TestCase):
 
     def test_phase_swap(self):
         print("Testing phase swap...", end="", flush=True)
-        aug_args = {
-            "x": [self.x3, self.x3np]
-        }
+        aug_args = {"x": [self.x3, self.x3np]}
         aug_args = self.makeGrid(aug_args)
         for i in aug_args:
             xaug = aug.phase_swap(**i)
@@ -232,7 +230,7 @@ class TestAugmentationFunctional(unittest.TestCase):
                 xaug = aug.phase_swap(**i)
 
         print("   phase_swap OK: tested", N + len(aug_args), "combinations of input arguments")
-    
+
     def test_flip_vertical(self):
         print("Testing flip vertical...", end="", flush=True)
         aug_args = {

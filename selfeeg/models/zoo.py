@@ -15,7 +15,7 @@ from .encoders import (
     StagerNetEncoder,
     STNetEncoder,
     TinySleepNetEncoder,
-    xEEGNetEncoder
+    xEEGNetEncoder,
 )
 from ..utils.utils import _reset_seed
 
@@ -32,7 +32,7 @@ __all__ = [
     "StagerNet",
     "STNet",
     "TinySleepNet",
-    "xEEGNet"
+    "xEEGNet",
 ]
 
 
@@ -141,20 +141,20 @@ class EEGNet(nn.Module):
         nb_classes: int,
         Chans: int,
         Samples: int,
-        kernLength: int=64,
-        dropRate: float=0.5,
-        F1: int=8,
-        D: int=2,
-        F2: int=16,
-        norm_rate: int=0.25,
-        dropType: str="Dropout",
-        ELUalpha: int=1,
-        pool1: int=4,
-        pool2: int=8,
-        separable_kernel: int=16,
-        depthwise_max_norm: float=1.0,
-        return_logits: bool=True,
-        seed: int=None
+        kernLength: int = 64,
+        dropRate: float = 0.5,
+        F1: int = 8,
+        D: int = 2,
+        F2: int = 16,
+        norm_rate: int = 0.25,
+        dropType: str = "Dropout",
+        ELUalpha: int = 1,
+        pool1: int = 4,
+        pool2: int = 8,
+        separable_kernel: int = 16,
+        depthwise_max_norm: float = 1.0,
+        return_logits: bool = True,
+        seed: int = None,
     ):
 
         super(EEGNet, self).__init__()
@@ -174,7 +174,7 @@ class EEGNet(nn.Module):
             pool2,
             separable_kernel,
             depthwise_max_norm,
-            seed
+            seed,
         )
 
         _reset_seed(seed)
@@ -302,17 +302,17 @@ class DeepConvNet(nn.Module):
         nb_classes: int,
         Chans: int,
         Samples: int,
-        kernLength: int=10,
-        F: int=25,
-        Pool: int=3,
-        stride: int=3,
-        max_norm: int=None,
-        batch_momentum: float=0.1,
-        ELUalpha: int=1,
-        dropRate: float=0.5,
-        max_dense_norm: float=None,
-        return_logits: bool=True,
-        seed: int=None
+        kernLength: int = 10,
+        F: int = 25,
+        Pool: int = 3,
+        stride: int = 3,
+        max_norm: int = None,
+        batch_momentum: float = 0.1,
+        ELUalpha: int = 1,
+        dropRate: float = 0.5,
+        max_dense_norm: float = None,
+        return_logits: bool = True,
+        seed: int = None,
     ):
         super(DeepConvNet, self).__init__()
 
@@ -445,17 +445,17 @@ class EEGInception(nn.Module):
         nb_classes: int,
         Chans: int,
         Samples: int,
-        F1: int=8,
-        D: int=2,
-        kernel_size: int=64,
-        pool: int=4,
-        dropRate: float=0.5,
-        ELUalpha: float=1.0,
-        bias: bool=True,
-        batch_momentum: float=0.1,
-        max_depth_norm: float=1.0,
-        return_logits: bool=True,
-        seed: int=None
+        F1: int = 8,
+        D: int = 2,
+        kernel_size: int = 64,
+        pool: int = 4,
+        dropRate: float = 0.5,
+        ELUalpha: float = 1.0,
+        bias: bool = True,
+        batch_momentum: float = 0.1,
+        max_depth_norm: float = 1.0,
+        return_logits: bool = True,
+        seed: int = None,
     ):
         super(EEGInception, self).__init__()
         self.nb_classes = nb_classes
@@ -471,7 +471,7 @@ class EEGInception(nn.Module):
             bias,
             batch_momentum,
             max_depth_norm,
-            seed
+            seed,
         )
 
         _reset_seed(seed)
@@ -585,15 +585,15 @@ class TinySleepNet(nn.Module):
         nb_classes: int,
         Chans: int,
         Fs: int,
-        F: int=128,
-        kernlength: int=8,
-        pool: int=8,
-        dropRate: float=0.5,
-        batch_momentum: float=0.1,
-        max_dense_norm: float=2.0,
-        hidden_lstm: int=128,
-        return_logits: bool=True,
-        seed: int=None
+        F: int = 128,
+        kernlength: int = 8,
+        pool: int = 8,
+        dropRate: float = 0.5,
+        batch_momentum: float = 0.1,
+        max_dense_norm: float = 2.0,
+        hidden_lstm: int = 128,
+        return_logits: bool = True,
+        seed: int = None,
     ):
         super(TinySleepNet, self).__init__()
 
@@ -695,20 +695,18 @@ class StagerNet(nn.Module):
         nb_classes: int,
         Chans: int,
         Samples: int,
-        dropRate: float=0.5,
-        kernLength: int=64,
-        F: int=8,
-        Pool: int=16,
-        return_logits: bool=True,
-        seed: int=None
+        dropRate: float = 0.5,
+        kernLength: int = 64,
+        F: int = 8,
+        Pool: int = 16,
+        return_logits: bool = True,
+        seed: int = None,
     ):
 
         super(StagerNet, self).__init__()
         self.nb_classes = nb_classes
         self.return_logits = return_logits
-        self.encoder = StagerNetEncoder(
-            Chans, kernLength=kernLength, F=F, Pool=Pool, seed=seed
-        )
+        self.encoder = StagerNetEncoder(Chans, kernLength=kernLength, F=F, Pool=Pool, seed=seed)
 
         _reset_seed(seed)
         self.drop = nn.Dropout(p=dropRate)
@@ -810,12 +808,12 @@ class ShallowNet(nn.Module):
         nb_classes: int,
         Chans: int,
         Samples: int,
-        F: int=40,
-        K1: int=25,
-        Pool: int=75,
-        p: float=0.2,
-        return_logits: bool=True,
-        seed: int=None
+        F: int = 40,
+        K1: int = 25,
+        Pool: int = 75,
+        p: float = 0.2,
+        return_logits: bool = True,
+        seed: int = None,
     ):
 
         super(ShallowNet, self).__init__()
@@ -969,8 +967,8 @@ class ResNet1D(nn.Module):
         preBlock: nn.Module = None,
         postBlock: nn.Module = None,
         classifier: nn.Module = None,
-        return_logits: bool=True,
-        seed: int=None
+        return_logits: bool = True,
+        seed: int = None,
     ):
 
         super(ResNet1D, self).__init__()
@@ -986,9 +984,9 @@ class ResNet1D(nn.Module):
             addConnection=addConnection,
             preBlock=preBlock,
             postBlock=postBlock,
-            seed=seed
+            seed=seed,
         )
-        
+
         # Classifier
         _reset_seed(seed)
         if classifier is None:
@@ -1099,14 +1097,14 @@ class STNet(nn.Module):
         self,
         nb_classes: int,
         Samples: int,
-        grid_size: int=9,
-        F: int=256,
-        kernlength: int=5,
-        dropRate: float=0.5,
-        bias: bool=True,
-        dense_size: int=1024,
-        return_logits: bool=True,
-        seed: int=None
+        grid_size: int = 9,
+        F: int = 256,
+        kernlength: int = 5,
+        dropRate: float = 0.5,
+        bias: bool = True,
+        dense_size: int = 1024,
+        return_logits: bool = True,
+        seed: int = None,
     ):
         super(STNet, self).__init__()
 
@@ -1240,17 +1238,17 @@ class EEGSym(nn.Module):
         Chans: int,
         Samples: int,
         Fs: int,
-        scales_time: tuple=(500, 250, 125),
-        lateral_chans: int=3,
-        first_left: bool=True,
-        F: int=8,
-        pool: int=2,
-        dropRate: float=0.5,
-        ELUalpha: float=1.0,
-        bias: bool=True,
-        residual: bool=True,
-        return_logits: bool=True,
-        seed: int=None
+        scales_time: tuple = (500, 250, 125),
+        lateral_chans: int = 3,
+        first_left: bool = True,
+        F: int = 8,
+        pool: int = 2,
+        dropRate: float = 0.5,
+        ELUalpha: float = 1.0,
+        bias: bool = True,
+        residual: bool = True,
+        return_logits: bool = True,
+        seed: int = None,
     ):
         super(EEGSym, self).__init__()
         self.nb_classes = nb_classes
@@ -1268,7 +1266,7 @@ class EEGSym(nn.Module):
             ELUalpha,
             bias,
             residual,
-            seed=seed
+            seed=seed,
         )
 
         _reset_seed(seed)
@@ -1438,7 +1436,7 @@ class FBCNet(nn.Module):
         linear_max_norm: float = None,
         classifier: nn.Module = None,
         return_logits: bool = True,
-        seed: int=None
+        seed: int = None,
     ):
         super(FBCNet, self).__init__()
 
@@ -1462,9 +1460,9 @@ class FBCNet(nn.Module):
             TemporalStride,
             batch_momentum,
             depthwise_max_norm,
-            seed=seed
+            seed=seed,
         )
-        
+
         # Head
         _reset_seed(seed)
         if classifier is None:
@@ -1751,26 +1749,26 @@ class ATCNet(nn.Module):
         Chans: int,
         Samples: int,
         Fs: float,
-        num_windows: int=5,
-        mha_heads: int=2,
-        tcn_depth: int=2,
-        F1: int=16,
-        D: int=2,
-        pool1: int=None,
-        pool2: int=None,
-        dropRate: float=0.3,
-        max_norm: float=None,
-        batchMomentum: float=0.1,
-        ELUAlpha: float=1.0,
-        mha_dropRate: float=0.5,
-        tcn_kernLength: int=4,
-        tcn_F: int=32,
-        tcn_ELUAlpha: float=0.0,
-        tcn_dropRate: float=0.3,
-        tcn_max_norm: float=None,
-        tcn_batchMom: float=0.1,
-        return_logits: bool=True,
-        seed: int=None
+        num_windows: int = 5,
+        mha_heads: int = 2,
+        tcn_depth: int = 2,
+        F1: int = 16,
+        D: int = 2,
+        pool1: int = None,
+        pool2: int = None,
+        dropRate: float = 0.3,
+        max_norm: float = None,
+        batchMomentum: float = 0.1,
+        ELUAlpha: float = 1.0,
+        mha_dropRate: float = 0.5,
+        tcn_kernLength: int = 4,
+        tcn_F: int = 32,
+        tcn_ELUAlpha: float = 0.0,
+        tcn_dropRate: float = 0.3,
+        tcn_max_norm: float = None,
+        tcn_batchMom: float = 0.1,
+        return_logits: bool = True,
+        seed: int = None,
     ):
 
         super(ATCNet, self).__init__()
@@ -1892,7 +1890,7 @@ class EEGConformer(nn.Module):
 
     For more information see the following paper [EEGcon]_ .
     The original implementation of EEGconformer can be found here [EEGcongit]_ .
-    
+
     The expected **input** is a **3D tensor** with size
     (Batch x Channels x Samples).
 
@@ -1982,34 +1980,46 @@ class EEGConformer(nn.Module):
     >>> print(out.shape) # shoud return torch.Size([4, 1])
 
     """
+
     def __init__(
         self,
         nb_classes: int,
         Chans: int,
         Samples: int,
-        F: int=40,
-        K1: int=25,
-        Pool: int=75,
-        stride_pool: int=15,
-        d_model: int=40,
-        nlayers: int=6,
-        nheads: int=10,
-        dim_feedforward: int=160,
-        activation_transformer: str or Callable="gelu",
-        p: float=0.2,
-        p_transformer: float=0.5,
-        mlp_dim: list[int,int]=[256,32],
-        return_logits: bool=True,
-        seed: int=None
+        F: int = 40,
+        K1: int = 25,
+        Pool: int = 75,
+        stride_pool: int = 15,
+        d_model: int = 40,
+        nlayers: int = 6,
+        nheads: int = 10,
+        dim_feedforward: int = 160,
+        activation_transformer: str or Callable = "gelu",
+        p: float = 0.2,
+        p_transformer: float = 0.5,
+        mlp_dim: list[int, int] = [256, 32],
+        return_logits: bool = True,
+        seed: int = None,
     ):
 
         super(EEGConformer, self).__init__()
         self.return_logits = return_logits
         self.nb_classes = nb_classes
-        
+
         self.encoder = EEGConformerEncoder(
-            Chans, F, K1, Pool, stride_pool, d_model, nlayers, nheads,
-            dim_feedforward, activation_transformer, p, p_transformer, seed
+            Chans,
+            F,
+            K1,
+            Pool,
+            stride_pool,
+            d_model,
+            nlayers,
+            nheads,
+            dim_feedforward,
+            activation_transformer,
+            p,
+            p_transformer,
+            seed,
         )
 
         _reset_seed(seed)
@@ -2020,13 +2030,16 @@ class EEGConformer(nn.Module):
             nn.Linear(d_model, mlp_dim[0]),
             nn.ELU(),
             nn.Dropout(p),
-            nn.Linear(mlp_dim[0], mlp_dim[1]),   
+            nn.Linear(mlp_dim[0], mlp_dim[1]),
             nn.ELU(),
             nn.Dropout(p),
-            nn.Linear(mlp_dim[1], 1 if nb_classes <= 2 else nb_classes)
+            nn.Linear(mlp_dim[1], 1 if nb_classes <= 2 else nb_classes),
         )
 
     def forward(self, x):
+        """
+        :meta private:
+        """
         x = self.encoder(x)
         x = self.MLP(x)
         if not (self.return_logits):
@@ -2059,11 +2072,11 @@ class xEEGNet(nn.Module):
     Fs: int
         The sampling rate of the EEG signal in Hz.
         It is used to initialize the weights of the filters.
-        Must be specified even if `random_temporal_filter` is False. 
+        Must be specified even if `random_temporal_filter` is False.
     F1: int, optional
         The number of output filters in the temporal convolution layer.
 
-        Default = 7  
+        Default = 7
     K1: int, optional
         The length of the temporal convolutional layer.
 
@@ -2141,8 +2154,9 @@ class xEEGNet(nn.Module):
     >>> mdl = models.xEEGNet(3, 8, 512, 125)
     >>> out = mdl(x)
     >>> print(out.shape) # shoud return torch.Size([4, 3])
-    
+
     """
+
     def __init__(
         self,
         nb_classes: int,
@@ -2154,16 +2168,16 @@ class xEEGNet(nn.Module):
         F2: int = 7,
         Pool: int = 75,
         p: float = 0.2,
-        random_temporal_filter = False,
+        random_temporal_filter=False,
         freeze_temporal: int = 1e12,
         spatial_depthwise: bool = True,
         log_activation_base: str = "dB",
         norm_type: str = "batchnorm",
-        global_pooling = True,
+        global_pooling=True,
         bias: list[int, int, int] = [False, False, False],
         dense_hidden: int = -1,
         return_logits=True,
-        seed = None
+        seed=None,
     ):
 
         super(xEEGNet, self).__init__()
@@ -2171,35 +2185,44 @@ class xEEGNet(nn.Module):
         self.nb_classes = nb_classes
         self.return_logits = return_logits
         self.encoder = xEEGNetEncoder(
-            Chans, Fs, F1, K1, F2, Pool, p, random_temporal_filter,
-            freeze_temporal, spatial_depthwise, log_activation_base,
-            norm_type, global_pooling, bias, seed
+            Chans,
+            Fs,
+            F1,
+            K1,
+            F2,
+            Pool,
+            p,
+            random_temporal_filter,
+            freeze_temporal,
+            spatial_depthwise,
+            log_activation_base,
+            norm_type,
+            global_pooling,
+            bias,
+            seed,
         )
-        
+
         if global_pooling:
             self.emb_size = F2
         else:
-            self.emb_size = F2 * ((Samples - K1 + 1 - Pool) // max(1,int(Pool//5)) + 1)
+            self.emb_size = F2 * ((Samples - K1 + 1 - Pool) // max(1, int(Pool // 5)) + 1)
 
         _reset_seed(seed)
-        if dense_hidden<=0:
+        if dense_hidden <= 0:
             self.Dense = nn.Linear(
-                self.emb_size,
-                1 if nb_classes <= 2 else nb_classes,
-                bias=bias[2]
+                self.emb_size, 1 if nb_classes <= 2 else nb_classes, bias=bias[2]
             )
         else:
             self.Dense = nn.Sequential(
                 nn.Linear(self.emb_size, dense_hidden, bias=True),
                 nn.ReLU(),
-                nn.Linear(
-                    dense_hidden,
-                    1 if nb_classes <= 2 else nb_classes,
-                    bias=bias[2]
-                )
+                nn.Linear(dense_hidden, 1 if nb_classes <= 2 else nb_classes, bias=bias[2]),
             )
-        
+
     def forward(self, x):
+        """
+        :meta private:
+        """
         x = self.encoder(x)
         x = self.Dense(x)
         if not (self.return_logits):

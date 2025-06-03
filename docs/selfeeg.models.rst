@@ -78,4 +78,3 @@ Classes
     STNet
     TinySleepNet
     xEEGNet
-
