@@ -1,7 +1,12 @@
 # Version X.X.X (only via git install)
 
+# Version 0.2.1 (latest)
+
 **Functionality**
 
+- **augmentation module**:
+  - add Circular augmenter in compose module.
+  - add phase swap augmentation in functional module.
 - **models module**:
     - models can be initialized with a custom seed.
     - add EEGConformer.
@@ -18,7 +23,7 @@
 * reduced unittest overall time
 
 
-# Version 0.2.0 (latest)
+# Version 0.2.0
 
 **Functionality**
 

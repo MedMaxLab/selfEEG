@@ -58,6 +58,7 @@ Functions
     moving_avg
     permutation_signal
     permute_channels
+    phase_swap
     random_FT_phase
     random_slope_scale
     scaling
