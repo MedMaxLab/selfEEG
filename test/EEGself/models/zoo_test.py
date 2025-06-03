@@ -487,6 +487,54 @@ class TestModels(unittest.TestCase):
                     self.assertGreaterEqual(out.min(), 0)
         print("   TinySleepNet OK: tested", len(EEGsleep_args), " combinations of input arguments")
 
+    def test_xEEGNet(self):
+        print("Testing xEEGNet...", end="", flush=True)
+        EEGxeg_args = {
+            "nb_classes": [4],
+            "Samples": [2048],
+            "Chans": [self.Chan],
+            "Fs": [125],
+            "F1": [7, 126],
+            "K1": [125, 75],
+            "F2": [7, 126],
+            "Pool": [75, 50],
+            "random_temporal_filter": [True, False],
+            "freeze_temporal": [0, 1e12],
+            "spatial_depthwise": [True, False],
+            "log_activation_base": ["dB"],
+            "norm_type": ["batchnorm"],
+            "global_pooling": [True, False],
+            "bias": [[False]*3],
+            "dense_hidden": [-1, 32],
+            "return_logits": [False],
+            "seed": [42]
+        }
+        
+        EEGxeg_args = self.makeGrid(EEGxeg_args)
+        for i in EEGxeg_args:
+            if i["F1"]>i["F2"] and i["spatial_depthwise"]:
+                continue
+            model = models.xEEGNet(**i)
+            out = model(self.x)
+            self.assertEqual(torch.isnan(out).sum(), 0)
+            self.assertEqual(out.shape[1], i["nb_classes"] if i["nb_classes"] > 2 else 1)
+            if not (i["return_logits"]):
+                self.assertLessEqual(out.max(), 1)
+                self.assertGreaterEqual(out.min(), 0)
+
+        if self.device.type != "cpu":
+            for i in EEGxeg_args:
+                if i["F1"]>i["F2"] and i["spatial_depthwise"]:
+                    continue
+                model = models.xEEGNet(**i).to(device=self.device)
+                out = model(self.x2)
+                self.assertEqual(torch.isnan(out).sum(), 0)
+                self.assertEqual(out.shape[1], i["nb_classes"] if i["nb_classes"] > 2 else 1)
+                if not (i["return_logits"]):
+                    self.assertLessEqual(out.max(), 1)
+                    self.assertGreaterEqual(out.min(), 0)
+        print("   xEEGNet OK: tested", len(EEGxeg_args), " combinations of input arguments")
+
 
 if __name__ == "__main__":
     unittest.main()

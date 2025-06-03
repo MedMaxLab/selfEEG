@@ -50,6 +50,7 @@ Classes
     StagerNetEncoder
     STNetEncoder
     TinySleepNetEncoder
+    xEEGNetEncoder
 
 
 models.zoo module
@@ -76,3 +77,5 @@ Classes
     StagerNet
     STNet
     TinySleepNet
+    xEEGNet
+

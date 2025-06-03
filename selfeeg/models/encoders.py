@@ -1,3 +1,5 @@
+from itertools import chain, combinations
+from scipy.signal import firwin
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -24,6 +26,7 @@ __all__ = [
     "StagerNetEncoder",
     "STNetEncoder",
     "TinySleepNetEncoder",
+    "xEEGNetEncoder"
 ]
 
 
@@ -2025,7 +2028,6 @@ class EEGConformerEncoder(nn.Module):
             nn.Dropout(p)
         )
         self.projection = nn.Conv2d(F, d_model, (1, 1))
-        # squeeze 2 and permute
         self.transformer = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
                 d_model,
@@ -2049,3 +2051,252 @@ class EEGConformerEncoder(nn.Module):
         x = self.transformer(x)
         x = torch.permute(x,[0,2,1])
         return x
+
+
+class xEEGNetEncoder(nn.Module):
+    """
+    Pytorch implementation of the xEEGNet Encoder.
+
+    See xEEGNet for some references.
+    The expected **input** is a **3D tensor** with size:
+        (Batch x Channels x Samples).
+
+    Parameters
+    ----------
+    Chans: int
+        The number of EEG channels.
+    Fs: int
+        The sampling rate of the EEG signal in Hz.
+        It is used to initialize the weights of the filters.
+        Must be specified even if `random_temporal_filter` is False. 
+    F1: int, optional
+        The number of output filters in the temporal convolution layer.
+
+        Default = 7  
+    K1: int, optional
+        The length of the temporal convolutional layer.
+
+        Default = 125
+    F2: int, optional
+        The number of output filters in the spatial convolution layer.
+
+        Default = 7
+    Pool: int, optional
+        Kernel size for temporal pooling.
+
+        Default = 75
+    p: float, optional
+        Dropout probability in [0,1)
+
+        Default = 0.2
+    random_temporal_filter: bool, optional
+        If True, initialize the temporal filter weights randomly.
+        Otherwise, use a passband FIR filter.
+
+        Default = False
+    freeze_temporal: int, optional
+        Number of forward steps to keep the temporal layer frozen.
+
+        Default = 1e12
+    spatial_depthwise: bool, optional
+        Whether to apply a depthwise layer in the spatial convolution.
+
+        Default = True
+    log_activation_base: str, optional
+        Base for the logarithmic activation after pooling.
+        Options: "e" (natural log), "10" (logarithm base 10), "dB" (decibel scale).
+
+        Default = "dB"
+    norm_type: str, optional
+        The type of normalization. Expected values are "batch" or "instance".
+
+        Default = "batchnorm"
+    global_pooling: bool, optional
+        If True, apply global average pooling instead of flattening.
+
+        Default = True
+    bias: list[int, int], optional
+        A 2-element list with boolean values.
+        If the first element is True, a bias will be added to the temporal
+        convolutional layer.
+        If the second element is True, a bias will be added to the spatial
+        convolutional layer.
+
+        Default = [False, False]
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4, 8, 512)
+    >>> mdl = models.xEEGNetEncoder(8, 125)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 7])
+    
+    """
+    def __init__(
+        self,
+        Chans: int,
+        Fs: int,
+        F1: int = 7,
+        K1: int = 125,
+        F2: int = 7,
+        Pool: int = 75,
+        p: float = 0.2,
+        random_temporal_filter = False,
+        freeze_temporal: int = 1e12,
+        spatial_depthwise: bool = True,
+        log_activation_base: str = "dB",
+        norm_type: str = "batchnorm",
+        global_pooling = True,
+        bias: list[int, int] = [False, False],
+        seed: int = None
+    ):
+
+        super(xEEGNetEncoder, self).__init__()
+
+        # Set seed before initializing layers
+        self.custom_seed = seed
+        _reset_seed(seed)
+                
+        self.Fs = Fs
+        self.chans = Chans
+        self.freeze_temporal = freeze_temporal
+        self.bias_1conv = bias[0]
+        self.bias_2conv = bias[1]
+        self.do_global_pooling = global_pooling
+        if self.Fs <=0 and not(random_temporal_filter):
+            raise ValueError(
+                "to properly initialize non random temporal fir filters, "
+                "Fs (sampling rate) must be given"
+            )
+        
+        if random_temporal_filter:
+            self.conv1 = nn.Conv2d(1, F1, (1, K1), stride=(1, 1), bias=self.bias_1conv)
+        else:
+            self.conv1 = nn.Conv2d(1, F1, (1, K1), stride=(1,1), bias=self.bias_1conv)
+            self._initialize_custom_temporal_filter(self.custom_seed)
+
+        if spatial_depthwise:
+            self.conv2 = nn.Conv2d(
+                F1, F2, (Chans, 1), stride=(1, 1), groups=F1, bias=self.bias_2conv
+            )
+        else:
+            self.conv2 = nn.Conv2d(
+                F1, F2, (Chans, 1), stride=(1, 1), bias = self.bias_2conv
+            )
+            
+        if "batch" in norm_type.casefold(): 
+            self.batch1 = nn.BatchNorm2d(F2,affine=True)
+        elif "instance" in norm_type.casefold():
+            self.batch1 = nn.InstanceNorm2d(F2)
+        else:
+            raise ValueError(
+                "normalization layer type can be 'batchnorm' or 'instancenorm'"
+            )
+        
+        if log_activation_base in ["e", torch.e]: 
+            self.log_activation = lambda x: torch.log(torch.clamp(x, 1e-7, 1e4))
+        elif log_activation_base in ["10", 10]:
+            self.log_activation = lambda x: torch.log10(torch.clamp(x, 1e-7, 1e4))
+        elif log_activation_base in ["db", "dB"]:
+            self.log_activation = lambda x: 10*torch.log10(torch.clamp(x, 1e-7, 1e4))
+        else:
+            raise ValueError(
+                "allowed activation base are 'e' for torch.log, "
+                "'10' for torch.log10, and 'dB' for 10*torch.log10"
+            )
+        
+        if not self.do_global_pooling:
+            self.pool2 = nn.AvgPool2d((1, Pool), stride=(1, max(1, Pool//5)))
+        else:
+            self.global_pooling = nn.AdaptiveAvgPool2d((1, 1))
+        
+        self.drop1 = nn.Dropout(p)
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        if self.freeze_temporal:
+            self.freeze_temporal -= 1
+            self.conv1.requires_grad_(False)
+        else:
+            self.conv1.requires_grad_(True)        
+        x = torch.unsqueeze(x, 1)
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.batch1(x)
+        x = torch.square(x)
+        if self.do_global_pooling:
+            x = self.global_pooling(x)
+        else:
+            x = self.pool2(x)
+        x = self.log_activation(x)
+        x = self.drop1(x)
+        x = self.flatten(x)
+        return x
+
+    @torch.no_grad()
+    def _get_spatial_softmax(self):
+        return torch.softmax(self.conv2.weight, -2)
+
+    @torch.no_grad()
+    def _get_spatial_zero(self):
+        return self.conv2.weight-torch.sum(self.conv2.weight,-2, keepdim=True)
+    
+    @torch.no_grad()
+    def _initialize_custom_temporal_filter(self, seed=None):
+        _reset_seed(seed)
+        if self.conv1.weight.shape[-1] >= 75:
+            bands = (
+                ( 0.5,  4.0), # delta
+                ( 4.0,  8.0), # theta
+                ( 8.0, 12.0), # alpha
+                (12.0, 16.0), # beta1 
+                (16.0, 20.0), # beta2
+                (20.0, 28.0), # beta3
+                (28.0, 45.0)  # gamma
+            )
+        else:
+            bands = (
+                ( 0.5,  8.0),
+                ( 8.0, 16.0),
+                (16.0, 28.0),
+                (28.0, 45.0)
+            )
+        F, KernLength = self.conv1.weight.shape[0], self.conv1.weight.shape[-1]
+        comb = self._powerset(bands)
+        for i in range(min(F,len(comb))): # if F <= len(comb):
+            filt_coeff = firwin(
+                KernLength,
+                self._merge_tuples(comb[i]),
+                pass_zero=False,
+                fs=self.Fs
+            )
+            self.conv1.weight.data[i,0,0] = torch.from_numpy(filt_coeff)
+
+    @torch.no_grad()
+    def _powerset(self, s):
+        return tuple(chain.from_iterable(combinations(s, r) for r in range(1, len(s)+1)))
+
+    @torch.no_grad()
+    def _merge_tuples(self, tuples):
+        merged = [num for tup in tuples for num in tup]
+        merged = sorted(merged)
+        if len(merged)>2:
+            new_merged = [merged[0]]
+            for i in range(1, len(merged)-2, 2):
+                if merged[i] != merged[i+1]:
+                    new_merged.append(merged[i])
+                    new_merged.append(merged[i+1])
+            new_merged.append(merged[-1])
+            return sorted(new_merged)  
+        return merged
+
+    @torch.no_grad()
+    def _combinatorial_op(self, N, k):
+        return int((math.factorial(N))/(math.factorial(k)*math.factorial(N-k)))
