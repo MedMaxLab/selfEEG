@@ -210,6 +210,27 @@ class TestAugmentationFunctional(unittest.TestCase):
         self.assertTrue(math.isclose(per1[24], per2[104], rel_tol=1e-5))
         print("   shift frequency OK: tested", N + len(aug_args), "combinations of input arguments")
 
+    def test_phase_swap(self):
+        print("Testing phase swap...", end="", flush=True)
+        aug_args = {"x": [self.x3, self.x3np]}
+        aug_args = self.makeGrid(aug_args)
+        for i in aug_args:
+            xaug = aug.phase_swap(**i)
+            if isinstance(xaug, torch.Tensor):
+                self.assertTrue(torch.isnan(xaug).sum() == 0)
+                self.assertFalse(torch.equal(i["x"], xaug))
+            else:
+                self.assertTrue(np.isnan(xaug).sum() == 0)
+                self.assertFalse(np.array_equal(i["x"], xaug))
+        N = len(aug_args)
+        if self.device.type != "cpu":
+            aug_args = {"x": [self.x3gpu]}
+            aug_args = self.makeGrid(aug_args)
+            for i in aug_args:
+                xaug = aug.phase_swap(**i)
+
+        print("   phase_swap OK: tested", N + len(aug_args), "combinations of input arguments")
+
     def test_flip_vertical(self):
         print("Testing flip vertical...", end="", flush=True)
         aug_args = {

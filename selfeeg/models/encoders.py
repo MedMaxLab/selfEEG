@@ -1,3 +1,5 @@
+from itertools import chain, combinations
+from scipy.signal import firwin
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,10 +11,12 @@ from .layers import (
     SeparableConv2d,
     FilterBank,
 )
+from ..utils.utils import _reset_seed
 
 __all__ = [
     "BasicBlock1",
     "DeepConvNetEncoder",
+    "EEGConformerEncoder",
     "EEGInceptionEncoder",
     "EEGNetEncoder",
     "EEGSymEncoder",
@@ -22,6 +26,7 @@ __all__ = [
     "StagerNetEncoder",
     "STNetEncoder",
     "TinySleepNetEncoder",
+    "xEEGNetEncoder",
 ]
 
 
@@ -81,6 +86,11 @@ class EEGNetEncoder(nn.Module):
         If None no constraint will be applied.
 
         Default = None
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
 
     Note
@@ -102,24 +112,26 @@ class EEGNetEncoder(nn.Module):
 
     def __init__(
         self,
-        Chans,
-        kernLength=64,
-        dropRate=0.5,
-        F1=8,
-        D=2,
-        F2=16,
-        dropType="Dropout",
-        ELUalpha=1,
-        pool1=4,
-        pool2=8,
-        separable_kernel=16,
-        depthwise_max_norm=1.0,
+        Chans: int,
+        kernLength: int = 64,
+        dropRate: float = 0.5,
+        F1: int = 8,
+        D: int = 2,
+        F2: int = 16,
+        dropType: str = "Dropout",
+        ELUalpha: int = 1,
+        pool1: int = 4,
+        pool2: int = 8,
+        separable_kernel: int = 16,
+        depthwise_max_norm: float = 1.0,
+        seed: int = None,
     ):
 
         if dropType not in ["SpatialDropout2D", "Dropout"]:
-            raise ValueError("implemented Dropout types are" " 'Dropout' or 'SpatialDropout2D '")
+            raise ValueError("Dropout types are 'Dropout' or 'SpatialDropout2D'")
 
         super(EEGNetEncoder, self).__init__()
+        _reset_seed(seed)
 
         # Layer 1
         self.conv1 = nn.Conv2d(1, F1, (1, kernLength), padding="same", bias=False)
@@ -154,26 +166,20 @@ class EEGNetEncoder(nn.Module):
         """
         :meta private:
         """
-        # Layer 1
         x = torch.unsqueeze(x, 1)
         x = self.conv1(x)
         x = self.batchnorm1(x)
-
-        # Layer 2
         x = self.conv2(x)
         x = self.batchnorm2(x)
         x = self.elu2(x)
         x = self.pooling2(x)
         x = self.drop2(x)
-
-        # Layer 3
         x = self.sepconv3(x)
         x = self.batchnorm3(x)
         x = self.elu3(x)
         x = self.pooling3(x)
         x = self.drop3(x)
         x = self.flatten3(x)
-
         return x
 
 
@@ -226,6 +232,11 @@ class DeepConvNetEncoder(nn.Module):
         The dropout percentage in range [0,1].
 
         Default = 0.5
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Example
     -------
@@ -241,18 +252,20 @@ class DeepConvNetEncoder(nn.Module):
 
     def __init__(
         self,
-        Chans,
-        kernLength=10,
-        F=25,
-        Pool=3,
-        stride=3,
-        max_norm=None,
-        batch_momentum=0.1,
-        ELUalpha=1,
-        dropRate=0.5,
+        Chans: int,
+        kernLength: int = 10,
+        F: int = 25,
+        Pool: int = 3,
+        stride: int = 3,
+        max_norm: float = None,
+        batch_momentum: float = 0.1,
+        ELUalpha: int = 1,
+        dropRate: float = 0.5,
+        seed: int = None,
     ):
 
         super(DeepConvNetEncoder, self).__init__()
+        _reset_seed(seed)
 
         self.conv1 = ConstrainedConv2d(
             1, F, (1, kernLength), padding="valid", stride=(1, 1), max_norm=max_norm
@@ -372,6 +385,11 @@ class EEGInceptionEncoder(nn.Module):
         If None no constraint will be included.
 
         Default = 1.
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Example
     -------
@@ -387,19 +405,22 @@ class EEGInceptionEncoder(nn.Module):
 
     def __init__(
         self,
-        Chans,
-        F1=8,
-        D=2,
-        kernel_size=64,
-        pool=4,
-        dropRate=0.5,
-        ELUalpha=1.0,
-        bias=True,
-        batch_momentum=0.1,
-        max_depth_norm=1.0,
+        Chans: int,
+        F1: int = 8,
+        D: int = 2,
+        kernel_size: int = 64,
+        pool: int = 4,
+        dropRate: float = 0.5,
+        ELUalpha: float = 1.0,
+        bias: bool = True,
+        batch_momentum: float = 0.1,
+        max_depth_norm: float = 1.0,
+        seed: int = None,
     ):
 
         super(EEGInceptionEncoder, self).__init__()
+        _reset_seed(seed)
+
         self.inc1 = nn.Sequential(
             nn.Conv2d(1, F1, (1, kernel_size), padding="same", bias=bias),
             nn.BatchNorm2d(F1, momentum=batch_momentum),
@@ -545,6 +566,11 @@ class TinySleepNetEncoder(nn.Module):
         Hidden size of the lstm block.
 
         Default = 128
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Example
     -------
@@ -560,17 +586,20 @@ class TinySleepNetEncoder(nn.Module):
 
     def __init__(
         self,
-        Chans,
-        Fs,
-        F=128,
-        kernlength=8,
-        pool=8,
-        dropRate=0.5,
-        batch_momentum=0.1,
-        hidden_lstm=128,
+        Chans: int,
+        Fs: int,
+        F: int = 128,
+        kernlength: int = 8,
+        pool: int = 8,
+        dropRate: float = 0.5,
+        batch_momentum: float = 0.1,
+        hidden_lstm: int = 128,
+        seed: int = None,
     ):
 
         super(TinySleepNetEncoder, self).__init__()
+        _reset_seed(seed)
+
         self.conv1 = nn.Conv1d(Chans, F, int(Fs // 2), stride=int(Fs // 16), padding="valid")
         self.BN1 = nn.BatchNorm1d(F, momentum=batch_momentum)
         self.Relu = nn.ReLU()
@@ -611,14 +640,10 @@ class TinySleepNetEncoder(nn.Module):
         x = self.conv4(x)
         x = self.BN4(x)
         x = self.Relu(x)
-
         x = self.pool2(x)
         x = self.drop2(x)
-
         x = torch.permute(x, (2, 0, 1))
-
         out, (ht, ct) = self.lstm1(x)
-
         return ht[-1]
 
 
@@ -649,6 +674,11 @@ class StagerNetEncoder(nn.Module):
         The temporal pooling kernel size.
 
         Default = 4
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Example
     -------
@@ -662,9 +692,10 @@ class StagerNetEncoder(nn.Module):
 
     """
 
-    def __init__(self, Chans, kernLength=64, F=8, Pool=16):
+    def __init__(self, Chans, kernLength: int = 64, F: int = 8, Pool: int = 16, seed: int = None):
 
         super(StagerNetEncoder, self).__init__()
+        _reset_seed(seed)
 
         self.conv1 = nn.Conv2d(1, Chans, (Chans, 1), stride=(1, 1), bias=True)
         self.conv2 = nn.Conv2d(1, F, (1, kernLength), stride=(1, 1), padding="same")
@@ -676,7 +707,6 @@ class StagerNetEncoder(nn.Module):
     def forward(self, x):
         """
         :meta private:
-
         """
         x = torch.unsqueeze(x, 1)
         x = self.conv1(x)
@@ -720,6 +750,11 @@ class ShallowNetEncoder(nn.Module):
         Dropout probability. Must be in [0,1)
 
         Default= 0.2
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Note
     ----
@@ -740,9 +775,13 @@ class ShallowNetEncoder(nn.Module):
 
     """
 
-    def __init__(self, Chans, F=40, K1=25, Pool=75, p=0.2):
+    def __init__(
+        self, Chans, F: int = 40, K1: int = 25, Pool: int = 75, p: float = 0.2, seed: int = None
+    ):
 
         super(ShallowNetEncoder, self).__init__()
+        _reset_seed(seed)
+
         self.conv1 = nn.Conv2d(1, F, (1, K1), stride=(1, 1))
         self.conv2 = nn.Conv2d(F, F, (Chans, 1), stride=(1, 1))
         self.batch1 = nn.BatchNorm2d(F)
@@ -774,7 +813,7 @@ class BasicBlock1(nn.Module):
     :meta private:
     """
 
-    def __init__(self, inplanes, planes, kernLength=7, stride=1):
+    def __init__(self, inplanes: int, planes: int, kernLength: int = 7, stride: int = 1):
 
         super(BasicBlock1, self).__init__()
         self.stride = stride
@@ -820,18 +859,13 @@ class BasicBlock1(nn.Module):
         :meta private:
         """
         residual = self.downsample(x)
-        # print('residual: ', residual.shape)
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
-        # print('out 1: ', out.shape)
         out = self.conv2(out)
         out = self.bn2(out)
-        # print('out 2: ', out.shape)
-
         out += residual
         out = self.relu(out)
-
         return out
 
 
@@ -894,7 +928,12 @@ class ResNet1DEncoder(nn.Module):
             2. nn.BatchNorm2d()
             3. nn.ReLU()
 
-            Default = None
+        Default = None
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Note
     ----
@@ -915,7 +954,7 @@ class ResNet1DEncoder(nn.Module):
 
     def __init__(
         self,
-        Chans,
+        Chans: int,
         block: nn.Module = BasicBlock1,
         Layers: "list of 4 ints" = [2, 2, 2, 2],
         inplane: int = 16,
@@ -923,9 +962,12 @@ class ResNet1DEncoder(nn.Module):
         addConnection: bool = False,
         preBlock: nn.Module = None,
         postBlock: nn.Module = None,
+        seed: int = None,
     ):
 
         super(ResNet1DEncoder, self).__init__()
+        _reset_seed(seed)
+
         self.inplane = inplane
         self.kernLength = kernLength
         self.connection = addConnection
@@ -1121,6 +1163,11 @@ class STNetEncoder(nn.Module):
         If True, adds a learnable bias to the convolutional layers.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Example
     -------
@@ -1134,8 +1181,17 @@ class STNetEncoder(nn.Module):
 
     """
 
-    def __init__(self, Samples, F=256, kernlength=5, dropRate=0.5, bias=True):
+    def __init__(
+        self,
+        Samples,
+        F: int = 256,
+        kernlength: int = 5,
+        dropRate: float = 0.5,
+        bias: bool = True,
+        seed: int = None,
+    ):
         super(STNetEncoder, self).__init__()
+        _reset_seed(seed)
 
         self.conv1 = nn.Conv2d(
             Samples, F, kernel_size=kernlength - 2, stride=1, padding="same", bias=bias
@@ -1396,6 +1452,11 @@ class EEGSymEncoder(nn.Module):
         Currently not implemented, will be added in future releases.
 
         Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Example
     -------
@@ -1411,21 +1472,22 @@ class EEGSymEncoder(nn.Module):
 
     def __init__(
         self,
-        Chans,
-        Samples,
-        Fs,
-        scales_time=(500, 250, 125),
-        lateral_chans=3,
-        first_left=True,
-        F=8,
-        pool=2,
-        dropRate=0.5,
-        ELUalpha=1.0,
-        bias=True,
-        residual=True,
+        Chans: int,
+        Samples: int,
+        Fs: float,
+        scales_time: tuple = (500, 250, 125),
+        lateral_chans: int = 3,
+        first_left: bool = True,
+        F: int = 8,
+        pool: int = 2,
+        dropRate: float = 0.5,
+        ELUalpha: float = 1.0,
+        bias: bool = True,
+        residual: bool = True,
+        seed: int = None,
     ):
-
         super(EEGSymEncoder, self).__init__()
+        _reset_seed(seed)
 
         self.input_samples = int(Samples * Fs / 1000)
         self.scales_samples = [int(s * Fs / 1000) for s in scales_time]
@@ -1772,6 +1834,11 @@ class FBCNetEncoder(nn.Module):
         If None no constraint will be included.
 
         Default = None
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
 
     Example
     -------
@@ -1802,6 +1869,7 @@ class FBCNetEncoder(nn.Module):
         TemporalStride: int = 4,
         batch_momentum: float = 0.1,
         depthwise_max_norm=None,
+        seed: int = None,
     ):
         super(FBCNetEncoder, self).__init__()
         self.FilterBands = FilterBands
@@ -1858,3 +1926,391 @@ class FBCNetEncoder(nn.Module):
         x = self.TMB(x)
         x = torch.flatten(x, 1)
         return x
+
+
+class EEGConformerEncoder(nn.Module):
+    """
+    Pytorch implementation of the EEGConformer Encoder.
+
+    See EEGConformer for some references.
+    The expected **input** is a **3D tensor** with size
+    (Batch x Channels x Samples).
+
+    Parameters
+    ----------
+    Chans: int
+        The number of EEG channels.
+    F: int, optional
+        The number of output filters in the temporal convolution layer.
+
+        Default = 40
+    K1: int, optional
+        The length of the temporal convolutional layer.
+
+        Default = 25
+    Pool: int, optional
+        The temporal pooling kernel size.
+
+        Default = 75
+    stride_pool: int, optional
+        The temporal pooling stride.
+
+        Default = 15
+    d_model: int, optional
+        The embedding size. It is the number of expected features in the input of
+        the transformer encoder layer.
+
+        Default = 40
+    nlayers: int, optional
+        The number of transformer encoder layers.
+
+        Default = 6
+    nheads: int, optional
+        The number of heads in the multi-head attention layers.
+
+        Default = 10
+    dim_feedforward: int, optional
+        The dimension of the feedforward hidden layer in the transformer encoder.
+
+        Default = 160
+    activation_transformer: str or Callabel, optional
+        The activation function in the transformer encoder. See the PyTorch
+        TransformerEncoderLayer documentation for accepted inputs.
+
+        Default = "gelu"
+    p: float, optional
+        Dropout probability in the tokenizer. Must be in [0,1)
+
+        Default= 0.2
+    p_transformer: float, optional
+        Dropout probability in the transformer encoder. Must be in [0,1)
+
+        Default= 0.5
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4,8,512)
+    >>> mdl = models.EEGConformerEncoder(8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 224])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
+    """
+
+    def __init__(
+        self,
+        Chans,
+        F: int = 40,
+        K1: int = 25,
+        Pool: int = 75,
+        stride_pool: int = 15,
+        d_model: int = 40,
+        nlayers: int = 6,
+        nheads: int = 10,
+        dim_feedforward: int = 160,
+        activation_transformer: str or Callable = "gelu",
+        p: float = 0.2,
+        p_transformer: float = 0.5,
+        seed: int = None,
+    ):
+
+        super(EEGConformerEncoder, self).__init__()
+        _reset_seed(seed)
+
+        self.tokenizer = nn.Sequential(
+            nn.Conv2d(1, F, (1, K1), stride=(1, 1)),
+            nn.Conv2d(F, F, (Chans, 1), stride=(1, 1)),
+            nn.BatchNorm2d(F),
+            nn.AvgPool2d((1, Pool), stride=(1, stride_pool)),
+            nn.Dropout(p),
+        )
+        self.projection = nn.Conv2d(F, d_model, (1, 1))
+        self.transformer = nn.TransformerEncoder(
+            nn.TransformerEncoderLayer(
+                d_model,
+                nhead=nheads,
+                dim_feedforward=dim_feedforward,
+                dropout=p_transformer,
+                activation="gelu",
+                batch_first=True,
+            ),
+            num_layers=nlayers,
+        )
+
+    def forward(self, x):
+        """
+        :meta private:
+        """
+        x = torch.unsqueeze(x, 1)
+        x = self.tokenizer(x)
+        x = x.squeeze(2)
+        x = torch.permute(x, [0, 2, 1])
+        x = self.transformer(x)
+        x = torch.permute(x, [0, 2, 1])
+        return x
+
+
+class xEEGNetEncoder(nn.Module):
+    """
+    Pytorch implementation of the xEEGNet Encoder.
+
+    See xEEGNet for some references.
+    The expected **input** is a **3D tensor** with size
+    (Batch x Channels x Samples).
+
+    Parameters
+    ----------
+    Chans: int
+        The number of EEG channels.
+    Fs: int
+        The sampling rate of the EEG signal in Hz.
+        It is used to initialize the weights of the filters.
+        Must be specified even if `random_temporal_filter` is False.
+    F1: int, optional
+        The number of output filters in the temporal convolution layer.
+
+        Default = 7
+    K1: int, optional
+        The length of the temporal convolutional layer.
+
+        Default = 125
+    F2: int, optional
+        The number of output filters in the spatial convolution layer.
+
+        Default = 7
+    Pool: int, optional
+        Kernel size for temporal pooling.
+
+        Default = 75
+    p: float, optional
+        Dropout probability in [0,1)
+
+        Default = 0.2
+    random_temporal_filter: bool, optional
+        If True, initialize the temporal filter weights randomly.
+        Otherwise, use a passband FIR filter.
+
+        Default = False
+    freeze_temporal: int, optional
+        Number of forward steps to keep the temporal layer frozen.
+
+        Default = 1e12
+    spatial_depthwise: bool, optional
+        Whether to apply a depthwise layer in the spatial convolution.
+
+        Default = True
+    log_activation_base: str, optional
+        Base for the logarithmic activation after pooling.
+        Options: "e" (natural log), "10" (logarithm base 10), "dB" (decibel scale).
+
+        Default = "dB"
+    norm_type: str, optional
+        The type of normalization. Expected values are "batch" or "instance".
+
+        Default = "batchnorm"
+    global_pooling: bool, optional
+        If True, apply global average pooling instead of flattening.
+
+        Default = True
+    bias: list[int, int], optional
+        A 2-element list with boolean values.
+        If the first element is True, a bias will be added to the temporal
+        convolutional layer.
+        If the second element is True, a bias will be added to the spatial
+        convolutional layer.
+
+        Default = [False, False]
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set
+
+        Default = None
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4, 8, 512)
+    >>> mdl = models.xEEGNetEncoder(8, 125)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 7])
+
+    """
+
+    def __init__(
+        self,
+        Chans: int,
+        Fs: int,
+        F1: int = 7,
+        K1: int = 125,
+        F2: int = 7,
+        Pool: int = 75,
+        p: float = 0.2,
+        random_temporal_filter=False,
+        freeze_temporal: int = 1e12,
+        spatial_depthwise: bool = True,
+        log_activation_base: str = "dB",
+        norm_type: str = "batchnorm",
+        global_pooling=True,
+        bias: list[int, int] = [False, False],
+        seed: int = None,
+    ):
+
+        super(xEEGNetEncoder, self).__init__()
+
+        # Set seed before initializing layers
+        self.custom_seed = seed
+        _reset_seed(seed)
+
+        self.Fs = Fs
+        self.chans = Chans
+        self.freeze_temporal = freeze_temporal
+        self.bias_1conv = bias[0]
+        self.bias_2conv = bias[1]
+        self.do_global_pooling = global_pooling
+        if self.Fs <= 0 and not (random_temporal_filter):
+            raise ValueError(
+                "to properly initialize non random temporal fir filters, "
+                "Fs (sampling rate) must be given"
+            )
+
+        if random_temporal_filter:
+            self.conv1 = nn.Conv2d(1, F1, (1, K1), stride=(1, 1), bias=self.bias_1conv)
+        else:
+            self.conv1 = nn.Conv2d(1, F1, (1, K1), stride=(1, 1), bias=self.bias_1conv)
+            self._initialize_custom_temporal_filter(self.custom_seed)
+
+        if spatial_depthwise:
+            self.conv2 = nn.Conv2d(
+                F1, F2, (Chans, 1), stride=(1, 1), groups=F1, bias=self.bias_2conv
+            )
+        else:
+            self.conv2 = nn.Conv2d(F1, F2, (Chans, 1), stride=(1, 1), bias=self.bias_2conv)
+
+        if "batch" in norm_type.casefold():
+            self.batch1 = nn.BatchNorm2d(F2, affine=True)
+        elif "instance" in norm_type.casefold():
+            self.batch1 = nn.InstanceNorm2d(F2)
+        else:
+            raise ValueError("normalization layer type can be 'batchnorm' or 'instancenorm'")
+
+        if log_activation_base in ["e", torch.e]:
+            self.log_activation = lambda x: torch.log(torch.clamp(x, 1e-7, 1e4))
+        elif log_activation_base in ["10", 10]:
+            self.log_activation = lambda x: torch.log10(torch.clamp(x, 1e-7, 1e4))
+        elif log_activation_base in ["db", "dB"]:
+            self.log_activation = lambda x: 10 * torch.log10(torch.clamp(x, 1e-7, 1e4))
+        else:
+            raise ValueError(
+                "allowed activation base are 'e' for torch.log, "
+                "'10' for torch.log10, and 'dB' for 10*torch.log10"
+            )
+
+        if not self.do_global_pooling:
+            self.pool2 = nn.AvgPool2d((1, Pool), stride=(1, max(1, Pool // 5)))
+        else:
+            self.global_pooling = nn.AdaptiveAvgPool2d((1, 1))
+
+        self.drop1 = nn.Dropout(p)
+        self.flatten = nn.Flatten()
+
+    def forward(self, x):
+        """
+        :meta private:
+        """
+        if self.freeze_temporal:
+            self.freeze_temporal -= 1
+            self.conv1.requires_grad_(False)
+        else:
+            self.conv1.requires_grad_(True)
+        x = torch.unsqueeze(x, 1)
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.batch1(x)
+        x = torch.square(x)
+        if self.do_global_pooling:
+            x = self.global_pooling(x)
+        else:
+            x = self.pool2(x)
+        x = self.log_activation(x)
+        x = self.drop1(x)
+        x = self.flatten(x)
+        return x
+
+    @torch.no_grad()
+    def _get_spatial_softmax(self):
+        """
+        :meta private:
+        """
+        return torch.softmax(self.conv2.weight, -2)
+
+    @torch.no_grad()
+    def _get_spatial_zero(self):
+        """
+        :meta private:
+        """
+        return self.conv2.weight - torch.sum(self.conv2.weight, -2, keepdim=True)
+
+    @torch.no_grad()
+    def _initialize_custom_temporal_filter(self, seed=None):
+        """
+        :meta private:
+        """
+        _reset_seed(seed)
+        if self.conv1.weight.shape[-1] >= 75:
+            bands = (
+                (0.5, 4.0),  # delta
+                (4.0, 8.0),  # theta
+                (8.0, 12.0),  # alpha
+                (12.0, 16.0),  # beta1
+                (16.0, 20.0),  # beta2
+                (20.0, 28.0),  # beta3
+                (28.0, 45.0),  # gamma
+            )
+        else:
+            bands = ((0.5, 8.0), (8.0, 16.0), (16.0, 28.0), (28.0, 45.0))
+        F, KernLength = self.conv1.weight.shape[0], self.conv1.weight.shape[-1]
+        comb = self._powerset(bands)
+        for i in range(min(F, len(comb))):  # if F <= len(comb):
+            filt_coeff = firwin(
+                KernLength, self._merge_tuples(comb[i]), pass_zero=False, fs=self.Fs
+            )
+            self.conv1.weight.data[i, 0, 0] = torch.from_numpy(filt_coeff)
+
+    @torch.no_grad()
+    def _powerset(self, s):
+        """
+        :meta private:
+        """
+        return tuple(chain.from_iterable(combinations(s, r) for r in range(1, len(s) + 1)))
+
+    @torch.no_grad()
+    def _merge_tuples(self, tuples):
+        """
+        :meta private:
+        """
+        merged = [num for tup in tuples for num in tup]
+        merged = sorted(merged)
+        if len(merged) > 2:
+            new_merged = [merged[0]]
+            for i in range(1, len(merged) - 2, 2):
+                if merged[i] != merged[i + 1]:
+                    new_merged.append(merged[i])
+                    new_merged.append(merged[i + 1])
+            new_merged.append(merged[-1])
+            return sorted(new_merged)
+        return merged
+
+    @torch.no_grad()
+    def _combinatorial_op(self, N, k):
+        """
+        :meta private:
+        """
+        return int((math.factorial(N)) / (math.factorial(k) * math.factorial(N - k)))

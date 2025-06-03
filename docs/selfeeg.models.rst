@@ -40,6 +40,7 @@ Classes
     :template: classtemplate.rst
 
     DeepConvNetEncoder
+    EEGConformerEncoder
     EEGInceptionEncoder
     EEGNetEncoder
     EEGSymEncoder
@@ -49,6 +50,7 @@ Classes
     StagerNetEncoder
     STNetEncoder
     TinySleepNetEncoder
+    xEEGNetEncoder
 
 
 models.zoo module
@@ -65,6 +67,7 @@ Classes
 
     ATCNet
     DeepConvNet
+    EEGConformer
     EEGInception
     EEGNet
     EEGSym
@@ -74,3 +77,4 @@ Classes
     StagerNet
     STNet
     TinySleepNet
+    xEEGNet
