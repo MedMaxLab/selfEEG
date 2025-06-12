@@ -1901,6 +1901,9 @@ class EEGConformer(nn.Module):
         is considered (output dimensions will be [batch, 1] in this case).
     Chans: int
         The number of EEG channels.
+    Samples: int
+        The sample length (number of time steps).
+        It will be used to calculate the embedding size (for head initialization).
     F: int, optional
         The number of output filters in the temporal convolution layer.
 
@@ -2055,7 +2058,7 @@ class xEEGNet(nn.Module):
     Pytorch implementation of xEEGNet.
 
     For more information see the following paper [xEEG]_ .
-    The original implementation of EEGconformer can be found here [xEEGgit]_ .
+    The original implementation of xEEGNet can be found here [xEEGgit]_ .
     The expected **input** is a **3D tensor** with size:
         (Batch x Channels x Samples).
 

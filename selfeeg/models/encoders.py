@@ -2050,6 +2050,7 @@ class EEGConformerEncoder(nn.Module):
         """
         x = torch.unsqueeze(x, 1)
         x = self.tokenizer(x)
+        x = self.projection(x)
         x = x.squeeze(2)
         x = torch.permute(x, [0, 2, 1])
         x = self.transformer(x)

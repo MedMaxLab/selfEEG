@@ -1,5 +1,10 @@
 # Version X.X.X (only via git install)
 
+**Functionality**
+
+- **models module**:
+    - Fix issue in EEGConformer (projection from F to d_model missing in the forward).
+
 # Version 0.2.1 (latest)
 
 **Functionality**
@@ -18,9 +23,9 @@
 
 **maintenance**
 
-* fixed unittest MPS device bug on git workflows
-* fixed unittest deprecation warnings
-* reduced unittest overall time
+* Fix unittest MPS device bug on git workflows
+* Fix unittest deprecation warnings
+* Improve unittest time
 
 
 # Version 0.2.0

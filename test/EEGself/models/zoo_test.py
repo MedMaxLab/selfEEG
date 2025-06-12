@@ -140,10 +140,11 @@ class TestModels(unittest.TestCase):
             "Pool": [75, 50],
             "stride_pool": [20],
             "nlayers": [4],
+            "d_model": [40, 80],
             "nheads": [8, 10],
             "dim_feedforward": [80],
             "activation_transformer": ["gelu"],
-            "mlp_dim": [[128, 32]],
+            "mlp_dim": [[128, 32], [64, 32]],
             "return_logits": [False],
             "seed": [42],
         }
