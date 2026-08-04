@@ -1,11 +1,17 @@
 # Version X.X.X (only via git install)
 
+# Version 0.2.2 (latest)
+
 **Functionality**
 
 - **models module**:
-    - Fix issue in EEGConformer (projection from F to d_model missing in the forward).
+    - Add TransformEEG model.
 
-# Version 0.2.1 (latest)
+**maintenance**
+
+* Improve unittest time
+
+# Version 0.2.1
 
 **Functionality**
 

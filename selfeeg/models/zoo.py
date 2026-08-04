@@ -2253,8 +2253,7 @@ class TransformEEG(nn.Module):
     multilayer perceptron.
 
     For more information see the following paper [tfeeg]_ .
-    The expected **input** is a **3D tensor** with size:
-        (Batch x Channels x Samples).
+    The expected **input** is a **3D tensor** with size: (Batch x Channels x Samples).
 
     Parameters
     ----------
