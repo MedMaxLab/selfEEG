@@ -4,7 +4,6 @@ from collections import OrderedDict
 from collections.abc import Iterable, Callable
 import copy
 import datetime
-from itertools import zip_longest
 import math
 import os
 import random
@@ -48,7 +47,7 @@ def _default_augmentation(x):
 
 def evaluate_loss(
     loss_fun: Callable,
-    arguments: torch.Tensor or list[torch.Tensor],
+    arguments: torch.Tensor | list[torch.Tensor],
     loss_arg: Union[list, dict] = None,
 ):
     """
@@ -119,15 +118,15 @@ def fine_tune(
     optimizer=None,
     augmenter=None,
     loss_func: Callable = None,
-    loss_args: list or dict = [],
+    loss_args: list | dict = [],
     validation_loss_func: Callable = None,
-    validation_loss_args: list or dict = [],
-    label_encoder: Callable or list[Callable] = None,
+    validation_loss_args: list | dict = [],
+    label_encoder: Callable | list[Callable] = None,
     lr_scheduler=None,
     EarlyStopper=None,
     validation_dataloader: torch.utils.data.DataLoader = None,
     verbose=True,
-    device: str or torch.device = None,
+    device: str | torch.device = None,
     return_loss_info: bool = False,
 ) -> Optional[dict]:
     """
@@ -595,7 +594,7 @@ class EarlyStopping:
         improvement: str = "decrease",
         monitored: str = "validation",
         record_best_weights: bool = True,
-        device: str or torch.device = None,
+        device: str | torch.device = None,
     ):
         if device is None:
             self.device = torch.device("cpu")
@@ -790,7 +789,7 @@ class SSLBase(nn.Module):
     def evaluate_loss(
         self,
         loss_fun: Callable,
-        arguments: torch.Tensor or list[torch.Tensors],
+        arguments: torch.Tensor | list[torch.Tensors],
         loss_arg: Union[list, dict] = None,
     ) -> torch.Tensor:
         """
@@ -906,10 +905,10 @@ class SSLBase(nn.Module):
         optimizer=None,
         augmenter=None,
         loss_func: Callable = None,
-        loss_args: list or dict = [],
+        loss_args: list | dict = [],
         EarlyStopper=None,
         validation_dataloader=None,
-        device: str or torch.device = None,
+        device: str | torch.device = None,
     ):
         # Various checks on input parameters.
         # If some arguments weren't given they will be automatically set
@@ -1015,7 +1014,7 @@ class SSLBase(nn.Module):
         test_dataloader,
         augmenter=None,
         loss_func: Callable = None,
-        loss_args: list or dict = [],
+        loss_args: list | dict = [],
         device: str = None,
     ):
         if device == None:

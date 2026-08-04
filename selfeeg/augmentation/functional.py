@@ -726,7 +726,7 @@ def add_band_noise(
     x: ArrayLike,
     bandwidth: list[tuple[float, float], str, float],
     samplerate: float = 256,
-    noise_range: float or list[float, float] = None,
+    noise_range: float | list[float, float] = None,
     std: float = None,
     get_noise: bool = False,
 ) -> tuple[ArrayLike, Optional[ArrayLike]]:
@@ -1419,7 +1419,7 @@ def get_filter_coeff(
                     if btype.lower() == "bandstop":
                         btype = "lowpass"
             else:
-                message = 'Brainwave "', bandwidth[i], '" not exist. \n'
+                message = f'Brainwave "{eeg_band}" not exist. \n'
                 message += "Choose between delta, theta, alpha, beta, "
                 message += "gamma, gamma_low, gamma_high"
                 raise ValueError(message)
@@ -2829,9 +2829,9 @@ def crop_and_resize(
 # RE-REFERENCING
 def change_ref(
     x: ArrayLike,
-    mode: str or int = "avg",
+    mode: str | int = "avg",
     reference: int = None,
-    exclude_from_ref: int or list[int] = None,
+    exclude_from_ref: int | list[int] = None,
 ) -> ArrayLike:
     """
     changes the reference of all EEG record in the ArrayLike object.

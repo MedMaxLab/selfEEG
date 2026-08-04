@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from collections import OrderedDict
-from collections.abc import Iterable, Callable
-import copy
-import os
+from collections.abc import Callable
 import sys
-from typing import Optional, Union
+from typing import Union
 
 import torch
 import torch.nn as nn
 import tqdm
 
-from .base import EarlyStopping, SSLBase
+from .base import SSLBase
 
 __all__ = ["ReconstructiveSSL"]
 
@@ -84,12 +81,12 @@ class ReconstructiveSSL(SSLBase):
         optimizer=None,
         augmenter=None,
         loss_func: Callable = None,
-        loss_args: list or dict = [],
+        loss_args: list | dict = [],
         lr_scheduler=None,
         EarlyStopper=None,
         validation_dataloader=None,
         verbose=True,
-        device: str or torch.device = None,
+        device: str | torch.device = None,
         return_loss_info: bool = False,
     ):
         """
@@ -304,7 +301,7 @@ class ReconstructiveSSL(SSLBase):
         test_dataloader,
         augmenter=None,
         loss_func: Callable = None,
-        loss_args: list or dict = [],
+        loss_args: list | dict = [],
         verbose: bool = True,
         device: str = None,
     ):
