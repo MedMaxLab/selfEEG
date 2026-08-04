@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/selfeeg?label=PyPI&color=blue)](https://pypi.org/project/selfeeg/)
 [![Conda](https://img.shields.io/conda/vn/conda-forge/selfeeg.svg?color=blue)](https://anaconda.org/conda-forge/selfeeg)
 [![Docs](https://img.shields.io/readthedocs/selfeeg)](https://readthedocs.org/projects/selfeeg/)
-[![Unittest](https://github.com/MedMaxLab/selfEEG/actions/workflows/python-app.yml/badge.svg)](https://github.com/MedMaxLab/selfEEG/actions/workflows/selfeeg_test.yml)
+[![Unittest](https://github.com/MedMaxLab/selfEEG/actions/workflows/selfeeg_test.yml/badge.svg)](https://github.com/MedMaxLab/selfEEG/actions/workflows/selfeeg_test.yml)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.06224/status.svg)](https://doi.org/10.21105/joss.06224)
 [![License](https://img.shields.io/badge/License-MIT-violet.svg)](https://github.com/MedMaxLab/selfEEG/blob/main/LICENSE.md)
 
