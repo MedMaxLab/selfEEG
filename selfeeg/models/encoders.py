@@ -135,13 +135,13 @@ class EEGNetEncoder(nn.Module):
 
         # Layer 1
         self.conv1 = nn.Conv2d(1, F1, (1, kernLength), padding="same", bias=False)
-        self.batchnorm1 = nn.BatchNorm2d(F1, False)
+        self.batchnorm1 = nn.BatchNorm2d(F1)
 
         # Layer 2
         self.conv2 = DepthwiseConv2d(
             F1, D, (Chans, 1), padding="valid", bias=False, max_norm=depthwise_max_norm
         )
-        self.batchnorm2 = nn.BatchNorm2d(D * F1, False)
+        self.batchnorm2 = nn.BatchNorm2d(D * F1)
         self.elu2 = nn.ELU(alpha=ELUalpha)
         self.pooling2 = nn.AvgPool2d((1, pool1))
         if dropType.lower() == "dropout":
@@ -153,7 +153,7 @@ class EEGNetEncoder(nn.Module):
         self.sepconv3 = SeparableConv2d(
             D * F1, F2, (1, separable_kernel), bias=False, padding="same"
         )
-        self.batchnorm3 = nn.BatchNorm2d(F2, False)
+        self.batchnorm3 = nn.BatchNorm2d(F2)
         self.elu3 = nn.ELU(alpha=ELUalpha)
         self.pooling3 = nn.AvgPool2d((1, pool2))
         if dropType.lower() == "dropout":

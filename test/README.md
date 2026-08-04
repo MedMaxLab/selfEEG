@@ -23,7 +23,7 @@ Here is reported a basic list of assertion you must include in your tests based 
 
 ### General
 
-All the functions must check that any allowed combination of input arguments will not raise an unexpected error. To speed up the procedure, you can create a dictionary of possible values per arguments and create the input iterator with the `makegrid` method included in each unittest.TestCase class. See already implemented testing pipelines.
+All the functions must check that any allowed combination of input arguments will not raise an unexpected error. To speed up the procedure, you can create a dictionary of possible values per argument and build the input iterator with the shared `make_grid` helper in `test/EEGself/_testtools.py`. Passing its `max_comb` argument caps the number of tested combinations while still exercising every individual parameter value at least once, which keeps the suite fast. See the already implemented testing pipelines and wrap each combination in a `self.subTest(...)` block so failures report the exact arguments involved.
 
 
 ### Dataloading
@@ -76,4 +76,5 @@ All the functions must check that any allowed combination of input arguments wil
 
 1. MacBook Pro 14 inch M2-Pro, MacOS 13.6.2, mps backend
 2. Padova Neuroscience Center Server, Ubuntu 18.04.1, Tesla V100 GPU
+2. Department of Neuroscience Server, Ubuntu 22.04.5, NVIDIA A30 GPU
 3. Custom built PC, Windows 10 22H2, NVIDIA RTX 2080 super
