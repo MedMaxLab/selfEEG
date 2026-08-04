@@ -290,6 +290,34 @@ class TestModels(unittest.TestCase):
         )
         self._check_classifier(models.TinySleepNet, grid, label_keys=("nb_classes", "F", "hidden_lstm"))
 
+    def test_TransformEEG(self):
+        # embedding size is Chans * D1 * D2 (a multiple of Chans=8), so
+        # num_heads in {1, 4} always divides it.
+        grid = make_grid(
+            {
+                "nb_classes": [2, 4],
+                "Chans": [CHAN],
+                "D1": [2, 4],
+                "D2": [2],
+                "kernLength1": [5, 7],
+                "kernLength2": [5],
+                "pool": [4, 3],
+                "stridePool": [2],
+                "num_heads": [1, 4],
+                "num_layers": [2],
+                "dim_feedforward": [None, 64],
+                "transformer_dropout": [0.2],
+                "activation": ["hardswish", "gelu"],
+                "dense_hidden": [None, 0, 32],
+                "return_logits": [False],
+                "seed": [42],
+            },
+            max_comb=12,
+        )
+        self._check_classifier(
+            models.TransformEEG, grid, label_keys=("nb_classes", "D1", "num_heads", "activation")
+        )
+
     def test_xEEGNet(self):
         grid = make_grid(
             {

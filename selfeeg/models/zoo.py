@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from typing import Callable
 from .layers import ConstrainedDense, ConstrainedConv1d, ConstrainedConv2d
 from .encoders import (
     BasicBlock1,
@@ -15,6 +16,7 @@ from .encoders import (
     StagerNetEncoder,
     STNetEncoder,
     TinySleepNetEncoder,
+    TransformEEGEncoder,
     xEEGNetEncoder,
 )
 from ..utils.utils import _reset_seed
@@ -32,6 +34,7 @@ __all__ = [
     "StagerNet",
     "STNet",
     "TinySleepNet",
+    "TransformEEG",
     "xEEGNet",
 ]
 
@@ -960,7 +963,7 @@ class ResNet1D(nn.Module):
         Chans: int,
         Samples: int,
         block: nn.Module = BasicBlock1,
-        Layers: "list of 4 int" = [2, 2, 2, 2],
+        Layers: list = [2, 2, 2, 2],
         inplane: int = 16,
         kernLength: int = 7,
         addConnection: bool = False,
@@ -1420,13 +1423,13 @@ class FBCNet(nn.Module):
         nb_classes: int,
         Chans: int,
         Samples: int,
-        Fs: int or float,
+        Fs: int | float,
         FilterBands: int = 9,
-        FilterRange: float or int = 4,
+        FilterRange: float | int = 4,
         FilterType: str = "Cheby2",
-        FilterStopRippple: int or float = 30,
-        FilterPassRipple: int or float = 3,
-        FilterRangeTol: int or float = 2,
+        FilterStopRipple: int | float = 30,
+        FilterPassRipple: int | float = 3,
+        FilterRangeTol: int | float = 2,
         FilterSkipFirst=True,
         D: int = 32,
         TemporalType: str = "logvar",
@@ -1451,7 +1454,7 @@ class FBCNet(nn.Module):
             FilterBands,
             FilterRange,
             FilterType,
-            FilterStopRippple,
+            FilterStopRipple,
             FilterPassRipple,
             FilterRangeTol,
             FilterSkipFirst,
@@ -1997,7 +2000,7 @@ class EEGConformer(nn.Module):
         nlayers: int = 6,
         nheads: int = 10,
         dim_feedforward: int = 160,
-        activation_transformer: str or Callable = "gelu",
+        activation_transformer: str | Callable = "gelu",
         p: float = 0.2,
         p_transformer: float = 0.5,
         mlp_dim: list[int, int] = [256, 32],
@@ -2220,6 +2223,203 @@ class xEEGNet(nn.Module):
                 nn.Linear(self.emb_size, dense_hidden, bias=True),
                 nn.ReLU(),
                 nn.Linear(dense_hidden, 1 if nb_classes <= 2 else nb_classes, bias=bias[2]),
+            )
+
+    def forward(self, x):
+        """
+        :meta private:
+        """
+        x = self.encoder(x)
+        x = self.Dense(x)
+        if not (self.return_logits):
+            if self.nb_classes <= 2:
+                x = torch.sigmoid(x)
+            else:
+                x = F.softmax(x, dim=1)
+        return x
+
+
+# ------------------------------
+#          TransformEEG
+# ------------------------------
+class TransformEEG(nn.Module):
+    """
+    Pytorch implementation of the TransformEEG model.
+
+    TransformEEG is a hybrid convolution-transformer architecture for EEG
+    decoding. A depthwise convolutional tokenizer turns the multichannel EEG
+    into a sequence of feature tokens, which is then processed by a stack of
+    transformer encoder layers. The temporal dimension is finally collapsed
+    with an adaptive average pooling and mapped to the class scores by a small
+    multilayer perceptron.
+
+    For more information see the following paper [tfeeg]_ .
+    The expected **input** is a **3D tensor** with size:
+        (Batch x Channels x Samples).
+
+    Parameters
+    ----------
+    nb_classes: int
+        The number of classes. If less than 2, a binary classification problem
+        is considered (output dimensions will be [batch, 1] in this case).
+    Chans: int
+        The number of EEG channels.
+    D1: int, optional
+        The depth multiplier of the first depthwise convolutional block.
+
+        Default = 2
+    D2: int, optional
+        The depth multiplier of the second depthwise convolutional block.
+        The token embedding size will be ``Chans * D1 * D2``.
+
+        Default = 2
+    kernLength1: int, optional
+        The kernel length of the first convolutional block.
+
+        Default = 5
+    kernLength2: int, optional
+        The kernel length of the remaining convolutional blocks.
+
+        Default = 5
+    pool: int, optional
+        The kernel size of the two average pooling layers of the tokenizer.
+
+        Default = 4
+    stridePool: int, optional
+        The stride of the two average pooling layers of the tokenizer.
+
+        Default = 2
+    dropRate: float, optional
+        The dropout probability of the tokenizer in range [0,1].
+
+        Default = 0.2
+    ELUalpha: float, optional
+        The alpha value of the ELU activation function used in the tokenizer.
+
+        Default = 0.1
+    batchMomentum: float, optional
+        The momentum of the batch normalization layers of the tokenizer.
+
+        Default = 0.25
+    num_heads: int, optional
+        The number of heads of each transformer encoder layer. The token
+        embedding size (``Chans * D1 * D2``) must be divisible by ``num_heads``.
+
+        Default = 1
+    dim_feedforward: int, optional
+        The dimension of the feedforward block of each transformer encoder layer.
+        If None, it is set equal to the token embedding size.
+
+        Default = None
+    num_layers: int, optional
+        The number of stacked transformer encoder layers.
+
+        Default = 2
+    transformer_dropout: float, optional
+        The dropout probability applied inside the transformer encoder layers.
+
+        Default = 0.2
+    activation: str or Callable, optional
+        The activation function of the transformer encoder layers. It can be a
+        callable (e.g., ``torch.nn.functional.gelu``) or one of the strings
+        'relu', 'gelu', 'elu', 'leaky_relu', 'hardswish'.
+
+        Default = 'hardswish'
+    dense_hidden: int, optional
+        The number of hidden units of the classification MLP. If None, it is set
+        to ``max(embedding_size // 2, 64)``. If set to a value lower than 1, a
+        single linear layer is used as the classification head.
+
+        Default = None
+    return_logits: bool, optional
+        If True, return the output as logit. It is suggested to not use False as
+        the pytorch crossentropy loss function applies the softmax internally.
+
+        Default = True
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set.
+
+        Default = None
+
+    References
+    ----------
+    .. [tfeeg] Del Pup et al., TransformEEG: Towards Improving Model
+      Generalizability in Deep Learning-based EEG Parkinson's Disease Detection.
+      arXiv preprint. 2025. https://doi.org/10.48550/arXiv.2506.17188
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4, 8, 512)
+    >>> mdl = models.TransformEEG(4, 8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 4])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
+    """
+
+    def __init__(
+        self,
+        nb_classes: int,
+        Chans: int,
+        D1: int = 2,
+        D2: int = 2,
+        kernLength1: int = 5,
+        kernLength2: int = 5,
+        pool: int = 4,
+        stridePool: int = 2,
+        dropRate: float = 0.2,
+        ELUalpha: float = 0.1,
+        batchMomentum: float = 0.25,
+        num_heads: int = 1,
+        dim_feedforward: int = None,
+        num_layers: int = 2,
+        transformer_dropout: float = 0.2,
+        activation="hardswish",
+        dense_hidden: int = None,
+        return_logits: bool = True,
+        seed: int = None,
+    ):
+
+        super(TransformEEG, self).__init__()
+        _reset_seed(seed)
+
+        self.nb_classes = nb_classes
+        self.return_logits = return_logits
+        self.encoder = TransformEEGEncoder(
+            Chans,
+            D1,
+            D2,
+            kernLength1,
+            kernLength2,
+            pool,
+            stridePool,
+            dropRate,
+            ELUalpha,
+            batchMomentum,
+            num_heads,
+            dim_feedforward,
+            num_layers,
+            transformer_dropout,
+            activation,
+            seed,
+        )
+        self.emb_size = self.encoder.embed_dim
+
+        if dense_hidden is None:
+            dense_hidden = max(self.emb_size // 2, 64)
+
+        _reset_seed(seed)
+        out_features = 1 if nb_classes <= 2 else nb_classes
+        if dense_hidden < 1:
+            self.Dense = nn.Linear(self.emb_size, out_features)
+        else:
+            self.Dense = nn.Sequential(
+                nn.Linear(self.emb_size, dense_hidden),
+                nn.LeakyReLU(),
+                nn.Linear(dense_hidden, out_features),
             )
 
     def forward(self, x):

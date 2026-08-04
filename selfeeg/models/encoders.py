@@ -1,12 +1,12 @@
 from itertools import chain, combinations
+import math
 from scipy.signal import firwin
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from typing import Callable
 from .layers import (
-    ConstrainedConv1d,
     ConstrainedConv2d,
-    ConstrainedDense,
     DepthwiseConv2d,
     SeparableConv2d,
     FilterBank,
@@ -26,6 +26,7 @@ __all__ = [
     "StagerNetEncoder",
     "STNetEncoder",
     "TinySleepNetEncoder",
+    "TransformEEGEncoder",
     "xEEGNetEncoder",
 ]
 
@@ -956,7 +957,7 @@ class ResNet1DEncoder(nn.Module):
         self,
         Chans: int,
         block: nn.Module = BasicBlock1,
-        Layers: "list of 4 ints" = [2, 2, 2, 2],
+        Layers: list = [2, 2, 2, 2],
         inplane: int = 16,
         kernLength: int = 7,
         addConnection: bool = False,
@@ -1856,13 +1857,13 @@ class FBCNetEncoder(nn.Module):
         self,
         Chans: int,
         Samples: int,
-        Fs: int or float,
+        Fs: int | float,
         FilterBands: int = 9,
-        FilterRange: float or int = 4,
+        FilterRange: float | int = 4,
         FilterType: str = "Cheby2",
-        FilterStopRippple: int or float = 30,
-        FilterPassRipple: int or float = 3,
-        FilterRangeTol: int or float = 2,
+        FilterStopRipple: int | float = 30,
+        FilterPassRipple: int | float = 3,
+        FilterRangeTol: int | float = 2,
         FilterSkipFirst=True,
         D: int = 32,
         TemporalType: str = "logvar",
@@ -1882,7 +1883,7 @@ class FBCNetEncoder(nn.Module):
             FilterBands,
             FilterRange,
             FilterType,
-            FilterStopRippple,
+            FilterStopRipple,
             FilterPassRipple,
             FilterRangeTol,
             FilterSkipFirst,
@@ -2015,7 +2016,7 @@ class EEGConformerEncoder(nn.Module):
         nlayers: int = 6,
         nheads: int = 10,
         dim_feedforward: int = 160,
-        activation_transformer: str or Callable = "gelu",
+        activation_transformer: str | Callable = "gelu",
         p: float = 0.2,
         p_transformer: float = 0.5,
         seed: int = None,
@@ -2315,3 +2316,241 @@ class xEEGNetEncoder(nn.Module):
         :meta private:
         """
         return int((math.factorial(N)) / (math.factorial(k) * math.factorial(N - k)))
+
+
+# ------------------------------
+#          TransformEEG
+# ------------------------------
+def _resolve_activation(activation):
+    """
+    Resolve a transformer activation given either a callable or a string alias.
+
+    :meta private:
+    """
+    if callable(activation):
+        return activation
+    act_map = {
+        "relu": F.relu,
+        "gelu": F.gelu,
+        "elu": F.elu,
+        "leaky_relu": F.leaky_relu,
+        "hardswish": F.hardswish,
+    }
+    if isinstance(activation, str) and activation.lower() in act_map:
+        return act_map[activation.lower()]
+    raise ValueError(
+        "activation must be a callable or one of "
+        "'relu', 'gelu', 'elu', 'leaky_relu', 'hardswish'"
+    )
+
+
+class TransformEEGEncoder(nn.Module):
+    """
+    Pytorch implementation of the TransformEEG Encoder.
+
+    See TransformEEG for some references.
+    The expected **input** is a **3D tensor** with size
+    (Batch x Channels x Samples).
+
+    The encoder is composed of two stages. First, a depthwise convolutional
+    tokenizer expands the channel dimension and produces a sequence of
+    ``Chans * D1 * D2`` feature tokens (the token embedding size). Then, a
+    stack of standard transformer encoder layers processes the token sequence.
+    The output is obtained by average pooling the transformer output along the
+    temporal (token) dimension, returning a 2D tensor of size
+    (Batch x ``Chans * D1 * D2``).
+
+    Parameters
+    ----------
+    Chans: int
+        The number of EEG channels.
+    D1: int, optional
+        The depth multiplier of the first depthwise convolutional block.
+        The number of intermediate feature maps will be ``Chans * D1``.
+
+        Default = 2
+    D2: int, optional
+        The depth multiplier of the second depthwise convolutional block.
+        The token embedding size will be ``Chans * D1 * D2``.
+
+        Default = 2
+    kernLength1: int, optional
+        The kernel length of the first convolutional block.
+
+        Default = 5
+    kernLength2: int, optional
+        The kernel length of the second, third and fourth convolutional blocks.
+
+        Default = 5
+    pool: int, optional
+        The kernel size of the two average pooling layers of the tokenizer.
+
+        Default = 4
+    stridePool: int, optional
+        The stride of the two average pooling layers of the tokenizer.
+
+        Default = 2
+    dropRate: float, optional
+        The dropout probability of the tokenizer in range [0,1].
+
+        Default = 0.2
+    ELUalpha: float, optional
+        The alpha value of the ELU activation function used in the tokenizer.
+
+        Default = 0.1
+    batchMomentum: float, optional
+        The momentum of the batch normalization layers of the tokenizer.
+
+        Default = 0.25
+    num_heads: int, optional
+        The number of heads of each transformer encoder layer. The token
+        embedding size (``Chans * D1 * D2``) must be divisible by ``num_heads``.
+
+        Default = 1
+    dim_feedforward: int, optional
+        The dimension of the feedforward block of each transformer encoder layer.
+        If None, it is set equal to the token embedding size.
+
+        Default = None
+    num_layers: int, optional
+        The number of stacked transformer encoder layers.
+
+        Default = 2
+    transformer_dropout: float, optional
+        The dropout probability applied inside the transformer encoder layers.
+
+        Default = 0.2
+    activation: str or Callable, optional
+        The activation function of the transformer encoder layers. It can be a
+        callable (e.g., ``torch.nn.functional.gelu``) or one of the strings
+        'relu', 'gelu', 'elu', 'leaky_relu', 'hardswish'.
+
+        Default = 'hardswish'
+    seed: int, optional
+        A custom seed for model initialization. It must be a nonnegative number.
+        If None is passed, no custom seed will be set.
+
+        Default = None
+
+    Note
+    ----
+    Since the temporal dimension is collapsed with an adaptive average pooling,
+    the encoder can process inputs with an arbitrary number of samples, provided
+    that they are long enough not to be entirely consumed by the pooling layers.
+
+    Example
+    -------
+    >>> import selfeeg.models
+    >>> import torch
+    >>> x = torch.randn(4, 8, 512)
+    >>> mdl = models.TransformEEGEncoder(8)
+    >>> out = mdl(x)
+    >>> print(out.shape) # shoud return torch.Size([4, 32])
+    >>> print(torch.isnan(out).sum()) # shoud return 0
+
+    """
+
+    def __init__(
+        self,
+        Chans: int,
+        D1: int = 2,
+        D2: int = 2,
+        kernLength1: int = 5,
+        kernLength2: int = 5,
+        pool: int = 4,
+        stridePool: int = 2,
+        dropRate: float = 0.2,
+        ELUalpha: float = 0.1,
+        batchMomentum: float = 0.25,
+        num_heads: int = 1,
+        dim_feedforward: int = None,
+        num_layers: int = 2,
+        transformer_dropout: float = 0.2,
+        activation="hardswish",
+        seed: int = None,
+    ):
+
+        if D1 < 1 or D2 < 1:
+            raise ValueError("D1 and D2 must be positive integers")
+
+        super(TransformEEGEncoder, self).__init__()
+        _reset_seed(seed)
+
+        F1 = Chans * D1
+        self.embed_dim = Chans * D1 * D2
+        if self.embed_dim % num_heads != 0:
+            raise ValueError(
+                "the token embedding size (Chans * D1 * D2 = "
+                f"{self.embed_dim}) must be divisible by num_heads ({num_heads})"
+            )
+        if dim_feedforward is None:
+            dim_feedforward = self.embed_dim
+
+        # Depthwise convolutional tokenizer
+        self.block1 = nn.Sequential(
+            nn.Conv1d(Chans, F1, kernLength1, padding="same", groups=Chans),
+            nn.BatchNorm1d(F1, momentum=batchMomentum),
+            nn.ELU(ELUalpha),
+        )
+        self.pool1 = nn.AvgPool1d(pool, stridePool)
+        self.drop1 = nn.Dropout1d(dropRate)
+
+        self.block2 = nn.Sequential(
+            nn.Conv1d(F1, F1, kernLength2, padding="same", groups=F1),
+            nn.BatchNorm1d(F1, momentum=batchMomentum),
+            nn.ELU(ELUalpha),
+        )
+
+        self.block3 = nn.Sequential(
+            nn.Conv1d(F1, self.embed_dim, kernLength2, padding="same", groups=F1),
+            nn.BatchNorm1d(self.embed_dim, momentum=batchMomentum),
+            nn.ELU(ELUalpha),
+        )
+        self.pool2 = nn.AvgPool1d(pool, stridePool)
+        self.drop2 = nn.Dropout1d(dropRate)
+
+        self.block4 = nn.Sequential(
+            nn.Conv1d(
+                self.embed_dim, self.embed_dim, kernLength2, padding="same", groups=self.embed_dim
+            ),
+            nn.BatchNorm1d(self.embed_dim, momentum=batchMomentum),
+            nn.ELU(ELUalpha),
+        )
+
+        # Transformer encoder
+        _reset_seed(seed)
+        self.transformer = nn.TransformerEncoder(
+            nn.TransformerEncoderLayer(
+                self.embed_dim,
+                nhead=num_heads,
+                dim_feedforward=dim_feedforward,
+                dropout=transformer_dropout,
+                activation=_resolve_activation(activation),
+                batch_first=True,
+            ),
+            num_layers=num_layers,
+            enable_nested_tensor=False,
+        )
+        self.pool_lay = nn.AdaptiveAvgPool1d(1)
+
+    def forward(self, x):
+        """
+        :meta private:
+        """
+        # Depthwise convolutional tokenizer with residual connections
+        x1 = self.block1(x)
+        x1 = self.pool1(x1)
+        x1 = self.drop1(x1)
+        x2 = x1 + self.block2(x1)
+        x3 = self.block3(x2)
+        x3 = self.pool2(x3)
+        x3 = self.drop2(x3)
+        x4 = x3 + self.block4(x3)
+
+        # Transformer expects (Batch x Tokens x Features)
+        x = torch.permute(x4, [0, 2, 1])
+        x = self.transformer(x)
+        x = torch.permute(x, [0, 2, 1])
+        x = self.pool_lay(x)
+        x = x.squeeze(-1)
+        return x
