@@ -2062,8 +2062,7 @@ class xEEGNet(nn.Module):
 
     For more information see the following paper [xEEG]_ .
     The original implementation of xEEGNet can be found here [xEEGgit]_ .
-    The expected **input** is a **3D tensor** with size:
-        (Batch x Channels x Samples).
+    The expected **input** is a **3D tensor** with size: (Batch x Channels x Samples).
 
     Parameters
     ----------
@@ -2346,7 +2345,7 @@ class TransformEEG(nn.Module):
     ----------
     .. [tfeeg] Del Pup et al., TransformEEG: Towards Improving Model
       Generalizability in Deep Learning-based EEG Parkinson's Disease Detection.
-      arXiv preprint. 2025. https://doi.org/10.48550/arXiv.2506.17188
+      neurocomputing. 2025. https://doi.org/10.1016/j.neucom.2025.132075
 
     Example
     -------
