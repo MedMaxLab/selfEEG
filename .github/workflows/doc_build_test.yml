@@ -1,9 +1,17 @@
 name: Sphinx_build_test
 
 on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'selfeeg/**'
+      - 'docs/**'
+      - '.github/workflows/doc_build_test.yml'
   pull_request:
     branches:
       - main
+      - develop
     paths:
       - 'selfeeg/**'
       - 'docs/**'
@@ -15,9 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
           cache: 'pip'

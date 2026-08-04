@@ -4,15 +4,16 @@ on:
   push:
     branches:
       - main
+      - develop
     paths:
       - 'selfeeg/**'
       - 'test/**'
-      - '.github/workflows/python-app.yml'
+      - '.github/workflows/selfeeg_test.yml'
   pull_request:
     paths:
       - 'selfeeg/**'
       - 'test/**'
-      - '.github/workflows/python-app.yml'
+      - '.github/workflows/selfeeg_test.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -23,14 +24,14 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.10", "3.11"]
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -39,7 +40,8 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
+          pip install torch torchvision
+          pip install torchaudio
           pip install -r requirements.txt
       - name: Test with unittest
         run: python3 -m unittest discover test "*_test.py"

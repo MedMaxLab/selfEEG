@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-from collections import OrderedDict
-from collections.abc import Iterable, Callable
-import copy
-import os
+
+from collections.abc import Callable
 import sys
-from typing import Optional, Union
+from typing import Union
 
 import torch
 import torch.nn as nn
 import tqdm
 
-from .base import EarlyStopping, SSLBase
+from .base import SSLBase
 
 __all__ = ["PredictiveSSL"]
 
@@ -127,14 +125,14 @@ class PredictiveSSL(SSLBase):
         optimizer=None,
         augmenter=None,
         loss_func: Callable = None,
-        loss_args: list or dict = [],
+        loss_args: list | dict = [],
         lr_scheduler=None,
         EarlyStopper=None,
         validation_dataloader=None,
         augmenter_batch_calls=2,
         labels_on_dataloader=False,
         verbose=True,
-        device: str or torch.device = None,
+        device: str | torch.device = None,
         return_loss_info: bool = False,
     ):
         """
@@ -465,7 +463,7 @@ class PredictiveSSL(SSLBase):
         test_dataloader,
         augmenter=None,
         loss_func=None,
-        loss_args: list or dict = [],
+        loss_args: list | dict = [],
         augmenter_batch_calls=2,
         labels_on_dataloader=False,
         verbose: bool = True,

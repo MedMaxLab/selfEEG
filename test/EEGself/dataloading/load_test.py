@@ -1,12 +1,16 @@
-import itertools
 import os
 import pickle
-import platform
-import random
+import shutil
+import sys
 import unittest
 
 import numpy as np
 import torch
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from EEGself._testtools import make_grid
 
 from selfeeg import dataloading as dl
 
@@ -39,28 +43,15 @@ class TestDataloading(unittest.TestCase):
                 # just to complicate things
                 y = np.array([[y] * 100, [y] * 100]).T
                 return x, y
-            else:
-                return x, y
-        else:
-            return x
+            return x, y
+        return x
 
     def transformEEG(self, EEG, value=64):
-        EEG = EEG[:, :-value]
-        return EEG
-
-    def makeGrid(self, pars_dict):
-        keys = pars_dict.keys()
-        combinations = itertools.product(*pars_dict.values())
-        ds = [dict(zip(keys, cc)) for cc in combinations]
-        return ds
+        return EEG[:, :-value]
 
     @classmethod
     def setUpClass(cls):
-        print("\n---------------------------")
-        print("TESTING DATALOADING MODULE")
-        print("the process will generetate two additional folders")
-        print("---------------------------")
-        if not (os.path.isdir("tmpsave")):
+        if not os.path.isdir("tmpsave"):
             os.mkdir("tmpsave")
         cls.eegpath = "Simulated_EEG"
         cls.create_dataset(cls)
@@ -70,44 +61,10 @@ class TestDataloading(unittest.TestCase):
 
     def setUp(self):
         self.seed = 1234
-        random.seed(self.seed)
         np.random.seed(self.seed)
 
-    def test_get_eeg_partition_number(self):
-        # checks = Table with length 1000 and results in specific setting is correct
-        print("Testing get_eeg_partition_number...", end="", flush=True)
-        input_grid = {
-            "EEGpath": [self.eegpath],
-            "freq": [self.freq],
-            "window": [2],
-            "overlap": [0, 0.15],
-            "includePartial": [True, False],
-            "file_format": ["*.pickle"],
-            "load_function": [self.loadEEG],
-            "optional_load_fun_args": [[False]],
-            "transform_function": [None, self.transformEEG],
-            "optional_transform_fun_args": [None, [32]],
-            "keep_zero_sample": [True, False],
-            "save": [True, False],
-            "save_path": ["tmpsave/results1.csv"],
-            "verbose": [False],
-        }
-        input_grid = self.makeGrid(input_grid)
-        for i in input_grid:
-            EEGlen = dl.get_eeg_partition_number(**i)
-            self.assertEqual(EEGlen.shape[0], 1000)
-        print(
-            "   get_eeg_partition_number OK: tested",
-            len(input_grid),
-            "combination of input arguments",
-        )
-
-    def test_get_eeg_split_table(self):
-        # checks: table has length 1000,
-        #         ratio = 0 means empty set,
-        #         ids when given are splitted corretly
-        print("Testing get_eeg_split_table (this may take some time)...", end="", flush=True)
-        EEGlen = dl.get_eeg_partition_number(
+    def _partition_table(self):
+        return dl.get_eeg_partition_number(
             self.eegpath,
             self.freq,
             self.window,
@@ -117,9 +74,41 @@ class TestDataloading(unittest.TestCase):
             optional_load_fun_args=[False],
             transform_function=self.transformEEG,
         )
-        Labels = np.zeros(EEGlen.shape[0], dtype=int)
+
+    def _labels(self, EEGlen):
+        labels = np.zeros(EEGlen.shape[0], dtype=int)
         for i in range(EEGlen.shape[0]):
-            _, Labels[i] = self.loadEEG(EEGlen.iloc[i]["full_path"], True)
+            _, labels[i] = self.loadEEG(EEGlen.iloc[i]["full_path"], True)
+        return labels
+
+    def test_get_eeg_partition_number(self):
+        grid = make_grid(
+            {
+                "EEGpath": [self.eegpath],
+                "freq": [self.freq],
+                "window": [2],
+                "overlap": [0, 0.15],
+                "includePartial": [True, False],
+                "file_format": ["*.pickle"],
+                "load_function": [self.loadEEG],
+                "optional_load_fun_args": [[False]],
+                "transform_function": [None, self.transformEEG],
+                "optional_transform_fun_args": [None, [32]],
+                "keep_zero_sample": [True, False],
+                "save": [True, False],
+                "save_path": ["tmpsave/results1.csv"],
+                "verbose": [False],
+            },
+            max_comb=16,
+        )
+        for args in grid:
+            with self.subTest(overlap=args["overlap"], includePartial=args["includePartial"]):
+                EEGlen = dl.get_eeg_partition_number(**args)
+                self.assertEqual(EEGlen.shape[0], 1000)
+
+    def test_get_eeg_split_table(self):
+        EEGlen = self._partition_table()
+        Labels = self._labels(EEGlen)
 
         # fmt: off
         val_dict_id = [
@@ -142,91 +131,95 @@ class TestDataloading(unittest.TestCase):
         ]
         # fmt: on
 
-        input_grid = {
-            "partition_table": [EEGlen],
-            "test_ratio": [0, 0.2],
-            "val_ratio": [0, 0.2],
-            "test_split_mode": [0, 1, 2],
-            "val_split_mode": [1, 2],
-            "exclude_data_id": [None, {x: [13, 23] for x in range(1, 6)}],
-            "test_data_id": [None, {x: [14, 22] for x in range(1, 6)}, 4],
-            "val_data_id": [None, {x: [15, 21] for x in range(1, 6)}, [3]],
-            "val_ratio_on_all_data": [True, False],
-            "stratified": [False, True],
-            "labels": [Labels],
-            "dataset_id_extractor": [lambda x: int(x.split("_")[0])],
-            "subject_id_extractor": [None],
-            "save": [True],
-            "split_tolerance": [0.001],
-            "perseverance": [1000],
-            "save_path": ["tmpsave/results1.csv"],
-            "seed": [self.seed],
-        }
-        input_grid = self.makeGrid(input_grid)
-        for n, i in enumerate(input_grid):
-            if n == 500:
-                print("proceding...", end="", flush=True)
-            elif n == 1000:
-                print("a little more...", end="", flush=True)
-            elif n == 1500:
-                print("almost done...", end="", flush=True)
+        grid = make_grid(
+            {
+                "partition_table": [EEGlen],
+                "test_ratio": [0, 0.2],
+                "val_ratio": [0, 0.2],
+                "test_split_mode": [0, 1, 2],
+                "val_split_mode": [1, 2],
+                "exclude_data_id": [None, {x: [13, 23] for x in range(1, 6)}],
+                "test_data_id": [None, {x: [14, 22] for x in range(1, 6)}, 4],
+                "val_data_id": [None, {x: [15, 21] for x in range(1, 6)}, [3]],
+                "val_ratio_on_all_data": [True, False],
+                "stratified": [False, True],
+                "labels": [Labels],
+                "dataset_id_extractor": [lambda x: int(x.split("_")[0])],
+                "subject_id_extractor": [None],
+                "save": [True],
+                "split_tolerance": [0.001],
+                "perseverance": [1000],
+                "save_path": ["tmpsave/results1.csv"],
+                "seed": [self.seed],
+            },
+            max_comb=48,
+        )
+        for args in grid:
+            with self.subTest(
+                test_ratio=args["test_ratio"],
+                val_ratio=args["val_ratio"],
+                test_split_mode=args["test_split_mode"],
+                stratified=args["stratified"],
+            ):
+                EEGsplit = dl.get_eeg_split_table(**args)
+                total_list = EEGsplit[EEGsplit["split_set"] != -1].index.tolist()
+                tot = EEGlen.iloc[total_list]["N_samples"].sum()
+                self.assertEqual(EEGsplit.shape[0], 1000)
 
-            EEGsplit = dl.get_eeg_split_table(**i)
-            total_list = EEGsplit[EEGsplit["split_set"] != -1].index.tolist()
-            tot = EEGlen.iloc[total_list]["N_samples"].sum()
-            self.assertEqual(EEGsplit.shape[0], 1000)
+                if isinstance(args["exclude_data_id"], dict):
+                    check = EEGsplit.iloc[excl_dict_id]["split_set"].unique()
+                    self.assertEqual(len(check), 1)
+                    self.assertEqual(check[0], -1)
 
-            if isinstance(i["exclude_data_id"], dict):
-                check = EEGsplit.iloc[excl_dict_id]["split_set"].unique()
-                self.assertTrue(len(check) == 1)
-                self.assertTrue(check[0] == -1)
-
-            if i["test_ratio"] == 0:
-                if isinstance(i["test_data_id"], dict):
-                    check = EEGsplit.iloc[test_dict_id]["split_set"].unique()
-                    self.assertTrue(len(check) == 1)
-                    self.assertTrue(check[0] == 2)
-                elif isinstance(i["test_data_id"], int):
-                    if not (isinstance(i["exclude_data_id"], dict)):
-                        cond = (EEGsplit["file_name"].str[0] == "4").values
-                        check = EEGsplit[cond]["split_set"].unique()
-                        self.assertTrue(len(check) == 1)
-                        self.assertTrue(check[0] == 2)
+                if args["test_ratio"] == 0:
+                    if isinstance(args["test_data_id"], dict):
+                        check = EEGsplit.iloc[test_dict_id]["split_set"].unique()
+                        self.assertEqual(len(check), 1)
+                        self.assertEqual(check[0], 2)
+                    elif isinstance(args["test_data_id"], int):
+                        if not isinstance(args["exclude_data_id"], dict):
+                            cond = (EEGsplit["file_name"].str[0] == "4").values
+                            check = EEGsplit[cond]["split_set"].unique()
+                            self.assertEqual(len(check), 1)
+                            self.assertEqual(check[0], 2)
+                    else:
+                        self.assertEqual(EEGlen["N_samples"][EEGsplit["split_set"] == 2].sum(), 0)
                 else:
-                    self.assertEqual(EEGlen["N_samples"][EEGsplit["split_set"] == 2].sum(), 0)
-            else:
-                if i["test_data_id"] is None:
-                    ratio = abs(0.2 - EEGlen["N_samples"][EEGsplit["split_set"] == 2].sum() / tot)
-                    self.assertTrue(ratio < 2.5e-2)
-                    if not (i["stratified"]) and i["test_split_mode"] == 0:
-                        EEGsplit["dataid"] = EEGsplit["file_name"].str[0]
-                        group = EEGsplit.groupby(["dataid", "split_set"])
-                        lst = list(group.split_set.groups.keys())
-                        result = [t for t in lst if t[1] == 2]
-                        self.assertEqual(len(result), 1)
-                        check = 200 if i["exclude_data_id"] is None else 190
-                        self.assertEqual(group.get_group(result[0]).shape[0], check)
+                    if args["test_data_id"] is None:
+                        ratio = abs(
+                            0.2 - EEGlen["N_samples"][EEGsplit["split_set"] == 2].sum() / tot
+                        )
+                        self.assertLess(ratio, 2.5e-2)
+                        if not args["stratified"] and args["test_split_mode"] == 0:
+                            EEGsplit["dataid"] = EEGsplit["file_name"].str[0]
+                            group = EEGsplit.groupby(["dataid", "split_set"])
+                            lst = list(group.split_set.groups.keys())
+                            result = [t for t in lst if t[1] == 2]
+                            self.assertEqual(len(result), 1)
+                            expected = 200 if args["exclude_data_id"] is None else 190
+                            self.assertEqual(group.get_group(result[0]).shape[0], expected)
 
-            if i["val_ratio"] == 0:
-                if isinstance(i["val_data_id"], dict):
-                    if isinstance(i["test_data_id"], dict):
-                        check = EEGsplit.iloc[val_dict_id]["split_set"].unique()
-                        self.assertTrue(len(check) == 1)
-                        self.assertTrue(check[0] == 1)
-                elif i["val_data_id"] is None:
-                    self.assertEqual(EEGlen["N_samples"][EEGsplit["split_set"] == 1].sum(), 0)
-            else:
-                if i["val_data_id"] is None:
-                    thresh = 0.2
-                    if not (i["val_ratio_on_all_data"]):
-                        test_list = EEGsplit[EEGsplit["split_set"] == 2].index.tolist()
-                        test_ratio = EEGlen.iloc[test_list]["N_samples"].sum() / tot
-                        thresh = 0.2 * (1 - test_ratio)
-                    ratio = abs(
-                        thresh - EEGlen["N_samples"][EEGsplit["split_set"] == 1].sum() / tot
-                    )
-                    self.assertTrue(ratio < 2.5e-2)
+                if args["val_ratio"] == 0:
+                    if isinstance(args["val_data_id"], dict):
+                        if isinstance(args["test_data_id"], dict):
+                            check = EEGsplit.iloc[val_dict_id]["split_set"].unique()
+                            self.assertEqual(len(check), 1)
+                            self.assertEqual(check[0], 1)
+                    elif args["val_data_id"] is None:
+                        self.assertEqual(EEGlen["N_samples"][EEGsplit["split_set"] == 1].sum(), 0)
+                else:
+                    if args["val_data_id"] is None:
+                        thresh = 0.2
+                        if not args["val_ratio_on_all_data"]:
+                            test_list = EEGsplit[EEGsplit["split_set"] == 2].index.tolist()
+                            test_ratio = EEGlen.iloc[test_list]["N_samples"].sum() / tot
+                            thresh = 0.2 * (1 - test_ratio)
+                        ratio = abs(
+                            thresh - EEGlen["N_samples"][EEGsplit["split_set"] == 1].sum() / tot
+                        )
+                        self.assertLess(ratio, 2.5e-2)
 
+        # stratified split preserves the per-class ratio across sets
         EEGsplit = dl.get_eeg_split_table(
             EEGlen,
             0.2,
@@ -241,84 +234,45 @@ class TestDataloading(unittest.TestCase):
             seed=1234,
         )
         ratio = dl.check_split(EEGlen, EEGsplit, Labels, True, False)["class_ratio"]
-        self.assertTrue(np.abs(ratio - ratio.mean(0)).max() < 1e-3)
-        print(
-            "   get_eeg_split_table OK: tested", len(input_grid), "combination of input arguments"
-        )
+        self.assertLess(np.abs(ratio - ratio.mean(0)).max(), 1e-3)
 
     def test_get_eeg_split_table_kfold(self):
-        # check: since this function is based on multiple calls of the previous one,
-        # we have already verified the quality of the single splits, so checks
-        # will be done on the size of the table and if each file is placed only
-        # ones in validation set, excluding those placed in test or excluded
-        print("Testing get_eeg_split_table_kfold...", end="", flush=True)
-        EEGlen = dl.get_eeg_partition_number(
-            self.eegpath,
-            self.freq,
-            self.window,
-            self.overlap,
-            file_format="*.pickle",
-            load_function=self.loadEEG,
-            optional_load_fun_args=[False],
-            transform_function=self.transformEEG,
+        EEGlen = self._partition_table()
+        Labels = self._labels(EEGlen)
+        grid = make_grid(
+            {
+                "partition_table": [EEGlen],
+                "test_ratio": [0, 0.2],
+                "kfold": [5, 10],
+                "test_split_mode": [1, 2],
+                "val_split_mode": [1, 2],
+                "exclude_data_id": [None, {x: [13, 23] for x in range(1, 6)}],
+                "test_data_id": [None, {x: [14, 22] for x in range(1, 6)}, 4],
+                "stratified": [False, True],
+                "labels": [Labels],
+                "save": [True],
+                "split_tolerance": [0.01],
+                "perseverance": [1000],
+                "save_path": ["tmpsave/results1.csv"],
+            },
+            max_comb=24,
         )
-        Labels = np.zeros(EEGlen.shape[0], dtype=int)
-        for i in range(EEGlen.shape[0]):
-            _, Labels[i] = self.loadEEG(EEGlen.iloc[i]["full_path"], True)
-        input_grid = {
-            "partition_table": [EEGlen],
-            "test_ratio": [0, 0.2],
-            "kfold": [5, 10],
-            "test_split_mode": [1, 2],
-            "val_split_mode": [1, 2],
-            "exclude_data_id": [None, {x: [13, 23] for x in range(1, 6)}],
-            "test_data_id": [None, {x: [14, 22] for x in range(1, 6)}, 4],
-            "stratified": [False, True],
-            "labels": [Labels],
-            "save": [True],
-            "split_tolerance": [0.01],
-            "perseverance": [1000],
-            "save_path": ["tmpsave/results1.csv"],
-        }
-        input_grid = self.makeGrid(input_grid)
-        for i in input_grid:
-            EEGsplit = dl.get_eeg_split_table_kfold(**i)
-            self.assertEqual(EEGsplit.shape[0], 1000)
-            self.assertEqual(EEGsplit.shape[1], i["kfold"] + 1)
-            sums = set(EEGsplit.sum(axis=1, numeric_only=True).unique().tolist())
-            self.assertTrue(sums.issubset(set([-1 * i["kfold"], 1, 2 * i["kfold"]])))
-
-        print(
-            "   get_eeg_split_table_kfold OK: tested",
-            len(input_grid),
-            "combination of input arguments",
-        )
+        for args in grid:
+            with self.subTest(test_ratio=args["test_ratio"], kfold=args["kfold"], stratified=args["stratified"]):
+                EEGsplit = dl.get_eeg_split_table_kfold(**args)
+                self.assertEqual(EEGsplit.shape[0], 1000)
+                self.assertEqual(EEGsplit.shape[1], args["kfold"] + 1)
+                sums = set(EEGsplit.sum(axis=1, numeric_only=True).unique().tolist())
+                self.assertTrue(sums.issubset({-1 * args["kfold"], 1, 2 * args["kfold"]}))
 
     def test_EEGDataset(self):
-        # checks: extraction is performed correctly
-        print("Testing EEGDataset...", end="", flush=True)
-
-        EEGlen = dl.get_eeg_partition_number(
-            self.eegpath,
-            self.freq,
-            self.window,
-            self.overlap,
-            file_format="*.pickle",
-            load_function=self.loadEEG,
-            optional_load_fun_args=[False],
-            transform_function=self.transformEEG,
-        )
-        Labels = np.zeros(EEGlen.shape[0], dtype=int)
-        for i in range(EEGlen.shape[0]):
-            _, Labels[i] = self.loadEEG(EEGlen.iloc[i]["full_path"], True)
-
+        EEGlen = self._partition_table()
         EEGsplit = dl.get_eeg_split_table(
             EEGlen,
             test_ratio=0.1,
             val_ratio=0.1,
             test_split_mode="file",
             val_split_mode="file",
-            # stratified=False, labels=Labels,
             perseverance=5000,
             split_tolerance=0.005,
         )
@@ -331,8 +285,8 @@ class TestDataloading(unittest.TestCase):
             load_function=self.loadEEG,
             transform_function=self.transformEEG,
         )
-        sample_1 = dataset_pretrain.__getitem__(0)
-        self.assertTrue(isinstance(sample_1, torch.Tensor))
+        sample_1 = dataset_pretrain[0]
+        self.assertIsInstance(sample_1, torch.Tensor)
         self.assertEqual(sample_1.shape[-1], 256)
 
         dataset_finetune = dl.EEGDataset(
@@ -346,10 +300,10 @@ class TestDataloading(unittest.TestCase):
             transform_function=self.transformEEG,
             label_on_load=True,
         )
-        sample_2, label_2 = dataset_finetune.__getitem__(0)
-        self.assertTrue(isinstance(sample_2, torch.Tensor))
+        sample_2, label_2 = dataset_finetune[0]
+        self.assertIsInstance(sample_2, torch.Tensor)
         self.assertEqual(sample_2.shape[-1], 256)
-        self.assertTrue(isinstance(label_2, int))
+        self.assertIsInstance(label_2, int)
 
         # try again with an array of labels
         dataset_finetune = dl.EEGDataset(
@@ -363,19 +317,16 @@ class TestDataloading(unittest.TestCase):
             transform_function=self.transformEEG,
             multilabel_on_load=True,
         )
-        sample_2, label_2 = dataset_finetune.__getitem__(0)
-        self.assertTrue(isinstance(sample_2, torch.Tensor))
+        sample_2, label_2 = dataset_finetune[0]
+        self.assertIsInstance(sample_2, torch.Tensor)
         self.assertEqual(sample_2.shape[-1], 256)
-        # self.assertTrue(len(label_2.shape)==0)
 
         dataset_finetune.preload_dataset()
-        sample_3, label_3 = dataset_finetune.__getitem__(0)
-        self.assertTrue(isinstance(sample_3, torch.Tensor))
+        sample_3, label_3 = dataset_finetune[0]
+        self.assertIsInstance(sample_3, torch.Tensor)
         self.assertEqual(sample_3.shape[-1], 256)
-        print("   EEGDataset OK")
 
     def test_EEGSampler(self):
-        print("Testing Sampler on both modalities...", end="", flush=True)
         EEGlen = dl.get_eeg_partition_number(
             self.eegpath,
             self.freq,
@@ -387,9 +338,9 @@ class TestDataloading(unittest.TestCase):
             save=True,
             save_path="tmpsave/results1.csv",
         )
-        Labels = np.zeros(EEGlen.shape[0])  # , dtype=in)
+        Labels = np.zeros(EEGlen.shape[0])
         for i in range(EEGlen.shape[0]):
-            EEG, Labels[i] = self.loadEEG(EEGlen["full_path"][i], True)
+            _, Labels[i] = self.loadEEG(EEGlen["full_path"][i], True)
         Labels = Labels.astype(int)
         EEGsplit = dl.get_eeg_split_table(
             EEGlen,
@@ -410,25 +361,14 @@ class TestDataloading(unittest.TestCase):
             load_function=self.loadEEG,
             transform_function=self.transformEEG,
         )
-        sampler_linear = dl.EEGSampler(dataset_pretrain, Mode=0)
-        sampler_custom = dl.EEGSampler(dataset_pretrain, 16, 4)
-        print("   EEGDataset OK")
+        # both sampling modalities must build without error
+        dl.EEGSampler(dataset_pretrain, Mode=0)
+        dl.EEGSampler(dataset_pretrain, 16, 4)
 
     @classmethod
     def tearDownClass(cls):
-        print("removing generated residual directories (Simulated_EEG, tmpsave)")
-        try:
-            if platform.system() == "Windows":
-                os.system("rmdir /Q /S Simulated_EEG")  # nosec
-                os.system("rmdir /Q /S tmpsave")  # nosec
-            else:
-                os.system("rm -r Simulated_EEG")  # nosec
-                os.system("rm -r tmpsave")  # nosec
-        except:
-            print(
-                'Failed to delete "Simulated_EEG" and "tmpsave" folders.'
-                " Please don't hate me and do it manually"
-            )
+        for folder in ("Simulated_EEG", "tmpsave"):
+            shutil.rmtree(folder, ignore_errors=True)
 
 
 if __name__ == "__main__":

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import copy
 import os
 import pickle
 import random
-from typing import Optional, Sequence, Union
+from typing import Optional
 
+from scipy.stats import zscore
 import numpy as np
 import pandas as pd
 import torch
@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 
-def subarray_closest_sum(arr: ArrayLike, n: int, k: float) -> tuple(ArrayLike, float, float, float):
+def subarray_closest_sum(arr: ArrayLike, n: int, k: float) -> tuple[ArrayLike, float, float, float]:
     """
     returns a subarray whose element sum is closest to k.
 
@@ -508,9 +508,9 @@ class ZscoreScaler:
 
 
 def torch_pchip(
-    x: "1D Tensor",
-    y: "ND Tensor",
-    xv: "1D Tensor",
+    x: torch.Tensor,
+    y: torch.Tensor,
+    xv: torch.Tensor,
     save_memory: bool = True,
     new_y_max_numel: int = 4194304,
 ) -> torch.Tensor:
@@ -835,7 +835,7 @@ def count_parameters(
     return_table: bool = False,
     print_table: bool = False,
     add_not_trainable=False,
-) -> [int, Optional[pd.DataFrame]]:
+) -> tuple[int, Optional[pd.DataFrame]]:
     """
     counts the number of **trainable parameters** of a
     Pytorch's nn.Module.

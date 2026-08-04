@@ -98,7 +98,7 @@ class StaticSingleAug:
     """
 
     def __init__(
-        self, augmentation: "function", arguments: list or dict or list[list or dict] = None
+        self, augmentation: "function", arguments: list | dict | list[list | dict] = None
     ):
 
         if not (inspect.isfunction(augmentation) or inspect.isbuiltin(augmentation)):
@@ -252,8 +252,8 @@ class DynamicSingleAug:
         self,
         augmentation,
         discrete_arg: Dict[str, Any] = None,
-        range_arg: Dict[str, list[int or float, int or float]] = None,
-        range_type: Dict[str, str or bool] or list[str or bool] = None,
+        range_arg: Dict[str, list[int | float, int | float]] = None,
+        range_type: Dict[str, str | bool] | list[str | bool] = None,
     ):
 
         # set augmentation function

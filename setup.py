@@ -1,7 +1,4 @@
-# license info
-
 import os
-
 import setuptools
 
 requirements = [
@@ -43,14 +40,12 @@ setuptools.setup(
         "Environment :: Console",
         "Environment :: GPU",
         "Intended Audience :: Science/Research",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: MacOS",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     keywords=[
@@ -67,7 +62,7 @@ setuptools.setup(
     },
     install_requires=requirements,
     include_package_data=True,
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     extras_require=extra_require,
     zip_safe=False,
 )
