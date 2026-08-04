@@ -50,6 +50,7 @@ Classes
     StagerNetEncoder
     STNetEncoder
     TinySleepNetEncoder
+    TransformEEGEncoder
     xEEGNetEncoder
 
 
@@ -77,4 +78,5 @@ Classes
     StagerNet
     STNet
     TinySleepNet
+    TransformEEG
     xEEGNet
